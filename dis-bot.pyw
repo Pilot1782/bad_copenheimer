@@ -48,10 +48,21 @@ async def on_message(message):
         print("The server has {0} players and replied in {1} ms".format(status.players.online, status.latency))
         await message.channel.send("The server has {0} players and replied in {1} ms".format(status.players.online, status.latency))
             
-        for a in range(255):
-            for b in range(255):
-                for i in range(255):
-                    ip = f'172.{a}.{b}.{i}'
+        for a in range(17):
+            for b in range(256):
+                for i in range(256):
+                    ip = f'172.{a+16}.{b}.{i}'
+                    response = MC(ip)
+                    if response == "Server is offline":
+                        print(f"Server {ip} is offline")
+                    else:
+                        await message.channel.send(response)
+                        print(response)
+                await message.channel.send(f"172.{a}.{b}.xxx is scanned")
+        for a in range(1):
+            for b in range(256):
+                for i in range(256):
+                    ip = f'192.168.{b}.{i}'
                     response = MC(ip)
                     if response == "Server is offline":
                         print(f"Server {ip} is offline")
@@ -59,5 +70,16 @@ async def on_message(message):
                         await message.channel.send(response)
                         print(response)
                 await message.channel.send(f"192.{a}.{b}.xxx is scanned")
+        for a in range(256):
+            for b in range(256):
+                for i in range(256):
+                    ip = f'10.{a}.{b}.{i}'
+                    response = MC(ip)
+                    if response == "Server is offline":
+                        print(f"Server {ip} is offline")
+                    else:
+                        await message.channel.send(response)
+                        print(response)
+                await message.channel.send(f"10.{a}.{b}.xxx is scanned")
 
 client.run(TOKEN)
