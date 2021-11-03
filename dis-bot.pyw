@@ -8,11 +8,12 @@ import os
 load_dotenv()
 ##################################################
 #Stuff for you to change
-TOKEN = 'YOUR TOKEN HERE' #Your discord bot token
+TOKEN = 'TO' #Your discord bot token
 lower_ip_bound = "172.0.0.0" #Lowest is 10.0.0.0
 upper_ip_bound = "192.255.255.255" #Highest is 199.255.255.255
 threads = 255 #Max usable is 1000
 timeout = 1000 #Ping timeout in miliseconds
+path = r"qubo.jar" #Path to qubo.jar
 ##################################################
 
 ################################################
@@ -30,20 +31,25 @@ def ptime():
     x = x + 1
     if x == 1:
       print(f"Year {i}")
+      return f"Year {i}"
     if x == 2:
       print(f"Month {i}")
+      return f"Month {i}"
     if x == 3:
       print(f"Day {i}")
+      return f"Day {i}"
     if x == 4:
       print(f"Hour {i}")
+      return f"Hour {i}"
     if x == 5:
       print(f"Min {i}")
+      return f"Min {i}"
 
 def MC(range,outp,threads,time):
   import subprocess
   ptime()
   print(f"Scanning {range} outputting {outp}")
-  outp = subprocess.check_output(f"java -Dfile.encoding=UTF-8 -jar qubo.jar -range {range} -ports 25565-25577 -th {threads} -ti {time}",shell=True)
+  outp = subprocess.check_output(f"java -Dfile.encoding=UTF-8 -jar {path} -range {range} -ports 25565-25577 -th {threads} -ti {time}",shell=True)
   if outp == True:
     print(outp)
     return outp
@@ -58,7 +64,7 @@ async def on_message(message):
         return
     
     if message.content == 'mc!':
-      await message.channel.send(f"Scanning started: {time.localtime()}")
+      await message.channel.send(f"Scanning started: {ptime()}")
       print("MC ping started")
       
       print("Testing")
