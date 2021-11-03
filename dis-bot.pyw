@@ -12,6 +12,7 @@ lower_ip_bound = 172.0.0.0 #Lowest is 10.0.0.0
 upper_ip_bound = 192.255.255.255 #Highest is 199.255.255.255
 threads = 255 #Max usable is 1000
 timeout = 1000 #Ping timeout in miliseconds
+path = "" #Path the the jar file from the quboscanner repo
 ##################################################
 
 ###############################################
@@ -25,7 +26,7 @@ def MC(range,outp,threads,time):
   import subprocess
   ptime()
   print(f"Scanning {range} outputting {outp}")
-  outp = subprocess.check_output(f"java -Dfile.encoding=UTF-8 -jar qubo.jar -range {range} -ports 25565-25577 -th {threads} -ti {time}",shell=True)
+  outp = subprocess.check_output(f"java -Dfile.encoding=UTF-8 -jar {path} -range {range} -ports 25565-25577 -th {threads} -ti {time}",shell=True)
   if outp == True:
     print(outp)
     return outp
