@@ -2,22 +2,24 @@ from requests import get
 import discord
 from dotenv import load_dotenv
 from discord.ext import commands
-from mcstatus import MinecraftServer
 import time
+import os
 
 load_dotenv()
 ##################################################
 #Stuff for you to change
 TOKEN = 'YOUR TOKEN HERE' #Your discord bot token
-lower_ip_bound = 172.0.0.0 #Lowest is 10.0.0.0
-upper_ip_bound = 192.255.255.255 #Highest is 199.255.255.255
+lower_ip_bound = "172.0.0.0" #Lowest is 10.0.0.0
+upper_ip_bound = "192.255.255.255" #Highest is 199.255.255.255
 threads = 255 #Max usable is 1000
 timeout = 1000 #Ping timeout in miliseconds
 ##################################################
 
-###############################################
-# You don't need to touch anything below this.#
-###############################################
+################################################
+# You don't need to touch anything below this. #
+################################################
+
+TOKEN = os.environ['Token'] #Used for Testing Keep Commented
 
 client = discord.Client()
 bot = commands.Bot(command_prefix='!')
