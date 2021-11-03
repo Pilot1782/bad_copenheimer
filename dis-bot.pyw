@@ -8,7 +8,7 @@ import os
 load_dotenv()
 ##################################################
 #Stuff for you to change
-TOKEN = 'TO' #Your discord bot token
+TOKEN = 'YOUR TOKEN HERE' #Your discord bot token
 lower_ip_bound = "172.0.0.0" #Lowest is 10.0.0.0
 upper_ip_bound = "192.255.255.255" #Highest is 199.255.255.255
 threads = 255 #Max usable is 1000
