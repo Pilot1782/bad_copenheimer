@@ -35,10 +35,10 @@ def ptime():
       arr.append(f"{i}/")
     if x == 3:
       print(f"Day {i}")
-      arr.append(f"{i}/")
+      arr.append(f"{i}")
     if x == 1:
       print(f"Year {i}")
-      arr.append(f"{i} ")
+      arr.append(f"{i}/")
     if x == 4:
       print(f"Hour {i}")
       arr.append(f"{i}:")
