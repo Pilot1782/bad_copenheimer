@@ -19,8 +19,8 @@ path = r"qubo.jar" #Path to qubo.jar
 # You don't need to touch anything below this. #
 ################################################
 
-lo#ad_dotenv()
-TOKEN = os.environ['Token'] #Used for Testing Keep Commented
+load_dotenv()
+#TOKEN = os.environ['Token'] #Used for Testing Keep Commented
 client = discord.Client()
 bot = commands.Bot(command_prefix='!')
 
@@ -66,16 +66,16 @@ async def on_ready():
 @client.event
 async def on_message(message):
     if message.author == client.user:
-        return
+         return
     
-    if message.content == 'mc!':: {ptime()}it message.channel.send(f"Scanning started: {ptime()}")
-      print("MC ping started")
+    if message.content == 'mc!':
+      await message.channel.send(f"Scanning started: {ptime()}")
       
-      print("Testing")
-      #Test tool
       server = MC("172.65.238.*",True,255,timeout)
-      print(server)
-      await message.channel.send(f"Testing the tool: {server}")
+      server = str(server)
+
+      #print(str(server))
+      await message.channel.send(f"Testing the tool:\n{str(server)}")
       
       print(f"\nPing on {lower_ip_bound} through {upper_ip_bound}, with {threads} threads and timeout of {timeout}")
       #Real Stuff
