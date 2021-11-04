@@ -71,10 +71,10 @@ async def on_message(message):
       
       print("Testing")
       #Test tool
-      server = MC("172.65.238.212",True,255,timeout)
-      await message.channel.send(server)
+      server = MC("172.65.238.*",True,255,timeout)
+      await message.channel.send(f"Testing the tool: {server}")
       
-      print(f"Ping on {lower_ip_bound} through {upper_ip_bound}, with {threads} threads and timeout of {timeout}")
+      print(f"\nPing on {lower_ip_bound} through {upper_ip_bound}, with {threads} threads and timeout of {timeout}")
       #Real Stuff
       scan = MC(f"{lower_ip_bound}-{upper_ip_bound}",True,threads,timeout)
 
