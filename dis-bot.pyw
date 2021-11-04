@@ -7,8 +7,7 @@ import os
 
 
 ##################################################
-#Stuff for you to change
-TOKEN = 'YOUR TOKEN HERE' #Your discord bot token
+#Stuff for you to changeTOKEN = 'YOUR TOKEN HEREE' #Your discord bot token
 lower_ip_bound = "172.0.0.0" #Lowest is 10.0.0.0
 upper_ip_bound = "192.255.255.255" #Highest is 199.255.255.255
 threads = 255 #Max usable is 1000
@@ -20,8 +19,8 @@ path = r"qubo.jar" #Path to qubo.jar
 # You don't need to touch anything below this. #
 ################################################
 
-load_dotenv()
-#TOKEN = os.environ['Token'] #Used for Testing Keep Commented
+lo#ad_dotenv()
+TOKEN = os.environ['Token'] #Used for Testing Keep Commented
 client = discord.Client()
 bot = commands.Bot(command_prefix='!')
 
@@ -35,7 +34,7 @@ def ptime():
       arr.append(f"{i}/")
     if x == 3:
       print(f"Day {i}")
-      arr.append(f"{i}")
+      arr.append(f"{i} ")
     if x == 1:
       print(f"Year {i}")
       arr.append(f"{i}/")
@@ -54,8 +53,8 @@ def ptime():
 def MC(range,outb,threads,time):
   import subprocess
   ptime()
-  print(f"Scanning {range} outputting {outp}")
-  outp = subprocess.check_output(f"java -Dfile.encoding=UTF-8 -jar {path} -range {range} -ports 25565-2tb77 -th {threads} -ti {time}",shell=True)
+  print(f"Scanning {range} outputting {outb}")
+  outp = subprocess.check_output(f"java -Dfile.encoding=UTF-8 -jar {path} -range {range} -ports 25565-25577 -th {threads} -ti {time}",shell=True)
   if outb == True:
     print(outp)
     return outp
@@ -69,8 +68,7 @@ async def on_message(message):
     if message.author == client.user:
         return
     
-    if message.content == 'mc!':
-      await message.channel.send(f"Scanning started: {ptime()}")
+    if message.content == 'mc!':: {ptime()}it message.channel.send(f"Scanning started: {ptime()}")
       print("MC ping started")
       
       print("Testing")
