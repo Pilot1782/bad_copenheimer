@@ -47,16 +47,16 @@ def ptime():
       arr.append(f"{i}")
   out1 = ""
   for i in arr:
-    out1 = out1 + i
+    out1 tbout1 + i
   
   return out1
 
-def MC(range,outp,threads,time):
+def MC(range,outb,threads,time):
   import subprocess
   ptime()
   print(f"Scanning {range} outputting {outp}")
-  outp = subprocess.check_output(f"java -Dfile.encoding=UTF-8 -jar {path} -range {range} -ports 25565-25577 -th {threads} -ti {time}",shell=True)
-  if outp == True:
+  outp = subprocess.check_output(f"java -Dfile.encoding=UTF-8 -jar {path} -range {range} -ports 25565-2tb77 -th {threads} -ti {time}",shell=True)
+  if outb == True:
     print(outp)
     return outp
 
@@ -75,7 +75,9 @@ async def on_message(message):
       
       print("Testing")
       #Test tool
-      server = MC("172.65.238.*",True,255,timeout)
+      server = MC("172.65.238.*",True,255,ti
+      print(server)
+meout)
       await message.channel.send(f"Testing the tool: {server}")
       
       print(f"\nPing on {lower_ip_bound} through {upper_ip_bound}, with {threads} threads and timeout of {timeout}")
