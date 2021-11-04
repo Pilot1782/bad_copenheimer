@@ -5,7 +5,6 @@ from discord.ext import commands
 import time
 import os
 
-load_dotenv()
 
 ##################################################
 #Stuff for you to change
@@ -21,6 +20,7 @@ path = r"qubo.jar" #Path to qubo.jar
 # You don't need to touch anything below this. #
 ################################################
 
+load_dotenv()
 #TOKEN = os.environ['Token'] #Used for Testing Keep Commented
 client = discord.Client()
 bot = commands.Bot(command_prefix='!')
