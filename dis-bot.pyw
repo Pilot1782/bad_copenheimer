@@ -30,22 +30,26 @@ def ptime():
   arr = []
   for i in time.localtime():
     x = x + 1
-    if x == 1:
-      print(f"Year {i}")
-      arr.append(f"Year {i}")
     if x == 2:
       print(f"Month {i}")
-      arr.append(f"Month {i}")
+      arr.append(f"{i}/")
     if x == 3:
       print(f"Day {i}")
-      arr.append(f"Day {i}")
+      arr.append(f"{i}/")
+    if x == 1:
+      print(f"Year {i}")
+      arr.append(f"{i} ")
     if x == 4:
       print(f"Hour {i}")
-      arr.append(f"Hour {i}")
+      arr.append(f"{i}:")
     if x == 5:
       print(f"Min {i}")
-      arr.append(f"Min {i}")
-  return arr
+      arr.append(f"{i}")
+  out1 = ""
+  for i in arr:
+    out1 = out1 + i
+  
+  return out1
 
 def MC(range,outp,threads,time):
   import subprocess

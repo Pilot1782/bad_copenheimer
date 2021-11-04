@@ -1,0 +1,4 @@
+quboScanner by @zreply - Version 0.3.7 
+Scanner started on: Thu, 4 Nov 2021 15:55:39 GMT
+(172.0.3.2:25566)(0/2)(21w40a)(bee and john private server)
+(172.0.3.2:25565)(0/35)(Paper 1.16.5)(Shilocraft Survival - 1.16)
