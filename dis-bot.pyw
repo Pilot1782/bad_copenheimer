@@ -21,7 +21,7 @@ path = r"qubo.jar" #Path to qubo.jar
 # You don't need to touch anything below this. #
 ################################################
 
-TOKEN = os.environ['Token'] #Used for Testing Keep Commented
+#TOKEN = os.environ['Token'] #Used for Testing Keep Commented
 client = discord.Client()
 bot = commands.Bot(command_prefix='!')
 
