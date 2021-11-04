@@ -6,6 +6,7 @@ import time
 import os
 
 load_dotenv()
+
 ##################################################
 #Stuff for you to change
 TOKEN = 'YOUR TOKEN HERE' #Your discord bot token
@@ -20,8 +21,7 @@ path = r"qubo.jar" #Path to qubo.jar
 # You don't need to touch anything below this. #
 ################################################
 
-#TOKEN = os.environ['Token'] #Used for Testing Keep Commented
-
+TOKEN = os.environ['Token'] #Used for Testing Keep Commented
 client = discord.Client()
 bot = commands.Bot(command_prefix='!')
 
@@ -72,8 +72,7 @@ async def on_message(message):
       print("Testing")
       #Test tool
       server = MC("172.65.238.212",True,255,timeout)
-      status = server.status()
-      await message.channel.send(status)
+      await message.channel.send(server)
       
       print(f"Ping on {lower_ip_bound} through {upper_ip_bound}, with {threads} threads and timeout of {timeout}")
       #Real Stuff
