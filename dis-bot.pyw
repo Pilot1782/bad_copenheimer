@@ -27,23 +27,25 @@ bot = commands.Bot(command_prefix='!')
 
 def ptime():
   x = 0
+  arr = []
   for i in time.localtime():
     x = x + 1
     if x == 1:
       print(f"Year {i}")
-      return f"Year {i}"
+      arr.append(f"Year {i}")
     if x == 2:
       print(f"Month {i}")
-      return f"Month {i}"
+      arr.append(f"Month {i}")
     if x == 3:
       print(f"Day {i}")
-      return f"Day {i}"
+      arr.append(f"Day {i}")
     if x == 4:
       print(f"Hour {i}")
-      return f"Hour {i}"
+      arr.append(f"Hour {i}")
     if x == 5:
       print(f"Min {i}")
-      return f"Min {i}"
+      arr.append(f"Min {i}")
+  return arr
 
 def MC(range,outp,threads,time):
   import subprocess
