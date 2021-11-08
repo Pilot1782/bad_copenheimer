@@ -57,7 +57,7 @@ def MC(range,outb,threads,time):
   outp = subprocess.check_output(f"java -Dfile.encoding=UTF-8 -jar {path} -range {range} -ports 25565-25577 -th {threads} -ti {time}",shell=True)
   if outb == True:
     print(outp)
-    return outp
+  return outp
 
 @client.event
 async def on_ready():
@@ -68,14 +68,14 @@ async def on_message(message):
     if message.author == client.user:
          return
     
-    if message.content == 'mc!':
+    if message.content == 'mc!' or message.content == "Mc!":
       await message.channel.send(f"Scanning started: {ptime()}")
       
-      server = MC("172.65.238.*",True,255,timeout)
-      server = str(server)
+      server = MC("172.65.238.*",False,255,timeout)
+      server = server.decode("utf-8")
+      print(server)
 
-      #print(str(server))
-      await message.channel.send(f"Testing the tool:\n{str(server)}")
+      await message.channel.send(f"Testing the tool:\n{server}")
       
       print(f"\nPing on {lower_ip_bound} through {upper_ip_bound}, with {threads} threads and timeout of {timeout}")
       #Real Stuff
