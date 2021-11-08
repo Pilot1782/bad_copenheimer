@@ -76,6 +76,8 @@ async def on_message(message):
       print(server)
 
       await message.channel.send(f"Testing the tool:\n{server}")
+
+      await message.channel.send(f"\nStarting the scan at {ptime()}\nPinging {lower_ip_bound} through {upper_ip_bound}, using {threads} threads and timingout after {timeout} miliseconds.")
       
       print(f"\nPing on {lower_ip_bound} through {upper_ip_bound}, with {threads} threads and timeout of {timeout}")
       #Real Stuff
