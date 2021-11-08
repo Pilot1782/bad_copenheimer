@@ -54,7 +54,11 @@ def MC(range,outb,threads,time):
   import subprocess
   ptime()
   print(f"Scanning {range} outputting {outb}")
-  outp = subprocess.check_output(f"java -Dfile.encoding=UTF-8 -jar {path} -range {range} -ports 25565-25577 -th {threads} -ti {time}",shell=True)
+  try:
+    outp = subprocess.check_output(f"java -Dfile.encoding=UTF-8 -jar {path} -range {range} -ports 25565-25577 -th {threads} -ti {time}",shell=True)
+  except:
+    print("Sorry, execution failed.")
+    return "Sorry, execution failed."
   if outb == True:
     print(outp)
   return outp
