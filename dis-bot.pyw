@@ -81,5 +81,9 @@ async def on_message(message):
       #Real Stuff
       scan = MC(f"{lower_ip_bound}-{upper_ip_bound}",True,threads,timeout)
 
+      scan = scan.decode("utf-8")
+
+      await message.channel.send(f"It's Finally Dne!\n{scan}")
+
 if __name__ == "__main__":
   client.run(TOKEN)
