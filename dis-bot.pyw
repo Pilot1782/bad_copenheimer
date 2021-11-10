@@ -95,7 +95,7 @@ async def on_message(message):
       msg = message.content
       for i in "status!-":
         msg = msg.replace(i,"",1)
-      print(msg)
+      print(f"Scan of {msg} requested.")
       if msg == "":
         await message.channel.send("Usage, status!-255.255.255.255:25565")
       else:
@@ -106,7 +106,8 @@ async def on_message(message):
           print(mesg)
           await message.channel.send(mesg)
         except:
-          await message.channel.send(f"Failed to scan {msg}")
+          await message.channel.send(f"Failed to scan {msg}.")
+          print(f"Failed to scan {msg}.")
 
 if __name__ == "__main__":
   client.run(TOKEN)
