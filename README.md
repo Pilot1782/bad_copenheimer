@@ -11,4 +11,4 @@ In your server, type mc! to do a general scan of the ip range specified in dis-b
 
 You can also type status!- followed by the ip and port of the server you would like to see.
 
-e.g. status!-255.255.255.255:25565
+e.g. status!-mc.hypixel.net:25565

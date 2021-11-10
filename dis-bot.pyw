@@ -16,9 +16,9 @@ timeout = 1000 #Ping timeout in miliseconds
 path = r"qubo.jar" #Path to qubo.jar
 ##################################################
 
-################################################
-# You don't need to touch anything below this. #
-################################################
+#################################################
+# You don't need to change anything below this. #
+#################################################
 
 load_dotenv()
 #TOKEN = os.environ['Token'] #Used for Testing Keep Commented
@@ -85,7 +85,7 @@ async def on_message(message):
       await message.channel.send(f"\nStarting the scan at {ptime()}\nPinging {lower_ip_bound} through {upper_ip_bound}, using {threads} threads and timingout after {timeout} miliseconds.")
       
       print(f"\nPing on {lower_ip_bound} through {upper_ip_bound}, with {threads} threads and timeout of {timeout}")
-      #Real Stuff
+      
       scan = MC(f"{lower_ip_bound}-{upper_ip_bound}",True,threads,timeout)
 
       scan = scan.decode("utf-8")
@@ -94,7 +94,7 @@ async def on_message(message):
     elif "status!" in message.content:
       msg = message.content
       for i in "status!-":
-        msg = msg.replace(i,"")
+        msg = msg.replace(i,"",1)
       print(msg)
       if msg == "":
         await message.channel.send("Usage, status!-255.255.255.255:25565")
