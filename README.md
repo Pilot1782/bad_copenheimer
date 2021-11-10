@@ -3,10 +3,12 @@ A Python impelentation of a discord bot that acts as a server scanner.
 
 This is a discord bot that will scan ip adresses to see if they are minecraft servers and will post the results in your channel.
 
-First Download the source code and run setup.pyw. Then in dis-bot.pyw insert your discord bot token and change any other variables you would like.
+# Installation
+To insatll, clone the repository and open dis-bot.pyw. Then put your discord bot token into 'YOUR TOKEN HERE' and change any of the prefrences you would like.
 
-To use, install the modules and start the program
-In you server type "mc!" to start the bot.
-Download quboscanner and unzip it.
+# Usage
+In your server, type mc! to do a general scan of the ip range specified in dis-bot.pyw and it will reurn a list in the server adn save a txt file in the folder "Outputs"
 
-Then follow the instructions in the pyw file.
+You can also type status!- followed by the ip and port of the server you would like to see.
+
+e.g. status!-255.255.255.255:25565
