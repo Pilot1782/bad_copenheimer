@@ -3,6 +3,7 @@ import discord
 from dotenv import load_dotenv
 from discord.ext import commands
 import time
+from mcstatus import MinecraftServer
 import os
 
 
@@ -90,6 +91,22 @@ async def on_message(message):
       scan = scan.decode("utf-8")
 
       await message.channel.send(f"It's Finally Dne!\n{scan}")
+    elif "status!" in message.content:
+      msg = message.content
+      for i in "status!-":
+        msg = msg.replace(i,"")
+      print(msg)
+      if msg == "":
+        await message.channel.send("Usage, status!-255.255.255.255:25565")
+      else:
+        try:
+          server = MinecraftServer.lookup(msg)
+          status = server.status()
+          mesg = "The server has {0} players and replied in {1} ms".format(status.players.online, status.latency)
+          print(mesg)
+          await message.channel.send(mesg)
+        except:
+          await message.channel.send(f"Failed to scan {msg}")
 
 if __name__ == "__main__":
   client.run(TOKEN)
