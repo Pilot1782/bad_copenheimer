@@ -8,7 +8,8 @@ import os
 
 
 ##################################################
-#Stuff for you to changeTOKEN = 'YOUR TOKEN HEREE' #Your discord bot token
+#Stuff for you to change
+TOKEN = 'YOUR TOKEN HEREE' #Your discord bot token
 lower_ip_bound = "172.0.0.0" #Lowest is 10.0.0.0
 upper_ip_bound = "192.255.255.255" #Highest is 199.255.255.255
 threads = 255 #Max usable is 1000
@@ -73,7 +74,8 @@ async def on_message(message):
     if message.author == client.user:
          return
     
-    if message.content == 'mc!' or message.content == "Mc!":
+    #Command MC
+    if lower(message.content) == 'mc!':
       await message.channel.send(f"Scanning started: {ptime()}")
       
       server = MC("172.65.238.*",False,255,timeout)
@@ -90,24 +92,39 @@ async def on_message(message):
 
       scan = scan.decode("utf-8")
 
-      await message.channel.send(f"It's Finally Dne!\n{scan}")
-    elif "status!" in message.content:
+      await message.channel.send(f"It's Finally Done!\n\n{scan}")
+    
+    #Command STATUS
+    elif "status!" in lower(message.content):
       msg = message.content
       for i in "status!-":
         msg = msg.replace(i,"",1)
+
       print(f"Scan of {msg} requested.")
+      
       if msg == "":
         await message.channel.send("Usage, status!-255.255.255.255:25565")
+      
       else:
         try:
           server = MinecraftServer.lookup(msg)
           status = server.status()
-          mesg = "The server has {0} players and replied in {1} ms".format(status.players.online, status.latency)
+          mesg = "The server has {0} players and replied in {1} ms\n".format(status.players.online, status.latency)
           print(mesg)
           await message.channel.send(mesg)
         except:
-          await message.channel.send(f"Failed to scan {msg}.")
-          print(f"Failed to scan {msg}.")
+          await message.channel.send(f"Failed to scan {msg}.\n")
+          print(f"Failed to scan {msg}.\n")
+        
+        try:
+          server = MinecraftServer.lookup(msg)
+          query = server.query()
+          print("The server has the following players online: {0}".format(", ".join(query.players.names)))
+          await message.channel.send("The server has the following players online: {0}".format(", ".join(query.players.names)))
+        except:
+          print(f"Failed to query {msg}")
+          await message.channel.send(f"Failed to query {msg}.")
+
 
 if __name__ == "__main__":
   client.run(TOKEN)
