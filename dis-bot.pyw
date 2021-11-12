@@ -92,7 +92,7 @@ async def on_message(message):
 
       scan = scan.decode("utf-8")
 
-      await message.channel.send(f"It's Finally Done!\n\n{scan}")
+      await message.channel.send(f"\nIt's Finally Done!\n\n{scan}")
     
     #Command STATUS
     elif "status!" in lower(message.content):
@@ -106,7 +106,7 @@ async def on_message(message):
         await message.channel.send("Usage, status!-255.255.255.255:25565")
       
       else:
-        try:
+        try: #Try getting the status
           server = MinecraftServer.lookup(msg)
           status = server.status()
           mesg = "The server has {0} players and replied in {1} ms\n".format(status.players.online, status.latency)
@@ -116,7 +116,7 @@ async def on_message(message):
           await message.channel.send(f"Failed to scan {msg}.\n")
           print(f"Failed to scan {msg}.\n")
         
-        try:
+        try: #Try quering server
           server = MinecraftServer.lookup(msg)
           query = server.query()
           print("The server has the following players online: {0}".format(", ".join(query.players.names)))
