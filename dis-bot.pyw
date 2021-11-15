@@ -29,7 +29,7 @@ os = 0 #What operating system you are using,0-Linux, 1-Windows
 
 client = discord.Client()
 bot = commands.Bot(command_prefix='!')
-testing = False
+testing_b = False
 
 def ptime():
   x = 0
@@ -83,6 +83,7 @@ def file_out():
 def find(player):
   files = file_out()
   outp = []
+  msg = []
   for i in files:
     if i == '':
       pass
@@ -103,9 +104,10 @@ def find(player):
             ip_addr.append(k)
         ip_addr = ''.join(ip_addr)
         ip_addr = ip_addr.replace('(','',1)
-        outp.append(ip_addr)
+        msg.append(ip_addr)
   
-  for i in outp:
+  outp = []
+  for i in msg:
     server = i
     try:
       query = server.query()
@@ -117,10 +119,13 @@ def find(player):
         return msg
         print(msg)
     except:
-      print(f"quering isn't supported on {i}")
+      outp.append(f"quering isn't supported on {i}")
+    
+  return '\n'.join(outp)
+  print('\n'.join(outp))
 
 def testing():
-  if testing:
+  if testing_b:
     print(find(''))
 
 @client.event
@@ -188,6 +193,8 @@ async def on_message(message):
       for i in "find!-":
         msg.replace(i,"",1)
       await message.channel.send(find(msg))
+    elif message.content.lower() == "help!":
+      await message.channel.send("Usage of all commands.\n\nmc! scans the range of ip specified in the dis-bot.pyw file.\n\nstatus! gets the status of the specified server.\nUsage:status!-10.0.0.0:25565\n\nfind! scans all know servers in the outputs folder and returns if the given player is found.\nUsage:find!-player123")
 
 
 if __name__ == "__main__":

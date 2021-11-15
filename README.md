@@ -11,6 +11,4 @@ The first time you use this bot, run mc! to get a list of all active minecraft s
 
 In your server, type mc! to do a general scan of the ip range specified in dis-bot.pyw and it will reurn a list in the server and save a txt file in the folder "Outputs"
 
-You can also type status!- followed by the ip and port of the server you would like to see.
-
-e.g. status!-mc.hypixel.net:25565
+You can also type help!. THis will return all possible commands and their usage.
