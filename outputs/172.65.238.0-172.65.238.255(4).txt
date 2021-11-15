@@ -1,5 +1,0 @@
-quboScanner by @zreply - Version 0.3.7 
-Scanner started on: Mon, 8 Nov 2021 16:39:59 GMT
-(172.65.238.110:25565)(0/1234)(Velocity 1.7.2-1.17.1)()
-(172.65.238.224:25565)(1/20)(Paper 1.17.1)(A Minecraft Server)
-Scanner ended on: Mon, 8 Nov 2021 16:40:02 GMT

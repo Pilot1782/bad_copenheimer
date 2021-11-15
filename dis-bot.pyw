@@ -5,26 +5,31 @@ from discord.ext import commands
 import time
 from mcstatus import MinecraftServer
 import os
+import subprocess
 
 
 ##################################################
 #Stuff for you to change
 TOKEN = 'YOUR TOKEN HEREE' #Your discord bot token
-lower_ip_bound = "172.0.0.0" #Lowest is 10.0.0.0
-upper_ip_bound = "192.255.255.255" #Highest is 199.255.255.255
+lower_ip_bound = "10.0.0.0" #Lowest is 10.0.0.0
+upper_ip_bound = "199.255.255.255" #Highest is 199.255.255.255
 threads = 255 #Max usable is 1000
 timeout = 1000 #Ping timeout in miliseconds
 path = r"qubo.jar" #Path to qubo.jar
+os = 0 #What operating system you are using,0-Linux, 1-Windows
 ##################################################
+
+
+
 
 #################################################
 # You don't need to change anything below this. #
 #################################################
 
-load_dotenv()
-#TOKEN = os.environ['Token'] #Used for Testing Keep Commented
+
 client = discord.Client()
 bot = commands.Bot(command_prefix='!')
+testing = False
 
 def ptime():
   x = 0
@@ -65,6 +70,59 @@ def MC(range,outb,threads,time):
     print(outp)
   return outp
 
+def file_out():
+  if os == 0:
+    outpt = subprocess.check_output("ls outputs",shell=True)
+  elif os == 1:
+    outpt = subprocess.check_output("dir",shell=True)
+  outpt = outpt.decode("utf-8")
+  outpt = outpt.split('\n')
+  return outpt
+  
+
+def find(player):
+  files = file_out()
+  outp = []
+  for i in files:
+    if i == '':
+      pass
+    else:
+      path = "outputs/" + i
+      with open(path) as f:
+        lines = f.readlines()
+        outp.append(lines)
+  for i in outp:
+    for j in i:
+      if '(' in j:
+        c = 0
+        ip_addr = []
+        for k in j:
+          if k == ')':
+            break
+          else:
+            ip_addr.append(k)
+        ip_addr = ''.join(ip_addr)
+        ip_addr = ip_addr.replace('(','',1)
+        outp.append(ip_addr)
+  
+  for i in outp:
+    server = i
+    try:
+      query = server.query()
+      if player in query.players.names:
+        msg = f"Found {player} on {i}"
+      if msg == "":
+        pass
+      else:
+        return msg
+        print(msg)
+    except:
+      print(f"quering isn't supported on {i}")
+
+def testing():
+  if testing:
+    print(find(''))
+
 @client.event
 async def on_ready():
     print(f'{client.user} has connected to Discord!')
@@ -75,7 +133,7 @@ async def on_message(message):
          return
     
     #Command MC
-    if lower(message.content) == 'mc!':
+    if message.content.lower() == 'mc!':
       await message.channel.send(f"Scanning started: {ptime()}")
       
       server = MC("172.65.238.*",False,255,timeout)
@@ -95,7 +153,7 @@ async def on_message(message):
       await message.channel.send(f"\nIt's Finally Done!\n\n{scan}")
     
     #Command STATUS
-    elif "status!" in lower(message.content):
+    elif "status!" in message.content.lower():
       msg = message.content
       for i in "status!-":
         msg = msg.replace(i,"",1)
@@ -125,6 +183,13 @@ async def on_message(message):
           print(f"Failed to query {msg}")
           await message.channel.send(f"Failed to query {msg}.")
 
+    elif "find!" in message.content.lower(): #Find command
+      msg = message.content
+      for i in "find!-":
+        msg.replace(i,"",1)
+      await message.channel.send(find(msg))
+
 
 if __name__ == "__main__":
+  testing()
   client.run(TOKEN)
