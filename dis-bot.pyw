@@ -5,12 +5,13 @@ from discord.ext import commands
 import time
 from mcstatus import MinecraftServer
 import os
+from os import listdir
 import subprocess
 
 
 ##################################################
 #Stuff for you to change
-TOKEN = 'YOUR TOKEN HEREE' #Your discord bot token
+TOKEN = 'YOUR TOKEN HERE' #Your discord bot token
 lower_ip_bound = "10.0.0.0" #Lowest is 10.0.0.0
 upper_ip_bound = "199.255.255.255" #Highest is 199.255.255.255
 threads = 255 #Max usable is 1000
@@ -27,8 +28,9 @@ os = 0 #What operating system you are using,0-Linux, 1-Windows
 #################################################
 
 
+
 client = discord.Client()
-bot = commands.Bot(command_prefix='!')
+bot = commands.Bot(command_prefix='!',help_command=None)
 testing_b = False
 
 def ptime():
@@ -74,7 +76,9 @@ def file_out():
   if os == 0:
     outpt = subprocess.check_output("ls outputs",shell=True)
   elif os == 1:
-    outpt = subprocess.check_output("dir",shell=True)
+    for name in os.listdir("."):
+      if name.endswith(".txt"):
+          outp.append(name)
   outpt = outpt.decode("utf-8")
   outpt = outpt.split('\n')
   return outpt
@@ -128,75 +132,68 @@ def testing():
   if testing_b:
     print(find(''))
 
-@client.event
-async def on_ready():
-    print(f'{client.user} has connected to Discord!')
+async def on_ready(self):
+  print('Logged on as {0}!'.format(self.user))
 
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-         return
+@bot.command(name='mc')
+async def _mc(ctx,*arg):
+  await ctx.send(f"Scanning started: {ptime()}")
+      
+  server = MC("172.65.238.*",False,255,timeout)
+  server = server.decode("utf-8")
+  print(server)
+
+  await ctx.send(f"Testing the tool:\n{server}")
+
+  await ctx.send(f"\nStarting the scan at {ptime()}\nPinging {lower_ip_bound} through {upper_ip_bound}, using {threads} threads and timingout after {timeout} miliseconds.")
+      
+  print(f"\nPing on {lower_ip_bound} through {upper_ip_bound}, with {threads} threads and timeout of {timeout}")
+      
+  scan = MC(f"{lower_ip_bound}-{upper_ip_bound}",True,threads,timeout)
+
+  scan = scan.decode("utf-8")
+
+  await ctx.send(f"\nIt's Finally Done!\n\n{scan}")
     
-    #Command MC
-    if message.content.lower() == 'mc!':
-      await message.channel.send(f"Scanning started: {ptime()}")
+@bot.command(name='status')
+async def _status(ctx,*args):
+  msg = args
+
+  print(f"Scan of {msg} requested.")
       
-      server = MC("172.65.238.*",False,255,timeout)
-      server = server.decode("utf-8")
-      print(server)
-
-      await message.channel.send(f"Testing the tool:\n{server}")
-
-      await message.channel.send(f"\nStarting the scan at {ptime()}\nPinging {lower_ip_bound} through {upper_ip_bound}, using {threads} threads and timingout after {timeout} miliseconds.")
+  for i in args:
+    try: #Try getting the status
+      server = MinecraftServer.lookup(i)
+      status = server.status()
+      mesg = "The server has {0} players and replied in {1} ms\n".format(status.players.online, status.latency)
+      print(mesg)
+      await ctx.send(mesg)
+    except:
+      await ctx.send(f"Failed to scan {i}.\n")
+      print(f"Failed to scan {i}.\n")
       
-      print(f"\nPing on {lower_ip_bound} through {upper_ip_bound}, with {threads} threads and timeout of {timeout}")
-      
-      scan = MC(f"{lower_ip_bound}-{upper_ip_bound}",True,threads,timeout)
+    try: #Try quering server
+      server = MinecraftServer.lookup(i)
+      query = server.query()
+      print("The server has the following players online: {0}".format(", ".join(query.players.names)))
+      await ctx.send("The server has the following players online: {0}".format(", ".join(query.players.names)))
+    except:
+      print(f"Failed to query {i}")
+      await ctx.send(f"Failed to query {i}.")
 
-      scan = scan.decode("utf-8")
+@bot.command(name='find')
+async def _find(ctx,arg):
+  msg = message.content
+  for i in "find!-":
+    msg.replace(i,"",1)
+  await ctx.send(find(msg))
 
-      await message.channel.send(f"\nIt's Finally Done!\n\n{scan}")
-    
-    #Command STATUS
-    elif "status!" in message.content.lower():
-      msg = message.content
-      for i in "status!-":
-        msg = msg.replace(i,"",1)
-
-      print(f"Scan of {msg} requested.")
-      
-      if msg == "":
-        await message.channel.send("Usage, status!-255.255.255.255:25565")
-      
-      else:
-        try: #Try getting the status
-          server = MinecraftServer.lookup(msg)
-          status = server.status()
-          mesg = "The server has {0} players and replied in {1} ms\n".format(status.players.online, status.latency)
-          print(mesg)
-          await message.channel.send(mesg)
-        except:
-          await message.channel.send(f"Failed to scan {msg}.\n")
-          print(f"Failed to scan {msg}.\n")
-        
-        try: #Try quering server
-          server = MinecraftServer.lookup(msg)
-          query = server.query()
-          print("The server has the following players online: {0}".format(", ".join(query.players.names)))
-          await message.channel.send("The server has the following players online: {0}".format(", ".join(query.players.names)))
-        except:
-          print(f"Failed to query {msg}")
-          await message.channel.send(f"Failed to query {msg}.")
-
-    elif "find!" in message.content.lower(): #Find command
-      msg = message.content
-      for i in "find!-":
-        msg.replace(i,"",1)
-      await message.channel.send(find(msg))
-    elif message.content.lower() == "help!":
-      await message.channel.send("Usage of all commands.\n\nmc! scans the range of ip specified in the dis-bot.pyw file.\n\nstatus! gets the status of the specified server.\nUsage:status!-10.0.0.0:25565\n\nfind! scans all know servers in the outputs folder and returns if the given player is found.\nUsage:find!-player123")
+@bot.command(name='help')
+async def _help(ctx):
+  await ctx.send("Usage of all commands.\n\nmc! scans the range of ip specified in the dis-bot.pyw file.\n\nstatus! gets the status of the specified server.\nUsage:status!-10.0.0.0:25565\n\nfind! scans all know servers in the outputs folder and returns if the given player is found.\nUsage:find!-player123")
 
 
 if __name__ == "__main__":
   testing()
+  print("Starting")
   client.run(TOKEN)
