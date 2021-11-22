@@ -5,7 +5,6 @@ from discord.ext import commands
 import time
 from mcstatus import MinecraftServer
 import os
-from os import listdir
 import subprocess
 
 
@@ -17,7 +16,7 @@ upper_ip_bound = "199.255.255.255" #Highest is 199.255.255.255
 threads = 255 #Max usable is 1000
 timeout = 1000 #Ping timeout in miliseconds
 path = r"qubo.jar" #Path to qubo.jar
-os = 0 #What operating system you are using,0-Linux, 1-Windows
+os = 1 #What operating system you are using,0-Linux, 1-Windows
 ##################################################
 
 
@@ -26,7 +25,6 @@ os = 0 #What operating system you are using,0-Linux, 1-Windows
 #################################################
 # You don't need to change anything below this. #
 #################################################
-
 
 
 client = discord.Client()
@@ -69,69 +67,62 @@ def MC(range,outb,threads,time):
     print("Sorry, execution failed.")
     return "Sorry, execution failed."
   if outb == True:
-    print(outp)
+    print(outp.decode("utf-8"))
+  outp = outp.decode("utf-8")
+
+  #reomove the first 5 letters of outp
+  outp = outp[400:]
+
   return outp
 
 def file_out():
-  if os == 0:
-    outpt = subprocess.check_output("ls outputs",shell=True)
-  elif os == 1:
-    for name in os.listdir("."):
-      if name.endswith(".txt"):
-          outp.append(name)
-  outpt = outpt.decode("utf-8")
-  outpt = outpt.split('\n')
-  return outpt
-  
+  try:
+    if os == 0:
+      outpt = subprocess.check_output("ls outputs",shell=True)
+    elif os == 1:
+      outpt = subprocess.check_output("dir",shell=True)
+    outpt = outpt.decode("utf-8")
+    outpt = outpt.split('\n')
+    return outpt
+  except:
+    return "No Output folder made."  
 
 def find(player):
   files = file_out()
   outp = []
   msg = []
-  for i in files:
-    if i == '':
-      pass
-    else:
-      path = "outputs/" + i
-      with open(path) as f:
-        lines = f.readlines()
-        outp.append(lines)
-  for i in outp:
-    for j in i:
-      if '(' in j:
-        c = 0
-        ip_addr = []
-        for k in j:
-          if k == ')':
-            break
-          else:
-            ip_addr.append(k)
-        ip_addr = ''.join(ip_addr)
-        ip_addr = ip_addr.replace('(','',1)
-        msg.append(ip_addr)
   
-  outp = []
-  for i in msg:
-    server = i
+  if files == "No Output folder made.":
+    return "No Output folder made."
+  else:
     try:
-      query = server.query()
-      if player in query.players.names:
-        msg = f"Found {player} on {i}"
-      if msg == "":
-        pass
-      else:
-        return msg
-        print(msg)
+      for i in files:
+        server = MinecraftServer.lookup("example.org:1234")
+
+        status = server.status()
+        print("The server has {0} players and replied in {1} ms".format(status.players.online, status.latency))
+
+        # 'ping' is supported by all Minecraft servers that are version 1.7 or higher.
+        # It is included in a 'status' call, but is exposed separate if you do not require the additional info.
+        latency = server.ping()
+        print("The server replied in {0} ms".format(latency))
+
+        # 'query' has to be enabled in a servers' server.properties file.
+        # It may give more information than a ping, such as a full player list or mod information.
+        query = server.query()
+        print("The server has the following players online: {0}".format(", ".join(query.players.names)))
     except:
-      outp.append(f"quering isn't supported on {i}")
-    
-  return '\n'.join(outp)
-  print('\n'.join(outp))
+      outp.append("Sorry, execution failed.")
+
+    print('\n'.join(outp))
+    return '\n'.join(outp)
+
 
 def testing():
   if testing_b:
     print(find(''))
 
+@bot.command()
 async def on_ready(self):
   print('Logged on as {0}!'.format(self.user))
 
@@ -140,7 +131,6 @@ async def _mc(ctx,*arg):
   await ctx.send(f"Scanning started: {ptime()}")
       
   server = MC("172.65.238.*",False,255,timeout)
-  server = server.decode("utf-8")
   print(server)
 
   await ctx.send(f"Testing the tool:\n{server}")
@@ -150,8 +140,6 @@ async def _mc(ctx,*arg):
   print(f"\nPing on {lower_ip_bound} through {upper_ip_bound}, with {threads} threads and timeout of {timeout}")
       
   scan = MC(f"{lower_ip_bound}-{upper_ip_bound}",True,threads,timeout)
-
-  scan = scan.decode("utf-8")
 
   await ctx.send(f"\nIt's Finally Done!\n\n{scan}")
     
@@ -183,17 +171,19 @@ async def _status(ctx,*args):
 
 @bot.command(name='find')
 async def _find(ctx,arg):
-  msg = message.content
-  for i in "find!-":
-    msg.replace(i,"",1)
-  await ctx.send(find(msg))
+  msg = find(arg)
+  if msg == None:
+    await ctx.send("No output found.")
+  else:
+    await ctx.send(msg)
+    print(msg)
 
 @bot.command(name='help')
 async def _help(ctx):
-  await ctx.send("Usage of all commands.\n\nmc! scans the range of ip specified in the dis-bot.pyw file.\n\nstatus! gets the status of the specified server.\nUsage:status!-10.0.0.0:25565\n\nfind! scans all know servers in the outputs folder and returns if the given player is found.\nUsage:find!-player123")
+  await ctx.send("Usage of all commands.\n\n!mc scans the range of ip specified in the dis-bot.pyw file.\n\n!status gets the status of the specified server.\nUsage:!status-10.0.0.0:25565\n\n!find scans all know servers in the outputs folder and returns if the given player is found.\nUsage:!find player123")
+  print("Printed Help")
 
 
 if __name__ == "__main__":
   testing()
-  print("Starting")
-  client.run(TOKEN)
+  bot.run(TOKEN)
