@@ -12,6 +12,9 @@ The first time you use this bot, run
 
 This will get a list of all active minecraft servers, you may want to set the threads higher than the current value. This will take several hours to complete.
 
+### Important
+
+In order for !find and !status to work properly the server should have enable-query=true in the server.properties file
 
 All Possible Commands
 >!help
