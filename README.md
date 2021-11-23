@@ -36,4 +36,4 @@ These are all of the possible commands implemented so far.
 
 **2:** Make a single message that shows the status of all known minecraft servers.
 
-**3:** Optimize
+**3:** Optimize (implement zmap)
