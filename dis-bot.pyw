@@ -3,6 +3,7 @@ import discord
 from dotenv import load_dotenv
 from discord.ext import commands
 import time
+from time import sleep
 from mcstatus import MinecraftServer
 import os
 import subprocess
@@ -11,12 +12,14 @@ import subprocess
 ##################################################
 #Stuff for you to change
 TOKEN = 'YOUR TOKEN HERE' #Your discord bot token
-lower_ip_bound = "10.0.0.0" #Lowest is 10.0.0.0
-upper_ip_bound = "199.255.255.255" #Highest is 199.255.255.255
-threads = 255 #Max usable is 1000
-timeout = 1000 #Ping timeout in miliseconds
+lower_ip_bound = "10.0.0.0" # Lowest is 10.0.0.0
+upper_ip_bound = "199.255.255.255" # Highest is 199.255.255.255
+threads = 255 # Max usable is 1000
+timeout = 1000 # Ping timeout in miliseconds
 path = r"qubo.jar" #Path to qubo.jar
-os = 1 #What operating system you are using,0-Linux, 1-Windows
+os = 1 # What operating system you are using,0-Linux, 1-Windows
+mascan = False # Do you have Masscan installed?
+time2 = 1000000 #Max time allowed inbetween succsessful pings
 ##################################################
 
 
@@ -57,23 +60,40 @@ def ptime():
   
   return out1
 
-def MC(range,outb,threads,time):
-  import subprocess
+def MC(low,high,outb,threads1,time):
   ptime()
-  print(f"Scanning {range} outputting {outb}")
-  try:
-    outp = subprocess.check_output(f"java -Dfile.encoding=UTF-8 -jar {path} -range {range} -ports 25565-25577 -th {threads} -ti {time}",shell=True)
-  except:
-    print("Sorry, execution failed.")
-    return "Sorry, execution failed."
-  if outb == True:
-    print(outp.decode("utf-8"))
-  outp = outp.decode("utf-8")
+  print(f"Scanning {low}-{high} outputting {outb}")
+  arr = []
+  if os == 0 and mascan == True:
+    command = f"masscan -p25565 {low}-{high} --rate={threads1 * 3}".split()
+    for line in run_command(command):
+      print(line.decode("utf-8"))
+      arr.append(line.decode("utf-8"))
+  elif os == 1:
+    command = f"java -Dfile.encoding=UTF-8 -jar {path} -range {low}-{high} -ports 25565-25577 -th {threads1} -ti {time}".split()
+    for line in run_command(command):
+      print(line.decode("utf-8"))
+      arr.append(line.decode("utf-8"))
+  return ''.join(arr)
 
-  #reomove the first 5 letters of outp
-  outp = outp[400:]
-
-  return outp
+def run_command(command):
+    p = subprocess.Popen(command,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE,
+                         shell=True)
+    # Read stdout from subprocess until the buffer is empty !
+    for line in iter(p.stdout.readline, b''):
+        if line: # Don't print blank lines
+            yield line
+    # This ensures the process has completed, AND sets the 'returncode' attr
+    while p.poll() is None:                                                                                                                                        
+        sleep(.1) #Don't waste CPU-cycles
+    # Empty STDERR buffer
+    err = p.stderr.read()
+    if p.returncode != 0:
+       # The run_command() function is responsible for logging STDERR 
+       print(str(err))
+       return ("Error: " + str(err))
 
 def file_out():
   try:
@@ -115,7 +135,7 @@ def find(player):
       outp.append("Sorry, execution failed.")
 
     print('\n'.join(outp))
-    return '\n'.join(outp)
+    return 'Done\n'.join(outp)
 
 
 def testing():
@@ -129,19 +149,70 @@ async def on_ready(self):
 @bot.command(name='mc')
 async def _mc(ctx,*arg):
   await ctx.send(f"Scanning started: {ptime()}")
-      
-  server = MC("172.65.238.*",False,255,timeout)
-  print(server)
+  arr = []
 
-  await ctx.send(f"Testing the tool:\n{server}")
+  ptime()
+  print(f"Scanning {'172.65.238.0'}-{'172.65.240.255'} outputting {False}")
+  arr = []
+  if os == 0 and mascan == True:
+    command = f"masscan -p25565 '172.65.238.0'-'172.65.240.255' --rate={threads * 3}".split()
+    for line in run_command(command):
+      line = line.decode("utf-8")
+      print(line)
+      if line == '' or line == None:
+        pass
+      else:
+        try:
+          await ctx.send(line)
+        except:
+          await ctx.send(".")
+  elif os == 1:
+    command = f"java -Dfile.encoding=UTF-8 -jar {path} -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {threads} -ti {timeout}".split()
+    for line in run_command(command):
+      line = line.decode("utf-8")
+      print(line)
+      if line == '' or line == None:
+        pass
+      else:
+        try:
+          await ctx.send(line)
+        except:
+          await ctx.send(".")
+
+  server = ''.join(arr)
+  if server != None:
+    await ctx.send(f"Testing the tool:\n{server}")
 
   await ctx.send(f"\nStarting the scan at {ptime()}\nPinging {lower_ip_bound} through {upper_ip_bound}, using {threads} threads and timingout after {timeout} miliseconds.")
       
   print(f"\nPing on {lower_ip_bound} through {upper_ip_bound}, with {threads} threads and timeout of {timeout}")
-      
-  scan = MC(f"{lower_ip_bound}-{upper_ip_bound}",True,threads,timeout)
 
-  await ctx.send(f"\nIt's Finally Done!\n\n{scan}")
+  arr = []
+  if os == 0 and mascan == True:
+    command = f"masscan -p25565 {lower_ip_bound}-{upper_ip_bound} --rate={threads * 3}".split()
+    for line in run_command(command):
+      line = line.decode("utf-8")
+      print(line)
+      if line == '' or line == None:
+        pass
+      else:
+        try:
+          await ctx.send(line)
+        except:
+          await ctx.send(".")
+  elif os == 1:
+    command = f"java -Dfile.encoding=UTF-8 -jar {path} -range {lower_ip_bound}-{upper_ip_bound} -ports 25565-25577 -th {threads} -ti {timeout}".split()
+    for line in run_command(command):
+      line = line.decode("utf-8")
+      print(line)
+      if line == '' or line == None:
+        pass
+      else:
+        try:
+          await ctx.send(line)
+        except:
+          await ctx.send(".")
+  await ctx.send(f"\nScanning finished at {ptime()}")
     
 @bot.command(name='status')
 async def _status(ctx,*args):
@@ -171,16 +242,19 @@ async def _status(ctx,*args):
 
 @bot.command(name='find')
 async def _find(ctx,arg):
-  msg = find(arg)
-  if msg == None:
-    await ctx.send("No output found.")
-  else:
-    await ctx.send(msg)
-    print(msg)
+  msg = 'A Thing'#find(arg)
+  try:
+    if msg == None:
+      await ctx.send("No output found.")
+    else:
+      await ctx.send(msg)
+      print(msg)
+  except:
+    await ctx.send("Failed to find output.")
 
 @bot.command(name='help')
 async def _help(ctx):
-  await ctx.send("Usage of all commands.\n\n!mc scans the range of ip specified in the dis-bot.pyw file.\n\n!status gets the status of the specified server.\nUsage:!status-10.0.0.0:25565\n\n!find scans all know servers in the outputs folder and returns if the given player is found.\nUsage:!find player123")
+  await ctx.send("Usage of all commands.\n\n!mc scans the range of ip specified in the dis-bot.pyw file.\n\n!status gets the status of the specified server.\nUsage:!status 10.0.0.0:25565\n\n!find scans all know servers in the outputs folder and returns if the given player is found.\nUsage:!find player123")
   print("Printed Help")
 
 
