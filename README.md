@@ -16,7 +16,7 @@ This will get a list of all active minecraft servers, you may want to set the th
 
 In order for !find and !status to work properly the server should have enable-query=true in the server.properties file
 
-###All Possible Commands
+### All Possible Commands
 
 >!help
 
