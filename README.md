@@ -8,6 +8,11 @@ To insatll, clone the repository and run setup.pyw,then open dis-bot.pyw. Then p
 
 # Usage
 The first time you use this bot, run 
+
+>!help
+
+This shows all of the commands you can use and their usage. Then to create your server list, run:
+
 >!mc
 
 This will get a list of all active minecraft servers, you may want to set the threads higher than the current value. This will take several hours to complete.
