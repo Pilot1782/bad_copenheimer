@@ -14,7 +14,7 @@ import subprocess
 TOKEN = 'YOUR TOKEN HERE' #Your discord bot token
 lower_ip_bound = "10.0.0.0" # Lowest is 10.0.0.0
 upper_ip_bound = "199.255.255.255" # Highest is 199.255.255.255
-threads = 255 # Max usable is 1000
+threads = 1020 # Max usable is 1000
 timeout = 1000 # Ping timeout in miliseconds
 path = r"qubo.jar" #Path to qubo.jar
 os = 1 # What operating system you are using,0-Linux, 1-Windows
@@ -49,6 +49,8 @@ def ptime():
       print(f"Year {i}")
       arr.append(f"{i}/")
     if x == 4:
+      if x > 12:
+        x = x - 12
       print(f"Hour {i}")
       arr.append(f"{i}:")
     if x == 5:
@@ -254,9 +256,41 @@ async def _find(ctx,arg):
 
 @bot.command(name='help')
 async def _help(ctx):
-  await ctx.send("Usage of all commands.\n\n!mc scans the range of ip specified in the dis-bot.pyw file.\n\n!status gets the status of the specified server.\nUsage:!status 10.0.0.0:25565\n\n!find scans all know servers in the outputs folder and returns if the given player is found.\nUsage:!find player123")
+  await ctx.send("Usage of all commands.\n\n!mc scans the range of ip specified in the dis-bot.pyw file.\n\n!status gets the status of the specified server.\nUsage:!status 10.0.0.0:25565\n\n!find scans all know servers in the outputs folder and returns if the given player is found.\nUsage:!find player123\n!cscan makes a custom scan\nUsage:\n!cscann 172.65.230.0 172.65.255.255")
   print("Printed Help")
 
+@bot.command(name='cscan')
+async def _cscan(ctx,arg1,arg2):
+  await ctx.send(f"Scanning started: {ptime()}")
+  arr = []
+
+  ptime()
+  print(f"Scanning {arg1}-{arg2} outputting {False}")
+  arr = []
+  if os == 0 and mascan == True:
+    command = f"masscan -p25565 {arg1}-{arg2} --rate={threads * 3}".split()
+    for line in run_command(command):
+      line = line.decode("utf-8")
+      print(line)
+      if line == '' or line == None:
+        pass
+      else:
+        try:
+          await ctx.send(line)
+        except:
+          await ctx.send(".")
+  elif os == 1:
+    command = f"java -Dfile.encoding=UTF-8 -jar {path} -range {arg1}-{arg2} -ports 25565-25577 -th {threads} -ti {timeout}".split()
+    for line in run_command(command):
+      line = line.decode("utf-8")
+      print(line)
+      if line == '' or line == None:
+        pass
+      else:
+        try:
+          await ctx.send(line)
+        except:
+          await ctx.send(".")
 
 if __name__ == "__main__":
   testing()
