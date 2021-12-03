@@ -7,7 +7,6 @@ from time import sleep
 from mcstatus import MinecraftServer
 import os
 import subprocess
-import masscan
 
 
 ##################################################
@@ -18,8 +17,8 @@ upper_ip_bound = "199.255.255.255" # Highest is 199.255.255.255
 threads = 1020 # Max usable is 1000
 timeout = 1000 # Ping timeout in miliseconds
 path = r"qubo.jar" #Path to qubo.jar
-os = 0 # What operating system you are using,0-Linux, 1-Windows
-mascan = True # Do you have Masscan installed?
+os = 1 # What operating system you are using,0-Linux, 1-Windows
+mascan = False # Do you have Masscan installed?
 time2 = 1000000 #Max time allowed inbetween succsessful pings
 ##################################################
 
@@ -40,30 +39,18 @@ if subprocess.check_output("whoami").decode("utf-8") != 'root\n' and os == 0:
 def ptime():
   x = 0
   arr = []
-  for i in time.localtime():
-    x = x + 1
-    if x == 2:
-      print(f"Month {i}")
-      arr.append(f"{i}/")
-    if x == 3:
-      print(f"Day {i}")
-      arr.append(f"{i} ")
-    if x == 1:
-      print(f"Year {i}")
-      arr.append(f"{i}/")
-    if x == 4:
-      if x > 12:
-        x = x - 12
-      print(f"Hour {i}")
-      arr.append(f"{i}:")
-    if x == 5:
-      print(f"Min {i}")
-      arr.append(f"{i}")
-  out1 = ""
-  for i in arr:
-    out1 = out1 + i
+  tim = time.localtime()
+
+  if tim.tm_hour > 12:
+    arr.append(str(tim.tm_hour - 12))
+  else:
+    arr.append(str(tim.tm_hour))
+  if tim.tm_min < 10:
+    arr.append("0" + str(tim.tm_min))
+  else:
+    arr.append(str(tim.tm_min))
   
-  return out1
+  return ':'.join(arr)
 
 def MC(low,high,outb,threads1,time):
   ptime()
@@ -156,6 +143,7 @@ async def _mc(ctx):
   arr = []
 
   ptime()
+  await ctx.send("Testing the Tool")
   print(f"Scanning {'172.65.238.0'}-{'172.65.240.255'} outputting False")
   arr = []
   if os == 0 and mascan == True:
@@ -184,27 +172,25 @@ async def _mc(ctx):
         except:
           await ctx.send(".")
 
-  server = ''.join(arr)
-  if server != None:
-    await ctx.send(f"Testing the tool:\n{server}")
 
   await ctx.send(f"\nStarting the scan at {ptime()}\nPinging {lower_ip_bound} through {upper_ip_bound}, using {threads} threads and timingout after {timeout} miliseconds.")
       
   print(f"\nPing on {lower_ip_bound} through {upper_ip_bound}, with {threads} threads and timeout of {timeout}")
 
-  arr = []
+
   if os == 0 and mascan == True:
-    command = f"masscan -p25565 {lower_ip_bound}-{upper_ip_bound} --rate={threads * 3}".split()
+    print("scanning using masscan")
+    command = f"sudo masscan 172.65.238.0-172.65.240.255 -p25565 --rate=100000 --exclude 255.255.255.255"
     for line in run_command(command):
       line = line.decode("utf-8")
-      print(line)
-      if line == '' or line == None:
-        pass
-      else:
-        try:
+      try:
+        if "rate" in line:
+          print("Skipped")
+        else:
+          print(line)
           await ctx.send(line)
-        except:
-          await ctx.send(".")
+      except:
+        await ctx.send(".")
   elif os == 1:
     command = f"java -Dfile.encoding=UTF-8 -jar {path} -range {lower_ip_bound}-{upper_ip_bound} -ports 25565-25577 -th {threads} -ti {timeout}".split()
     for line in run_command(command):
@@ -265,24 +251,23 @@ async def _help(ctx):
 @bot.command(name='cscan')
 async def _cscan(ctx,arg1,arg2):
   await ctx.send(f"Scanning started: {ptime()}")
-  arr = []
 
   ptime()
   print(f"Scanning {arg1}-{arg2} outputting {False}")
-  arr = []
+  
   if os == 0 and mascan == True:
-    command = f"masscan -p25565 {arg1}-{arg2} --rate=100000 --exclude 255.255.255.255"#.split()
-
+    print("scanning using masscan")
+    command = f"sudo masscan {arg1}-{arg2} -p25565,25566,25567 --rate=100000 --exclude 255.255.255.255"
     for line in run_command(command):
       line = line.decode("utf-8")
-      print(line)
-      if line == '' or line == None:
-        pass
-      else:
-        try:
+      try:
+        if "rate" in line:
+          print("Skipped")
+        else:
+          print(line)
           await ctx.send(line)
-        except:
-          await ctx.send(".")
+      except:
+        await ctx.send(".")
   elif os == 1:
     command = f"java -Dfile.encoding=UTF-8 -jar {path} -range {arg1}-{arg2} -ports 25565-25577 -th {threads} -ti {timeout}".split()
     for line in run_command(command):
@@ -295,6 +280,7 @@ async def _cscan(ctx,arg1,arg2):
           await ctx.send(line)
         except:
           await ctx.send(".")
+  await ctx.send(f"\n\nScanning finished at {ptime()}")
 
 if __name__ == "__main__":
   bot.run(TOKEN)
