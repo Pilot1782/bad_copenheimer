@@ -7,6 +7,7 @@ from time import sleep
 from mcstatus import MinecraftServer
 import os
 import subprocess
+import masscan
 
 
 ##################################################
@@ -17,8 +18,8 @@ upper_ip_bound = "199.255.255.255" # Highest is 199.255.255.255
 threads = 1020 # Max usable is 1000
 timeout = 1000 # Ping timeout in miliseconds
 path = r"qubo.jar" #Path to qubo.jar
-os = 1 # What operating system you are using,0-Linux, 1-Windows
-mascan = False # Do you have Masscan installed?
+os = 0 # What operating system you are using,0-Linux, 1-Windows
+mascan = True # Do you have Masscan installed?
 time2 = 1000000 #Max time allowed inbetween succsessful pings
 ##################################################
 
@@ -32,7 +33,9 @@ time2 = 1000000 #Max time allowed inbetween succsessful pings
 
 client = discord.Client()
 bot = commands.Bot(command_prefix='!',help_command=None)
-testing_b = False
+testing = False
+if subprocess.check_output("whoami").decode("utf-8") != 'root\n' and os == 0:
+  raise PermissionError(f"Please run as root, not as {subprocess.check_output('whoami').decode('utf-8')}")
 
 def ptime():
   x = 0
@@ -141,33 +144,33 @@ def find(player):
 
 
 def testing():
-  if testing_b:
-    print(find(''))
+  pass
 
 @bot.command()
 async def on_ready(self):
   print('Logged on as {0}!'.format(self.user))
 
 @bot.command(name='mc')
-async def _mc(ctx,*arg):
+async def _mc(ctx):
   await ctx.send(f"Scanning started: {ptime()}")
   arr = []
 
   ptime()
-  print(f"Scanning {'172.65.238.0'}-{'172.65.240.255'} outputting {False}")
+  print(f"Scanning {'172.65.238.0'}-{'172.65.240.255'} outputting False")
   arr = []
   if os == 0 and mascan == True:
-    command = f"masscan -p25565 '172.65.238.0'-'172.65.240.255' --rate={threads * 3}".split()
+    print("scanning using masscan")
+    command = f"sudo masscan 172.65.238.0-172.65.240.255 -p25565 --rate=100000 --exclude 255.255.255.255"
     for line in run_command(command):
       line = line.decode("utf-8")
-      print(line)
-      if line == '' or line == None:
-        pass
-      else:
-        try:
+      try:
+        if "rate" in line:
+          print("Skipped")
+        else:
+          print(line)
           await ctx.send(line)
-        except:
-          await ctx.send(".")
+      except:
+        await ctx.send(".")
   elif os == 1:
     command = f"java -Dfile.encoding=UTF-8 -jar {path} -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {threads} -ti {timeout}".split()
     for line in run_command(command):
@@ -268,7 +271,8 @@ async def _cscan(ctx,arg1,arg2):
   print(f"Scanning {arg1}-{arg2} outputting {False}")
   arr = []
   if os == 0 and mascan == True:
-    command = f"masscan -p25565 {arg1}-{arg2} --rate={threads * 3}".split()
+    command = f"masscan -p25565 {arg1}-{arg2} --rate=100000 --exclude 255.255.255.255"#.split()
+
     for line in run_command(command):
       line = line.decode("utf-8")
       print(line)
@@ -293,5 +297,4 @@ async def _cscan(ctx,arg1,arg2):
           await ctx.send(".")
 
 if __name__ == "__main__":
-  testing()
   bot.run(TOKEN)
