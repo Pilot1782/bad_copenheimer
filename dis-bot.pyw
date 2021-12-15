@@ -7,27 +7,13 @@ from time import sleep
 from mcstatus import MinecraftServer
 import os
 import subprocess
+import json
 
 
 ##################################################
-#Stuff for you to change
-TOKEN = 'YOUR TOKEN HERE' #Your discord bot token
-lower_ip_bound = "10.0.0.0" # Lowest is 10.0.0.0
-upper_ip_bound = "199.255.255.255" # Highest is 199.255.255.255
-threads = 1020 # Max usable is 1000
-timeout = 1000 # Ping timeout in miliseconds
-path = r"qubo.jar" #Path to qubo.jar
-os = 1 # What operating system you are using,0-Linux, 1-Windows
-mascan = False # Do you have Masscan installed?
-time2 = 1000000 #Max time allowed inbetween succsessful pings
+#To change the settings, edit the settings.json file.
 ##################################################
 
-
-
-
-#################################################
-# You don't need to change anything below this. #
-#################################################
 
 
 client = discord.Client()
@@ -35,6 +21,27 @@ bot = commands.Bot(command_prefix='!',help_command=None)
 testing = False
 if subprocess.check_output("whoami").decode("utf-8") != 'root\n' and os == 0:
   raise PermissionError(f"Please run as root, not as {subprocess.check_output('whoami').decode('utf-8')}")
+
+with open("settings.json", "r") as read_file:
+    data = json.load(read_file)
+
+TOKEN = data["token"]
+lower_ip_bound = data["lower_ip_bound"]
+upper_ip_bound = data["upper_ip_bound"]
+threads = data["threads"]
+threads = int(threads)
+timeout = data["timeout"]
+timeout = int(timeout)
+path = data["path"]
+os = data["os"]
+os = int(os)
+mascan = data["mascan"]
+mascan = bool(mascan)
+time2 = data["time2"]
+
+def write(inp):
+  with open("data_file.json", "w") as write_file:
+    json.dump(inp, write_file)
 
 def ptime():
   x = 0
@@ -283,4 +290,7 @@ async def _cscan(ctx,arg1,arg2):
   await ctx.send(f"\n\nScanning finished at {ptime()}")
 
 if __name__ == "__main__":
-  bot.run(TOKEN)
+  if not testing:
+    bot.run(TOKEN)
+  else:
+    pass

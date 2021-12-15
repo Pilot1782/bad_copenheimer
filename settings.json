@@ -1,0 +1,11 @@
+{
+  "token":"YOUR TOKEN HERE",
+  "lower_ip_bound":"10.0.0.0",
+  "upper_ip_bound":"199.255.255.255",
+  "threads":1020,
+  "timeout":1000,
+  "path":"qubo.jar",
+  "os":1,
+  "mascan":"False",
+  "time2":1000000
+}
