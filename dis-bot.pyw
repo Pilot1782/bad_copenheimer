@@ -19,6 +19,7 @@ import json
 client = discord.Client()
 bot = commands.Bot(command_prefix='!',help_command=None)
 testing = False
+
 if subprocess.check_output("whoami").decode("utf-8") != 'root\n' and os == 0:
   raise PermissionError(f"Please run as root, not as {subprocess.check_output('whoami').decode('utf-8')}")
 
@@ -39,9 +40,12 @@ mascan = data["mascan"]
 mascan = bool(mascan)
 time2 = data["time2"]
 
-def write(inp):
-  with open("data_file.json", "w") as write_file:
-    json.dump(inp, write_file)
+def write_json(new_data, filename='data.json'):
+    with open(filename,'r+') as file:
+        file_data = json.load(file)
+        file_data["emp_details"].append(new_data)
+        file.seek(0)
+        json.dump(file_data, file, indent = 4)
 
 def ptime():
   x = 0
@@ -293,4 +297,4 @@ if __name__ == "__main__":
   if not testing:
     bot.run(TOKEN)
   else:
-    pass
+    bot.run(TOKEN)
