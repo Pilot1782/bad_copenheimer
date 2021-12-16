@@ -8,3 +8,4 @@ def imports():
 
 if __name__ == "__main__":
   imports()
+  input("\nSetup is Done!\nPlease change the settings.json file to suit your needs.")
