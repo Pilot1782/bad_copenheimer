@@ -10,6 +10,8 @@ requests = "^2.26.0"
 discord = "^1.7.3"
 python-dotenv = "^0.19.1"
 mcstatus = "^6.5.0"
+javascript = "^2015.32.59"
+require = "^0.1.1"
 
 [tool.poetry.dev-dependencies]
 

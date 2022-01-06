@@ -8,11 +8,13 @@ from mcstatus import MinecraftServer
 import os
 import subprocess
 import json
+import sys, re
+from javascript import require, On, Once, console
 
 
-##################################################
-#To change the settings, edit the settings.json file.
-##################################################
+######################################################
+#To change the settings, edit the settings.json file.#
+######################################################
 
 
 
@@ -186,12 +188,12 @@ async def _mc(ctx):
 
   await ctx.send(f"\nStarting the scan at {ptime()}\nPinging {lower_ip_bound} through {upper_ip_bound}, using {threads} threads and timingout after {timeout} miliseconds.")
       
-  print(f"\nPing on {lower_ip_bound} through {upper_ip_bound}, with {threads} threads and timeout of {timeout}")
+  print(f"\nScanning on {lower_ip_bound} through {upper_ip_bound}, with {threads} threads and timeout of {timeout}")
 
 
   if os == 0 and mascan == True:
     print("scanning using masscan")
-    command = f"sudo masscan 172.65.238.0-172.65.240.255 -p25565 --rate=100000 --exclude 255.255.255.255"
+    command = f"sudo masscan 172.65.238.0-172.65.240.255 -p25565 --rate=100000 --exclude 255.255.255.255 -oj outputs.json"
     for line in run_command(command):
       line = line.decode("utf-8")
       try:

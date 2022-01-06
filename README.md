@@ -38,10 +38,10 @@ These are all of the possible commands implemented so far.
 
 # Todo
 
-**1:** Store server information into a json instead of .txt files.
+**1:** Store server information into a json instead of .txt files. (WIP)
 
 **2:** Make a single message that shows the status of all known minecraft servers.
 
 **3:** Optimize (implement masscan) (done)
 
-**4:** Use a mine craft client to send login packets
+**4:** Use a minecraft client to send login packets to check is the server is whitelisted (Reasherching)
