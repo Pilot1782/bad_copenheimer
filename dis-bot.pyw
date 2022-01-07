@@ -8,7 +8,6 @@ from mcstatus import MinecraftServer
 import os
 import subprocess
 import json
-import sys, re
 from javascript import require, On, Once, console
 
 
@@ -25,9 +24,11 @@ testing = False
 if subprocess.check_output("whoami").decode("utf-8") != 'root\n' and os == 0:
   raise PermissionError(f"Please run as root, not as {subprocess.check_output('whoami').decode('utf-8')}")
 
-with open("settings.json", "r") as read_file:
+with open(r"settings.json", "r") as read_file:
     data = json.load(read_file)
 
+mineflayer = require('mineflayer')
+name = data["name"]
 TOKEN = data["token"]
 lower_ip_bound = data["lower_ip_bound"]
 upper_ip_bound = data["upper_ip_bound"]
@@ -142,6 +143,9 @@ def find(player):
     print('\n'.join(outp))
     return 'Done\n'.join(outp)
 
+def server_join(ip):
+  pass
+
 
 def testing():
   pass
@@ -184,16 +188,19 @@ async def _mc(ctx):
           await ctx.send(line)
         except:
           await ctx.send(".")
+  await ctx.send(f"Testing if the servers are whitelisted.")
 
 
   await ctx.send(f"\nStarting the scan at {ptime()}\nPinging {lower_ip_bound} through {upper_ip_bound}, using {threads} threads and timingout after {timeout} miliseconds.")
       
   print(f"\nScanning on {lower_ip_bound} through {upper_ip_bound}, with {threads} threads and timeout of {timeout}")
 
+  
+
 
   if os == 0 and mascan == True:
     print("scanning using masscan")
-    command = f"sudo masscan 172.65.238.0-172.65.240.255 -p25565 --rate=100000 --exclude 255.255.255.255 -oj outputs.json"
+    command = f"sudo masscan {lower_ip_bound}-{upper_ip_bound} -p25565 --rate={threads * 3} --exclude 255.255.255.255 -oj outputs.json"
     for line in run_command(command):
       line = line.decode("utf-8")
       try:
@@ -220,45 +227,81 @@ async def _mc(ctx):
     
 @bot.command(name='status')
 async def _status(ctx,*args):
-  msg = args
+  try:
+    msg = args
+  except:
+    msg = ""
 
-  print(f"Scan of {msg} requested.")
-      
-  for i in args:
-    try: #Try getting the status
-      server = MinecraftServer.lookup(i)
-      status = server.status()
-      mesg = "The server has {0} players and replied in {1} ms\n".format(status.players.online, status.latency)
-      print(mesg)
-      await ctx.send(mesg)
-    except:
-      await ctx.send(f"Failed to scan {i}.\n")
-      print(f"Failed to scan {i}.\n")
-      
-    try: #Try quering server
-      server = MinecraftServer.lookup(i)
-      query = server.query()
-      print("The server has the following players online: {0}".format(", ".join(query.players.names)))
-      await ctx.send("The server has the following players online: {0}".format(", ".join(query.players.names)))
-    except:
-      print(f"Failed to query {i}")
-      await ctx.send(f"Failed to query {i}.")
+  if len(msg) > 0:
+    print(f"Scan of {msg} requested.")
+        
+    for i in args:
+      try: #Try getting the status
+        server = MinecraftServer.lookup(i)
+        status = server.status()
+        mesg = "The server has {0} players and replied in {1} ms\n".format(status.players.online, status.latency)
+        print(mesg)
+        await ctx.send(mesg)
+      except:
+        await ctx.send(f"Failed to scan {i}.\n")
+        print(f"Failed to scan {i}.\n")
+        
+      try: #Try quering server
+        server = MinecraftServer.lookup(i)
+        query = server.query()
+        print("The server has the following players online: {0}".format(", ".join(query.players.names)))
+        await ctx.send("The server has the following players online: {0}".format(", ".join(query.players.names)))
+      except:
+        print(f"Failed to query {i}")
+        await ctx.send(f"Failed to query {i}.")
+  else:
+
+    with open(r'outputs.json') as json_file:
+      data = json.load(json_file)
+      await ctx.send("Scanning {0} servers".format(len(data)))
+      c = 0
+      u = 0
+      lst = data
+      er = []
+      for p in lst:
+        #find the status of p
+        p = p["ip"]
+        try:  #Try getting the status and catch the errors
+          try: #Nested try to get the status
+            from mcstatus import MinecraftServer
+            server = MinecraftServer.lookup(p)
+            status = server.status()
+            mesg = "{0} has {1} players and replied in {2} ms\n".format(p, status.players.online, status.latency)
+            print(mesg)
+            await ctx.send(mesg)
+            c += 1
+            u += 1
+          except Exception as e: #Catch the error
+            if not str(e) in er:
+              er.append(str(e))
+            print("Failed to scan {0} due to {1} \n {2}:{3}".format(p, e, c, u))
+            c += 1
+        except Exception as err: #Catches all other errors
+          if not str(err) in er:
+            er.append(str(err))
+          print("Failed to scan {0} due to {1} \n {2}:{3}".format(p, err, c, u))
+          c += 1
+      er = list(set(er)) #Remove duplicates
+      er = "\n".join(er)
+      await ctx.send("Scanning finished.\n{1} out of {0} are up.\nThe following Errors occured:\n{2}".format(len(data), u, er))
+      print("Scanning finished.\n{1} out of {0} are up.\nThe following Errors occured:\n{2}".format(len(data), u, er))
 
 @bot.command(name='find')
 async def _find(ctx,arg):
-  msg = 'A Thing'#find(arg)
+  msg = arg
   try:
-    if msg == None:
-      await ctx.send("No output found.")
-    else:
-      await ctx.send(msg)
-      print(msg)
+    await("Finding {0}".format(msg))
   except:
-    await ctx.send("Failed to find output.")
+    await ctx.send("No player specified.")
 
 @bot.command(name='help')
 async def _help(ctx):
-  await ctx.send("Usage of all commands.\n\n!mc scans the range of ip specified in the dis-bot.pyw file.\n\n!status gets the status of the specified server.\nUsage:!status 10.0.0.0:25565\n\n!find scans all know servers in the outputs folder and returns if the given player is found.\nUsage:!find player123\n!cscan makes a custom scan\nUsage:\n!cscann 172.65.230.0 172.65.255.255")
+  await ctx.send("Usage of all commands.\n\n!mc scans the range of ip specified in the dis-bot.pyw file.\n\n!status gets the status of the specified server.\nUsage:!status 10.0.0.0:25565\nTo test the connectivity of the servers in the output file.\n\n!find scans all know servers in the outputs folder and returns if the given player is found.\nUsage:!find player123\n!cscan makes a custom scan\nUsage:\n!cscann 172.65.230.0 172.65.255.255")
   print("Printed Help")
 
 @bot.command(name='cscan')
