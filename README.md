@@ -44,4 +44,4 @@ These are all of the possible commands implemented so far.
 
 **3:** Optimize (implement masscan) (done)
 
-**4:** Use a minecraft client to send login packets to check is the server is whitelisted (Reasherching)
+**4:** Use a minecraft client to send login packets to check is the server is whitelisted (Researching)
