@@ -4,7 +4,13 @@ A Python impelentation of a discord bot that acts as a server scanner.
 This is a discord bot that will scan ip adresses to see if they are minecraft servers and will post the results in your channel.
 
 # Installation
-To insatll, clone the repository and run setup.pyw,then open dis-bot.pyw. Then put your discord bot token into 'YOUR TOKEN HERE' and change any of the prefrences you would like.
+To install, clone the repository and run setup.pyw, then open settings.json. Then put your discord bot token into 'YOUR TOKEN HERE' and change any of the prefrences you would like.
+
+### Windows Users
+
+Enter the dis-bot.pyw and change the line:
+> settings-json = r"settings.json"
+Change "settings.json" to the path of the settings file in your computer.
 
 # Usage
 The first time you use this bot, run 
@@ -33,15 +39,7 @@ In order for !find and !status to work properly the server should have enable-qu
 
 >!cscan
 
-These are all of the possible commands implemented so far.
-
 
 # Todo
 
-**1:** Store server information into a json instead of .txt files. (WIP)
-
-**2:** Make a single message that shows the status of all known minecraft servers.
-
-**3:** Optimize (implement masscan) (done)
-
-**4:** Use a minecraft client to send login packets to check is the server is whitelisted (Researching)
+**1:** Use a minecraft client to send login packets to check is the server is whitelisted (Researching)
