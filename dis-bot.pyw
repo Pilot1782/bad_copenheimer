@@ -26,6 +26,7 @@ if subprocess.check_output("whoami").decode("utf-8") != 'root\n' and os == 0:
 
 with open(r"settings.json", "r") as read_file:
     data = json.load(read_file)
+output_path = r"outputs.json"
 
 mineflayer = require('mineflayer')
 name = data["name"]
@@ -143,6 +144,8 @@ def find(player):
     print('\n'.join(outp))
     return 'Done\n'.join(outp)
 
+
+
 def server_join(ip):
   pass
 
@@ -188,7 +191,6 @@ async def _mc(ctx):
           await ctx.send(line)
         except:
           await ctx.send(".")
-  await ctx.send(f"Testing if the servers are whitelisted.")
 
 
   await ctx.send(f"\nStarting the scan at {ptime()}\nPinging {lower_ip_bound} through {upper_ip_bound}, using {threads} threads and timingout after {timeout} miliseconds.")
@@ -213,6 +215,7 @@ async def _mc(ctx):
         await ctx.send(".")
   elif os == 1:
     command = f"java -Dfile.encoding=UTF-8 -jar {path} -range {lower_ip_bound}-{upper_ip_bound} -ports 25565-25577 -th {threads} -ti {timeout}".split()
+    arr= []
     for line in run_command(command):
       line = line.decode("utf-8")
       print(line)
@@ -221,9 +224,52 @@ async def _mc(ctx):
       else:
         try:
           await ctx.send(line)
+          arr.append(line)
         except:
           await ctx.send(".")
+    a = []
+    for i in arr:
+      if i.startswith("(1"):
+        a.append(i)
+    b = []
+    for i in a:
+      f = []
+      for j in i:
+        if j == ":":
+          break
+        else:
+          if j == "(":
+            pass
+          else:
+            f.append(j)
+      b.append("".join(f))
+    
+    print("{0}\n{1}".format(b,len(b)))
   await ctx.send(f"\nScanning finished at {ptime()}")
+  with open(output_path) as fp:
+    data = json.load(fp)
+    
+    for i in b:
+      bol = False
+      for j in data:
+        if i in j['ip']:
+          bol = False
+          break
+        else:
+          bol = True
+      if bol:
+        data.append({"ip": i,"timestamp": "1641565033","ports": [{"port": 25565,"proto": "tcp","status": "open","reason": "syn-ack","ttl": 64}]})
+    filename = output_path
+
+
+    with open(filename, 'w') as json_file:
+       json.dump(data, json_file, 
+                            indent=4,  
+                            separators=(',',': '))
+ 
+    print('Successfully appended {0} lines to the JSON file'.format(len(data)))
+    
+
     
 @bot.command(name='status')
 async def _status(ctx,*args):
@@ -256,7 +302,7 @@ async def _status(ctx,*args):
         await ctx.send(f"Failed to query {i}.")
   else:
 
-    with open(r'outputs.json') as json_file:
+    with open(r'D:\Carson\Programming\Python_Stuff\bad_copeheimer-main\bad_copeheimer-main\outputs.json') as json_file:
       data = json.load(json_file)
       await ctx.send("Scanning {0} servers".format(len(data)))
       c = 0
