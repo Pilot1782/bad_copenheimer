@@ -15,7 +15,14 @@ from javascript import require, On, Once, console
 #To change the settings, edit the settings.json file.#
 ######################################################
 
+###############################################################
+# Setting for Windows users and if you move the settings file #
+###############################################################
+settings_path = r"settings.json"
 
+###############################
+# Below this is preconfigured #
+###############################
 
 client = discord.Client()
 bot = commands.Bot(command_prefix='!',help_command=None)
@@ -24,9 +31,9 @@ testing = False
 if subprocess.check_output("whoami").decode("utf-8") != 'root\n' and os == 0:
   raise PermissionError(f"Please run as root, not as {subprocess.check_output('whoami').decode('utf-8')}")
 
-with open(r"settings.json", "r") as read_file:
+with open(settings_path, "r") as read_file:
     data = json.load(read_file)
-output_path = r"outputs.json"
+
 
 mineflayer = require('mineflayer')
 name = data["name"]
