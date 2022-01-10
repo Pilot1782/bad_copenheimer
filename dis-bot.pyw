@@ -34,7 +34,7 @@ if subprocess.check_output("whoami").decode("utf-8") != 'root\n' and os == 0:
 with open(settings_path, "r") as read_file:
     data = json.load(read_file)
 
-
+output_path = data["output-json"]
 mineflayer = require('mineflayer')
 name = data["name"]
 TOKEN = data["token"]
