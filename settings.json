@@ -10,5 +10,6 @@
   "os_comment":"1=Windows,0=Linux",
   "mascan":"False",
   "time2":1000000,
-  "name":"Pilot1782"
+  "name":"Pilot1782",
+  "debugging":false
 }

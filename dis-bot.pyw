@@ -48,6 +48,7 @@ os = int(os)
 mascan = data["mascan"]
 mascan = bool(mascan)
 time2 = data["time2"]
+debug = data["debugging"]
 
 def write_json(new_data, filename='data.json'):
     with open(filename,'r+') as file:
@@ -422,8 +423,13 @@ async def _cscan(ctx,arg1,arg2):
   await ctx.send(f"\n\nScanning finished at {ptime()}")
 
 if __name__ == "__main__":
-  print("Testing{0}({1})".format(testing,type(testing)))
-  if testing:
-    login('127.0.0.1',25565,'Pilot1782','Password')
-  else:
-    bot.run(TOKEN)
+  print("Testing:{0}, Debugging:{1}\n".format(testing,debug))
+  try:
+    if testing:
+      login('127.0.0.1',25565,'Pilot1782','Password')
+    else:
+      bot.run(TOKEN)
+  except Exception as err:
+    if debug:
+      print("\n{0}".format(err))
+    print("\nSorry, Execution of this file has failed.")
