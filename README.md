@@ -42,7 +42,7 @@ In order for !find and !status to work properly the server should have enable-qu
 
 # Todo
 
-**1:** Use a minecraft client to send login packets to check is the server is whitelisted (Researching)
+**1:** Use send login packets to check is the server is whitelisted (Researching)
 
 **2:** Create a "Meteor Client" addon and implement the scanner results into the addon allowing you to join servers based on "whitelist, modded, vinilla etc."
 

@@ -8,7 +8,6 @@ from mcstatus import MinecraftServer
 import os
 import subprocess
 import json
-from javascript import require, On, Once, console
 
 
 ######################################################
@@ -35,7 +34,6 @@ with open(settings_path, "r") as read_file:
     data = json.load(read_file)
 
 output_path = data["output-json"]
-mineflayer = require('mineflayer')
 name = data["name"]
 TOKEN = data["token"]
 lower_ip_bound = data["lower_ip_bound"]
@@ -74,22 +72,6 @@ def ptime():
   
   return ':'.join(arr)
 
-def MC(low,high,outb,threads1,time):
-  ptime()
-  print(f"Scanning {low}-{high} outputting {outb}")
-  arr = []
-  if os == 0 and mascan == True:
-    command = f"masscan -p25565 {low}-{high} --rate={threads1 * 3}".split()
-    for line in run_command(command):
-      print(line.decode("utf-8"))
-      arr.append(line.decode("utf-8"))
-  elif os == 1:
-    command = f"java -Dfile.encoding=UTF-8 -jar {path} -range {low}-{high} -ports 25565-25577 -th {threads1} -ti {time}".split()
-    for line in run_command(command):
-      print(line.decode("utf-8"))
-      arr.append(line.decode("utf-8"))
-  return ''.join(arr)
-
 def run_command(command):
     p = subprocess.Popen(command,
                          stdout=subprocess.PIPE,
@@ -108,6 +90,63 @@ def run_command(command):
        # The run_command() function is responsible for logging STDERR 
        print(str(err))
        return ("Error: " + str(err))
+
+def login(host,port,user,passwd):
+  import struct
+  import socket
+  import time
+  import urllib
+  try:
+    import urllib.request as urllib2
+  except ImportError:
+    import urllib2
+  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  s.connect((host, port))
+
+  logindata = {'user':username, 'password':passwd, 'version':'12'}
+  data = urllib.urlencode(logindata)
+  print('Sending data to login.minecraft.net...')
+  req = urllib2.Request('https://login.minecraft.net', data)
+  response = urllib2.urlopen(req)
+  returndata = response.read() 
+  returndata = returndata.split(":")
+  mcsessionid = returndata[3]
+  del req
+  del returndata
+  print("Session ID: " + mcsessionid)
+  data = {'user':username,'host':host,'port':port}
+
+
+  stringfmt = u'%(user)s;%(host)s:%(port)d'
+  string = stringfmt % data
+  structfmt = '>bh'
+  packfmt = '>bih{}shiibBB'.format(len(enc_user))
+  packetbytes = struct.pack(packfmt, 1, 23, len(data['user']), enc_user, 0, 0, 0, 0, 0, 0)
+  s.send(packetbytes)
+  connhash = s.recv(1024)
+  print("Connection Hash: " + connhash)
+  print('Sending data to http://session.minecraft.net/game/joinserver.jsp?user=JackBeePee&sessionId=' + mcsessionid + '&serverId=' + connhash + '...')
+  req = urllib.urlopen('http://session.minecraft.net/game/joinserver.jsp?user=JackBeePee&sessionId=' + mcsessionid + '&serverId=' + connhash)
+  returndata = req.read()
+  if(returndata == 'OK'):
+      print('session.minecraft.net says everything is okay, proceeding to send data to server.')
+  else:
+      print('Oops, something went wrong.')
+
+  time.sleep(5)
+
+  # All above here works perfectly.
+  enc_user = data['user'].encode('utf-16BE')
+  #This line is probably where something's going wrong:
+  packetbytes = struct.pack('>bih', 1, 23, len(data['user'])) + data['user'].encode('utf-16BE') + struct.pack('>hiibBB', 2,0,0,0,0,0)
+  print(len(packetbytes))
+  print('Sending ' + packetbytes + ' to server.')
+  s.send(packetbytes)
+
+  while True:
+      data = s.recv(1024)
+      if data:
+          print(data)
 
 def file_out():
   try:
@@ -150,15 +189,6 @@ def find(player):
 
     print('\n'.join(outp))
     return 'Done\n'.join(outp)
-
-
-
-def server_join(ip):
-  pass
-
-
-def testing():
-  pass
 
 @bot.command()
 async def on_ready(self):
@@ -392,7 +422,8 @@ async def _cscan(ctx,arg1,arg2):
   await ctx.send(f"\n\nScanning finished at {ptime()}")
 
 if __name__ == "__main__":
-  if not testing:
-    bot.run(TOKEN)
+  print("Testing{0}({1})".format(testing,type(testing)))
+  if testing:
+    login('127.0.0.1',25565,'Pilot1782','Password')
   else:
     bot.run(TOKEN)
