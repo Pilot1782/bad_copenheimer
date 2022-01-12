@@ -6,10 +6,11 @@ This is a discord bot that will scan ip adresses to see if they are minecraft se
 # Installation
 To install, clone the repository and run setup.pyw, then open settings.json. Then put your discord bot token into 'YOUR TOKEN HERE' and change any of the prefrences you would like.
 
-### Windows Users
+## Windows Users
 
 Enter the dis-bot.pyw and change the line:
-> settings-json = r"settings.json"
+> settings_path = r"settings.json"
+
 Change "settings.json" to the path of the settings file in your computer.
 
 # Usage
@@ -44,6 +45,6 @@ In order for !find and !status to work properly the server should have enable-qu
 
 **1:** Use send login packets to check is the server is whitelisted (Researching)
 
-**2:** Create a "Meteor Client" addon and implement the scanner results into the addon allowing you to join servers based on "whitelist, modded, vinilla etc."
+**2:** Create a [Meteor CLient](https://github.com/MeteorDevelopment/meteor-client) addon and implement the scanner results into the addon allowing you to join servers based on "whitelist, modded, vinilla etc."
 
 **3:** Add a webserver to request scan documents like the outputs.json so you can run this program on a raspi and leave it while using the server and discord to monitor and use the tool.

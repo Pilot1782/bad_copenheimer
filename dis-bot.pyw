@@ -11,7 +11,7 @@ import json
 
 
 ######################################################
-#To change the settings, edit the settings.json file.#
+#To change the main settings, edit the settings.json file.#
 ######################################################
 
 ###############################################################
