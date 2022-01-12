@@ -43,3 +43,7 @@ In order for !find and !status to work properly the server should have enable-qu
 # Todo
 
 **1:** Use a minecraft client to send login packets to check is the server is whitelisted (Researching)
+
+**2:** Create a "Meteor Client" addon and implement the scanner results into the addon allowing you to join servers based on "whitelist, modded, vinilla etc."
+
+**3:** Add a webserver to request scan documents like the outputs.json so you can run this program on a raspi and leave it while using the server and discord to monitor and use the tool.
