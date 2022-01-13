@@ -11,5 +11,8 @@
   "mascan":"False",
   "time2":1000000,
   "name":"Pilot1782",
+  "password":"Password123",
+  "server":false,
+  "server-port":"8000",
   "debugging":false
 }
