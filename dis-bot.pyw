@@ -10,9 +10,9 @@ import subprocess
 import json
 
 
-######################################################
+##############################################################
 #To change the main settings, edit the settings.json file.#
-######################################################
+##############################################################
 
 ###############################################################
 # Setting for Windows users and if you move the settings file #
@@ -23,18 +23,19 @@ settings_path = r"settings.json"
 # Below this is preconfigured #
 ###############################
 
-
+# Check if you are root for running masscan
 if subprocess.check_output("whoami").decode("utf-8") != 'root\n' and os == 0:
   raise PermissionError(f"Please run as root, not as {subprocess.check_output('whoami').decode('utf-8')}")
 
-
+# Varaible getting defeined
 client = discord.Client()
 bot = commands.Bot(command_prefix='!',help_command=None)
-testing = True
+
 
 with open(settings_path, "r") as read_file:
   data = json.load(read_file)
 
+testing = data["testing"] #bc it easier
 output_path = data["output-json"]
 name = data["name"]
 TOKEN = data["token"]
@@ -55,6 +56,10 @@ passwd = data["password"]
 server = data["server"]
 sport = data["server-port"]
 
+
+# Functions getting defeined
+
+# Write to a json file
 def write_json(new_data, filename='data.json'):
     with open(filename,'r+') as file:
         file_data = json.load(file)
@@ -62,6 +67,7 @@ def write_json(new_data, filename='data.json'):
         file.seek(0)
         json.dump(file_data, file, indent = 4)
 
+# Prin the Time
 def ptime():
   x = 0
   arr = []
@@ -78,10 +84,12 @@ def ptime():
   
   return ':'.join(arr)
 
+# Start a python server
 def hserver():
   if server:
     os.system("python -m http.server {0}".format(sport))
 
+# Run a command and get line by line output
 def run_command(command):
     p = subprocess.Popen(command,
                          stdout=subprocess.PIPE,
@@ -101,6 +109,7 @@ def run_command(command):
        print(str(err))
        return ("Error: " + str(err))
 
+# Login into a minecraft server
 def login(host,port,user,passwd):
   import struct
   import socket
@@ -158,18 +167,14 @@ def login(host,port,user,passwd):
       if data:
           print(data)
 
+# Get the file output depending on the os
 def file_out():
-  try:
-    if os == 0:
-      outpt = subprocess.check_output("ls outputs",shell=True)
-    elif os == 1:
-      outpt = subprocess.check_output("dir",shell=True)
-    outpt = outpt.decode("utf-8")
-    outpt = outpt.split('\n')
-    return outpt
-  except:
-    return "No Output folder made."  
+  with open(output_path, "r") as f:
+    data1 = json.load(f)
+    for i in data1:
+      return i["ip"]
 
+# Look through your files and see if the server you scan has 'player' playing on it, going to be redon soon
 def find(player):
   files = file_out()
   outp = []
@@ -200,10 +205,16 @@ def find(player):
     print('\n'.join(outp))
     return 'Done\n'.join(outp)
 
+##############################
+
+# Discord commands
+
+# On login to server
 @bot.command()
 async def on_ready(self):
   print('Logged on as {0}!'.format(self.user))
 
+# Scan the large list
 @bot.command(name='mc')
 async def _mc(ctx):
   await ctx.send(f"Scanning started: {ptime()}")
@@ -316,8 +327,7 @@ async def _mc(ctx):
  
     print('Successfully appended {0} lines to the JSON file'.format(len(data)))
     
-
-    
+# Get the status of a specified server or all of the saved servers
 @bot.command(name='status')
 async def _status(ctx,*args):
   try:
@@ -357,10 +367,10 @@ async def _status(ctx,*args):
       lst = data
       er = []
       for p in lst:
-        #find the status of p
+        #find the status of ips
         p = p["ip"]
         try:  #Try getting the status and catch the errors
-          try: #Nested try to get the status
+          try: #Nested trying bc otherwise if i make a mistake then it fails but i alread fixed it but i don't want to remove the nested trying bc im too lazy but I'll do it next commit, I promise
             from mcstatus import MinecraftServer
             server = MinecraftServer.lookup(p)
             status = server.status()
@@ -384,6 +394,7 @@ async def _status(ctx,*args):
       await ctx.send("Scanning finished.\n{1} out of {0} are up.\nThe following Errors occured:\n{2}".format(len(data), u, er))
       print("Scanning finished.\n{1} out of {0} are up.\nThe following Errors occured:\n{2}".format(len(data), u, er))
 
+# Find a player currently playing on a server
 @bot.command(name='find')
 async def _find(ctx,arg):
   msg = arg
@@ -392,11 +403,13 @@ async def _find(ctx,arg):
   except:
     await ctx.send("No player specified.")
 
+# List all of the commands and how to use them
 @bot.command(name='help')
 async def _help(ctx):
   await ctx.send("Usage of all commands.\n\n!mc scans the range of ip specified in the dis-bot.pyw file.\n\n!status gets the status of the specified server.\nUsage:!status 10.0.0.0:25565\nTo test the connectivity of the servers in the output file.\n\n!find scans all know servers in the outputs folder and returns if the given player is found.\nUsage:!find player123\n!cscan makes a custom scan\nUsage:\n!cscann 172.65.230.0 172.65.255.255")
   print("Printed Help")
 
+# Scan a custom set of ips
 @bot.command(name='cscan')
 async def _cscan(ctx,arg1,arg2):
   await ctx.send(f"Scanning started: {ptime()}")
@@ -431,11 +444,13 @@ async def _cscan(ctx,arg1,arg2):
           await ctx.send(".")
   await ctx.send(f"\n\nScanning finished at {ptime()}")
 
+
+# Print whether debugging and testing are active
 if __name__ == "__main__":
   print("Testing:{0}, Debugging:{1}\n".format(testing,debug))
   try:
     if testing:
-      login('127.0.0.1',25565,'Pilot1782','Password')
+      print(file_out())
     else:
       bot.run(TOKEN)
   except Exception as err:
