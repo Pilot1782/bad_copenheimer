@@ -74,7 +74,7 @@ def ptime():
   tim = time.localtime()
 
   if tim.tm_hour > 12:
-    arr.append(str(tim.tm_hour - 12))
+    arr.append(str(tim.tm_hour - 7)) # Adjust for US Mountain Time
   else:
     arr.append(str(tim.tm_hour))
   if tim.tm_min < 10:
@@ -358,8 +358,7 @@ async def _status(ctx,*args):
         print(f"Failed to query {i}")
         await ctx.send(f"Failed to query {i}.")
   else:
-
-    with open(r'D:\Carson\Programming\Python_Stuff\bad_copeheimer-main\bad_copeheimer-main\outputs.json') as json_file:
+    with open(output_path as json_file:
       data = json.load(json_file)
       await ctx.send("Scanning {0} servers".format(len(data)))
       c = 0
@@ -450,7 +449,7 @@ if __name__ == "__main__":
   print("Testing:{0}, Debugging:{1}\n".format(testing,debug))
   try:
     if testing:
-      print(file_out())
+      print("\n{0}".format(ptime()))
     else:
       bot.run(TOKEN)
   except Exception as err:

@@ -14,6 +14,6 @@
   "password":"Password123",
   "server":false,
   "server-port":"8000",
-  "debugging":true,
+  "debugging":false,
   "testing":false
 }
