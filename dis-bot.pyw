@@ -49,7 +49,6 @@ path = data["path"]
 os = data["os"]
 os = int(os)
 mascan = data["mascan"]
-mascan = bool(mascan)
 time2 = data["time2"]
 debug = data["debugging"]
 passwd = data["password"]
@@ -358,7 +357,7 @@ async def _status(ctx,*args):
         print(f"Failed to query {i}")
         await ctx.send(f"Failed to query {i}.")
   else:
-    with open(output_path as json_file:
+    with open(output_path) as json_file:
       data = json.load(json_file)
       await ctx.send("Scanning {0} servers".format(len(data)))
       c = 0
