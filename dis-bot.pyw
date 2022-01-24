@@ -236,7 +236,7 @@ async def _mc(ctx):
           await ctx.send(line)
       except:
         await ctx.send(".")
-  elif os == 1:
+  else:
     command = f"java -Dfile.encoding=UTF-8 -jar {path} -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {threads} -ti {timeout}".split()
     for line in run_command(command):
       line = line.decode("utf-8")
@@ -256,8 +256,9 @@ async def _mc(ctx):
 
   
 
-
+  outp = []
   if os == 0 and mascan == True:
+    arr = []
     print("scanning using masscan")
     command = f"sudo masscan {lower_ip_bound}-{upper_ip_bound} -p25565 --rate={threads * 3} --exclude 255.255.255.255 -oj outputs.json"
     for line in run_command(command):
@@ -268,9 +269,28 @@ async def _mc(ctx):
         else:
           print(line)
           await ctx.send(line)
+          arr.append(line)
       except:
         await ctx.send(".")
-  elif os == 1:
+    
+    a = []
+    for i in arr:
+      if i.startswith("(1") or i.startswith("(2"):
+        a.append(i)
+    b = []
+    for i in a:
+      f = []
+      for j in i:
+        if j == ":":
+          break
+        else:
+          if j == "(":
+            pass
+          else:
+            f.append(j)
+      b.append("".join(f))
+    outp = b
+  else:
     command = f"java -Dfile.encoding=UTF-8 -jar {path} -range {lower_ip_bound}-{upper_ip_bound} -ports 25565-25577 -th {threads} -ti {timeout}".split()
     arr= []
     for line in run_command(command):
@@ -286,7 +306,7 @@ async def _mc(ctx):
           await ctx.send(".")
     a = []
     for i in arr:
-      if i.startswith("(1"):
+      if i.startswith("(1") or i.startswith("(2"):
         a.append(i)
     b = []
     for i in a:
@@ -302,11 +322,12 @@ async def _mc(ctx):
       b.append("".join(f))
     
     print("{0}\n{1}".format(b,len(b)))
+    outp = b
   await ctx.send(f"\nScanning finished at {ptime()}")
   with open(output_path) as fp:
     data = json.load(fp)
     
-    for i in b:
+    for i in outp:
       bol = False
       for j in data:
         if i in j['ip']:
@@ -339,16 +360,18 @@ async def _status(ctx,*args):
         
     for i in args:
       try: #Try getting the status
+        from mcstatus import MinecraftServer
         server = MinecraftServer.lookup(i)
         status = server.status()
         mesg = "The server has {0} players and replied in {1} ms\n".format(status.players.online, status.latency)
         print(mesg)
         await ctx.send(mesg)
-      except:
+      except Exception as err:
         await ctx.send(f"Failed to scan {i}.\n")
-        print(f"Failed to scan {i}.\n")
+        print("Failed to scan {0}.\n{1}".format(i,err))
         
       try: #Try quering server
+        from mcstatus import MinecraftServer
         server = MinecraftServer.lookup(i)
         query = server.query()
         print("The server has the following players online: {0}".format(", ".join(query.players.names)))

@@ -1,3 +1,5 @@
+# THis file will start a discord bot that only listens for the !stop command which will then kill all process that include the words python or python3
+
 import discord
 import subprocess
 import os
@@ -15,11 +17,11 @@ TOKEN = data["token"]
 os = data["os"]
 
 def winkill():
-  PROCNAME = "python.exe"
+  PROCNAME = "python"
 
   for proc in psutil.process_iter():
       # check whether the process name matches
-      if proc.name() == PROCNAME:
+      if PROCNAME in proc.name():
           proc.kill()
       else:
         print("No processes.")
@@ -29,7 +31,8 @@ def linkill():
 
   for proc in psutil.process_iter():
       # check whether the process name matches
-      if proc.name() == PROCNAME:
+      print(proc.name())
+      if PROCNAME in proc.name():
           proc.kill()
       else:
         print("No processes.")
@@ -42,4 +45,5 @@ async def _stop(ctx):
     linkill()
 
 if __name__ == "__main__":
-  bot.run(TOKEN)
+  #bot.run(TOKEN)
+  linkill()
