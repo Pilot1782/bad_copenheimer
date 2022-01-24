@@ -237,7 +237,7 @@ async def _mc(ctx):
       except:
         await ctx.send(".")
   else:
-    command = f"java -Dfile.encoding=UTF-8 -jar {path} -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {threads} -ti {timeout}".split()
+    command = f"java -Dfile.encoding=UTF-8 -jar {path} -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {threads} -ti {timeout}"
     for line in run_command(command):
       line = line.decode("utf-8")
       print(line)
@@ -245,9 +245,10 @@ async def _mc(ctx):
         pass
       else:
         try:
-          await ctx.send(line)
+          if line.startswith("[") or line.startswith("(") and not testing:
+            await ctx.send(line)
         except:
-          await ctx.send(".")
+          pass
 
 
   await ctx.send(f"\nStarting the scan at {ptime()}\nPinging {lower_ip_bound} through {upper_ip_bound}, using {threads} threads and timingout after {timeout} miliseconds.")
@@ -291,7 +292,7 @@ async def _mc(ctx):
       b.append("".join(f))
     outp = b
   else:
-    command = f"java -Dfile.encoding=UTF-8 -jar {path} -range {lower_ip_bound}-{upper_ip_bound} -ports 25565-25577 -th {threads} -ti {timeout}".split()
+    command = f"java -Dfile.encoding=UTF-8 -jar {path} -range {lower_ip_bound}-{upper_ip_bound} -ports 25565-25577 -th {threads} -ti {timeout}"
     arr= []
     for line in run_command(command):
       line = line.decode("utf-8")
@@ -300,10 +301,11 @@ async def _mc(ctx):
         pass
       else:
         try:
-          await ctx.send(line)
-          arr.append(line)
+          if line.startswith("[") or line.startswith("("):
+            await ctx.send(line)
+            arr.append(line)
         except:
-          await ctx.send(".")
+          pass
     a = []
     for i in arr:
       if i.startswith("(1") or i.startswith("(2"):

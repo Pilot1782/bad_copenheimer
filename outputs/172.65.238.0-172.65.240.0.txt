@@ -1,0 +1,5 @@
+quboScanner by @zreply - Version 0.3.7 
+Scanner started on: Mon, 24 Jan 2022 18:12:11 GMT
+(172.65.238.110:25565)(36/1234)(RelightProxy - 1.18.x)()
+(172.65.239.18:25565)(20/2000)(Velocity 1.8-1.18.1)(Lucky Network [1.8 - 1.17])
+Scanner ended on: Mon, 24 Jan 2022 18:12:17 GMT
