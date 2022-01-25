@@ -454,11 +454,10 @@ if __name__ == "__main__":
   print("Testing:{0}, Debugging:{1}\n".format(testing,debug))
   try:
     if testing:
-      pass
+      login(user=name,host="mc.hypixel.net",passwd=passwd,port=25565)
     else:
       bot.run(TOKEN)
   except Exception as err:
     if debug:
       print("\n{0}".format(err))
     print("\nSorry, Execution of this file has failed.")
-  login(user=name,host="mc.hypixel.net",passwd=passwd,port=25565)
