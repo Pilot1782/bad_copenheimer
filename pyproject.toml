@@ -13,6 +13,7 @@ mcstatus = "^6.5.0"
 javascript = "^2015.32.59"
 require = "^0.1.1"
 psutil = "^5.9.0"
+quarry = "^1.8.0"
 
 [tool.poetry.dev-dependencies]
 

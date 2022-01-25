@@ -114,27 +114,27 @@ def login(host,port,user,passwd):
   import socket
   import time
   import urllib
-  try:
-    import urllib.request as urllib2
-  except ImportError:
-    import urllib2
+  from urllib.request import urlopen
+  host = host
+  port = port
   s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   s.connect((host, port))
 
-  logindata = {'user':username, 'password':passwd, 'version':'12'}
-  data = urllib.urlencode(logindata)
+  logindata = {'user':user, 'password':passwd, 'version':'12'}
+  data = urllib.parse.quote_plus(json.dumps(logindata))
   print('Sending data to login.minecraft.net...')
-  req = urllib2.Request('https://login.minecraft.net', data)
-  response = urllib2.urlopen(req)
-  returndata = response.read() 
+  req = urllib.request.Request('https://minecraft.net', bytes(data,"utf-8"))
+  response = urlopen(req)
+  returndata = response.read().decode("utf-8")
   returndata = returndata.split(":")
   mcsessionid = returndata[3]
   del req
   del returndata
   print("Session ID: " + mcsessionid)
-  data = {'user':username,'host':host,'port':port}
+  data = {'user':user,'host':host,'port':port}
 
 
+  enc_user = bytes(user,"utf-8")
   stringfmt = u'%(user)s;%(host)s:%(port)d'
   string = stringfmt % data
   structfmt = '>bh'
@@ -142,29 +142,10 @@ def login(host,port,user,passwd):
   packetbytes = struct.pack(packfmt, 1, 23, len(data['user']), enc_user, 0, 0, 0, 0, 0, 0)
   s.send(packetbytes)
   connhash = s.recv(1024)
-  print("Connection Hash: " + connhash)
-  print('Sending data to http://session.minecraft.net/game/joinserver.jsp?user=JackBeePee&sessionId=' + mcsessionid + '&serverId=' + connhash + '...')
+  print("Connection Hash: " + connhash.decode("utf-8"))
+  print('Sending data to http://session.minecraft.net/game/joinserver.jsp?user=JackBeePee&sessionId=' + mcsessionid + '&serverId=' + connhash.decode("urf-8") + '...')
   req = urllib.urlopen('http://session.minecraft.net/game/joinserver.jsp?user=JackBeePee&sessionId=' + mcsessionid + '&serverId=' + connhash)
   returndata = req.read()
-  if(returndata == 'OK'):
-      print('session.minecraft.net says everything is okay, proceeding to send data to server.')
-  else:
-      print('Oops, something went wrong.')
-
-  time.sleep(5)
-
-  # All above here works perfectly.
-  enc_user = data['user'].encode('utf-16BE')
-  #This line is probably where something's going wrong:
-  packetbytes = struct.pack('>bih', 1, 23, len(data['user'])) + data['user'].encode('utf-16BE') + struct.pack('>hiibBB', 2,0,0,0,0,0)
-  print(len(packetbytes))
-  print('Sending ' + packetbytes + ' to server.')
-  s.send(packetbytes)
-
-  while True:
-      data = s.recv(1024)
-      if data:
-          print(data)
 
 # Get the file output depending on the os
 def file_out():
@@ -221,7 +202,7 @@ async def _mc(ctx):
 
   ptime()
   await ctx.send("Testing the Tool")
-  print(f"Scanning {'172.65.238.0'}-{'172.65.240.255'} outputting False")
+  print(f"Scanning {'172.65.238.0'}-{'172.65.240.255'}")
   arr = []
   if os == 0 and mascan == True:
     print("scanning using masscan")
@@ -261,7 +242,7 @@ async def _mc(ctx):
   if os == 0 and mascan == True:
     arr = []
     print("scanning using masscan")
-    command = f"sudo masscan {lower_ip_bound}-{upper_ip_bound} -p25565 --rate={threads * 3} --exclude 255.255.255.255 -oj outputs.json"
+    command = f"sudo masscan {lower_ip_bound}-{upper_ip_bound} -p25565 --rate={threads * 3} --exclude 255.255.255.255 -oJ outputs.json"
     for line in run_command(command):
       line = line.decode("utf-8")
       try:
@@ -473,10 +454,11 @@ if __name__ == "__main__":
   print("Testing:{0}, Debugging:{1}\n".format(testing,debug))
   try:
     if testing:
-      print("\n{0}".format(ptime()))
+      pass
     else:
       bot.run(TOKEN)
   except Exception as err:
     if debug:
       print("\n{0}".format(err))
     print("\nSorry, Execution of this file has failed.")
+  login(user=name,host="mc.hypixel.net",passwd=passwd,port=25565)
