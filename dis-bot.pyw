@@ -207,16 +207,18 @@ async def _mc(ctx):
   if os == 0 and mascan == True:
     print("scanning using masscan")
     command = f"sudo masscan 172.65.238.0-172.65.240.255 -p25565 --rate=100000 --exclude 255.255.255.255"
+    bol = False
     for line in run_command(command):
       line = line.decode("utf-8")
       try:
-        if "rate" in line:
-          print("Skipped")
-        else:
-          print(line)
-          await ctx.send(line)
+        if "D" in line:
+          bol = True
       except:
         pass
+    if bol:
+      print("Test passed!")
+    else:
+      print("Test failed.")
   else:
     command = f"java -Dfile.encoding=UTF-8 -jar {path} -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {threads} -ti {timeout}"
     for line in run_command(command):
