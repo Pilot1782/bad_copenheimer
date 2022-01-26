@@ -253,7 +253,7 @@ async def _mc(ctx):
         if "rate" in line:
           print("Skipped")
         else:
-          words = "Discovered open port 25565/tcp on "
+          words = "Discover pnt256/"
           arr = []
           for i in line:
             if i in words:
