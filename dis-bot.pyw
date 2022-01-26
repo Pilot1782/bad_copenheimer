@@ -252,8 +252,9 @@ async def _mc(ctx):
           words = "Discovered open port 25565/tcp on "
           arr = []
           for i in line:
-            if not (i in words):
-              arr.append(i)
+            for j in words:
+              if i != j:
+                arr.append(i)
           line = "".join(arr)
           await ctx.send(line)
           arr.append(line)
