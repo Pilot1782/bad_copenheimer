@@ -249,7 +249,12 @@ async def _mc(ctx):
         if "rate" in line:
           print("Skipped")
         else:
-          print(line.replace('Discovered open port 25565/tcp on ', ''))
+          words = "Discovered open port 25565/tcp on "
+          arr = []
+          for i in line:
+            if not (i in words):
+              arr.append(i)
+          line = "".join(arr)
           await ctx.send(line)
           if "25565" in line:
             arr.append(line)
