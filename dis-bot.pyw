@@ -216,7 +216,7 @@ async def _mc(ctx):
           print(line)
           await ctx.send(line)
       except:
-        await ctx.send(".")
+        pass
   else:
     command = f"java -Dfile.encoding=UTF-8 -jar {path} -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {threads} -ti {timeout}"
     for line in run_command(command):
@@ -249,18 +249,17 @@ async def _mc(ctx):
         if "rate" in line:
           print("Skipped")
         else:
-          print(line)
+          print(line.replace('Discovered open port 25565/tcp on ', ''))
           await ctx.send(line)
-          arr.append(line)
+          if "25565" in line:
+            arr.append(line)
       except:
         await ctx.send(".")
-    
-    a = []
-    for i in arr:
-      if i.startswith("(1") or i.startswith("(2"):
-        a.append(i)
+    # Clean array
+    new_set = {x.replace('Discovered open port 25565/tcp on ', '') for x in arr}
+    arr = new_set
     b = []
-    for i in a:
+    for i in arr:
       f = []
       for j in i:
         if j == ":":
@@ -309,7 +308,6 @@ async def _mc(ctx):
   await ctx.send(f"\nScanning finished at {ptime()}")
   with open(output_path) as fp:
     data = json.load(fp)
-    
     for i in outp:
       bol = False
       for j in data:
