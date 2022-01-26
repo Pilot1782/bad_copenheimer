@@ -206,7 +206,7 @@ async def _mc(ctx):
   arr = []
   if os == 0 and mascan == True:
     print("scanning using masscan")
-    command = f"sudo masscan 172.65.238.0-172.65.240.255 -p25565 --rate=100000 --exclude 255.255.255.255"
+    command = f"sudo masscan 172.65.238.0-172.65.239.0 -p25565 --rate=100000 --exclude 255.255.255.255"
     bol = False
     for line in run_command(command):
       line = line.decode("utf-8")
@@ -214,11 +214,13 @@ async def _mc(ctx):
         if "D" in line:
           bol = True
       except:
-        pass
+        bol = False
     if bol:
       print("Test passed!")
+      await ctx.send("Test passed!")
     else:
       print("Test failed.")
+      await ctx.send("Test Failed.")
   else:
     command = f"java -Dfile.encoding=UTF-8 -jar {path} -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {threads} -ti {timeout}"
     for line in run_command(command):
@@ -254,9 +256,10 @@ async def _mc(ctx):
           words = "Discovered open port 25565/tcp on "
           arr = []
           for i in line:
-            for j in words:
-              if i != j:
-                arr.append(i)
+            if i in words:
+              pass
+            else:
+              arr.append(i)
           line = "".join(arr)
           await ctx.send(line)
           arr.append(line)
