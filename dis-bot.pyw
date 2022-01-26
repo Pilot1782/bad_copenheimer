@@ -256,8 +256,7 @@ async def _mc(ctx):
               arr.append(i)
           line = "".join(arr)
           await ctx.send(line)
-          if "25565" in line:
-            arr.append(line)
+          arr.append(line)
       except:
         await ctx.send(".")
     # Clean array
