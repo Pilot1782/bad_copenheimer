@@ -233,17 +233,20 @@ async def _mc(ctx):
       await ctx.send("Test Failed.")
   else:
     command = f"java -Dfile.encoding=UTF-8 -jar {path} -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {threads} -ti {timeout}"
+    bol = False
     for line in run_command(command):
       line = line.decode("utf-8")
-      print(line)
-      if line == '' or line == None:
-        pass
-      else:
-        try:
-          if line.startswith("[") or line.startswith("(") and not testing:
-            await ctx.send(line)
-        except:
-          pass
+      try:
+        if "(" in line:
+          bol = True
+      except:
+        bol = False
+    if bol:
+      print("Test passed!")
+      await ctx.send("Test passed!")
+    else:
+      print("Test failed.")
+      await ctx.send("Test Failed.")
 
 
   await ctx.send(f"\nStarting the scan at {ptime()}\nPinging {lower_ip_bound} through {upper_ip_bound}, using {threads} threads and timingout after {timeout} miliseconds.")
