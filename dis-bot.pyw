@@ -185,6 +185,16 @@ def find(player):
     print('\n'.join(outp))
     return 'Done\n'.join(outp)
 
+def clean(line):
+    if "rate" in line:
+      print("Skipped")
+    else:
+        arr = []
+        line = line.split()
+        arr = {x.replace('Discovered', '').replace('open', '').replace('port','').replace('25565/tcp','') for x in line}
+        line = "".join(arr)
+        return line
+
 ##############################
 
 # Discord commands
@@ -253,34 +263,14 @@ async def _mc(ctx):
         if "rate" in line:
           print("Skipped")
         else:
-          words = "Discovered open port 25565/tcp on "
-          arr = []
-          for i in line:
-            if i in words:
-              pass
-            else:
-              arr.append(i)
-          line = "".join(arr)
-          await ctx.send(line)
+          clean(line)
+          line = line + ":25565"
+          await ctx.append(line)
           arr.append(line)
       except:
-        await ctx.send(".")
-    # Clean array
-    new_set = {x.replace('Discovered open port 25565/tcp on ', '') for x in arr}
-    arr = new_set
-    b = []
-    for i in arr:
-      f = []
-      for j in i:
-        if j == ":":
-          break
-        else:
-          if j == "(":
-            pass
-          else:
-            f.append(j)
-      b.append("".join(f))
-    outp = b
+        pass
+    
+    outp = arr
   else:
     command = f"java -Dfile.encoding=UTF-8 -jar {path} -range {lower_ip_bound}-{upper_ip_bound} -ports 25565-25577 -th {threads} -ti {timeout}"
     arr= []
