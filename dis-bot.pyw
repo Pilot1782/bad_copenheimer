@@ -260,15 +260,17 @@ async def _mc(ctx):
     for line in run_command(command):
       line = line.decode("utf-8")
       try:
-        clean(line)
         if "rate" in line:
           print("Skipped")
         else:
-          await ctx.send(line)
+          clean(line)
+          line = line + ":25565"
+          await ctx.append(line)
           arr.append(line)
       except:
         pass
     
+    outp = arr
   else:
     command = f"java -Dfile.encoding=UTF-8 -jar {path} -range {lower_ip_bound}-{upper_ip_bound} -ports 25565-25577 -th {threads} -ti {timeout}"
     arr= []
