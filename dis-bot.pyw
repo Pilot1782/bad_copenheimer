@@ -112,7 +112,7 @@ def run_command(command):
 
 # Login into a minecraft server
 def login(host,port,user,passwd,name):
-  x = subprocess.check_output("python3 playerlist.pyw --auth {0}:{1} --session-name {2} --ofline-name {2} -p {3} {4}".format(user,passwd,name,port,host))
+  x = subprocess.check_output("python3 {5}playerlist.pyw --auth {0}:{1} --session-name {2} --ofline-name {2} -p {3} {4}".format(user,passwd,name,port,host,home_dir))
 
 # Get the file output depending on the os
 def file_out():
