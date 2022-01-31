@@ -36,7 +36,8 @@ with open(settings_path, "r") as read_file:
   data = json.load(read_file)
 
 testing = data["testing"] #bc it easier
-output_path = data["output-json"]
+home_dir = data["home-dir"]
+output_path = home_dir + "outputs.json"
 name = data["name"]
 usr_name = data["user"]
 TOKEN = data["token"]
@@ -46,7 +47,7 @@ threads = data["threads"]
 threads = int(threads)
 timeout = data["timeout"]
 timeout = int(timeout)
-path = data["path"]
+path = home_dir + "qubo.jar"
 os = data["os"]
 os = int(os)
 mascan = data["mascan"]
@@ -235,6 +236,7 @@ async def _mc(ctx):
           clean(line)
           line = "{0}:25565".format(line)
           await ctx.append(line)
+          print(line)
           arr.append(line)
       except:
         pass
