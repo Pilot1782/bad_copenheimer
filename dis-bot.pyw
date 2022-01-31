@@ -185,6 +185,8 @@ async def _mc(ctx):
     print("scanning using masscan")
     command = f"sudo masscan 172.65.238.0-172.65.239.0 -p25565 --rate=100000 --exclude 255.255.255.255"
     bol = False
+    if debug:
+      print(command)
     for line in run_command(command):
       line = line.decode("utf-8")
       try:
@@ -201,6 +203,8 @@ async def _mc(ctx):
   else:
     command = f"java -Dfile.encoding=UTF-8 -jar {path} -nooutput -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {threads} -ti {timeout}"
     bol = False
+    if debug:
+      print(command)
     for line in run_command(command):
       line = line.decode("utf-8")
       try:
@@ -227,13 +231,16 @@ async def _mc(ctx):
     arr = []
     print("scanning using masscan")
     command = f"sudo masscan {lower_ip_bound}-{upper_ip_bound} -p25565 --rate={threads * 3} --exclude 255.255.255.255 -oJ outputs.json"
+    if debug:
+      print(command)
     for line in run_command(command):
       line = line.decode("utf-8")
       try:
         if "rate" in line:
           print("Skipped")
         else:
-          clean(line)
+          if not debug:
+            clean(line)
           line = "{0}:25565".format(line)
           await ctx.append(line)
           print(line)
@@ -246,6 +253,8 @@ async def _mc(ctx):
   else:
     command = f"java -Dfile.encoding=UTF-8 -jar {path} -nooutput -range {lower_ip_bound}-{upper_ip_bound} -ports 25565-25577 -th {threads} -ti {timeout}"
     arr= []
+    if debug:
+      print(command)
     for line in run_command(command):
       line = line.decode("utf-8")
       print(line)
