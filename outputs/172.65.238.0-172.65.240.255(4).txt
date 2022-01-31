@@ -1,7 +1,0 @@
-quboScanner by @zreply - Version 0.3.7 
-Scanner started on: Mon, 24 Jan 2022 18:21:31 GMT
-(172.65.238.110:25565)(35/1234)(RelightProxy - 1.18.x)()
-(172.65.239.18:25565)(18/2000)(Velocity 1.8-1.18.1)(Lucky Network [1.8 - 1.17])
-(172.65.240.39:25565)(0/0)(§cClosed Beta Network)(NeruxVace Network Closed Beta Network)
-(172.65.240.147:25565)(0/0)(TCPShield.com)(Invalid hostname. Please refer to our documentation at docs.tcpshield.com)
-Scanner ended on: Mon, 24 Jan 2022 18:21:39 GMT

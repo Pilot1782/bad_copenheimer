@@ -38,6 +38,7 @@ with open(settings_path, "r") as read_file:
 testing = data["testing"] #bc it easier
 output_path = data["output-json"]
 name = data["name"]
+usr_name = data["user"]
 TOKEN = data["token"]
 lower_ip_bound = data["lower_ip_bound"]
 upper_ip_bound = data["upper_ip_bound"]
@@ -109,43 +110,8 @@ def run_command(command):
        return ("Error: " + str(err))
 
 # Login into a minecraft server
-def login(host,port,user,passwd):
-  import struct
-  import socket
-  import time
-  import urllib
-  from urllib.request import urlopen
-  host = host
-  port = port
-  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  s.connect((host, port))
-
-  logindata = {'user':user, 'password':passwd, 'version':'12'}
-  data = urllib.parse.quote_plus(json.dumps(logindata))
-  print('Sending data to login.minecraft.net...')
-  req = urllib.request.Request('https://minecraft.net', bytes(data,"utf-8"))
-  response = urlopen(req)
-  returndata = response.read().decode("utf-8")
-  returndata = returndata.split(":")
-  mcsessionid = returndata[3]
-  del req
-  del returndata
-  print("Session ID: " + mcsessionid)
-  data = {'user':user,'host':host,'port':port}
-
-
-  enc_user = bytes(user,"utf-8")
-  stringfmt = u'%(user)s;%(host)s:%(port)d'
-  string = stringfmt % data
-  structfmt = '>bh'
-  packfmt = '>bih{}shiibBB'.format(len(enc_user))
-  packetbytes = struct.pack(packfmt, 1, 23, len(data['user']), enc_user, 0, 0, 0, 0, 0, 0)
-  s.send(packetbytes)
-  connhash = s.recv(1024)
-  print("Connection Hash: " + connhash.decode("utf-8"))
-  print('Sending data to http://session.minecraft.net/game/joinserver.jsp?user=JackBeePee&sessionId=' + mcsessionid + '&serverId=' + connhash.decode("urf-8") + '...')
-  req = urllib.urlopen('http://session.minecraft.net/game/joinserver.jsp?user=JackBeePee&sessionId=' + mcsessionid + '&serverId=' + connhash)
-  returndata = req.read()
+def login(host,port,user,passwd,name):
+  x = subprocess.check_output("python3 playerlist.pyw --auth {0}:{1} --session-name {2} --ofline-name {2} -p {3} {4}".format(user,passwd,name,port,host))
 
 # Get the file output depending on the os
 def file_out():
@@ -232,7 +198,7 @@ async def _mc(ctx):
       print("Test failed.")
       await ctx.send("Test Failed.")
   else:
-    command = f"java -Dfile.encoding=UTF-8 -jar {path} -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {threads} -ti {timeout}"
+    command = f"java -Dfile.encoding=UTF-8 -jar {path} -nooutput -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {threads} -ti {timeout}"
     bol = False
     for line in run_command(command):
       line = line.decode("utf-8")
@@ -267,15 +233,16 @@ async def _mc(ctx):
           print("Skipped")
         else:
           clean(line)
-          line = line + ":25565"
+          line = "{0}:25565".format(line)
           await ctx.append(line)
           arr.append(line)
       except:
         pass
     
     outp = arr
+    
   else:
-    command = f"java -Dfile.encoding=UTF-8 -jar {path} -range {lower_ip_bound}-{upper_ip_bound} -ports 25565-25577 -th {threads} -ti {timeout}"
+    command = f"java -Dfile.encoding=UTF-8 -jar {path} -nooutput -range {lower_ip_bound}-{upper_ip_bound} -ports 25565-25577 -th {threads} -ti {timeout}"
     arr= []
     for line in run_command(command):
       line = line.decode("utf-8")
@@ -455,7 +422,7 @@ if __name__ == "__main__":
   print("Testing:{0}, Debugging:{1}\n".format(testing,debug))
   try:
     if testing:
-      login(user=name,host="mc.hypixel.net",passwd=passwd,port=25565)
+      login(user=usr_name,host="mc.hypixel.net",passwd=passwd,port=25565,name=name)
     else:
       bot.run(TOKEN)
   except Exception as err:
