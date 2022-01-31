@@ -241,12 +241,14 @@ async def _mc(ctx):
         if "rate" in line:
           print("Skipped")
         else:
-          if not debug:
-            clean(line)
+          if debug:
+            print(line)
+          else:
+            line = clean(line)
+            print(line)
           print(debug)
           line = "{0}:25565".format(line)
           await ctx.append(line)
-          print(line)
           arr.append(line)
       except:
         pass
