@@ -183,7 +183,7 @@ async def _mc(ctx):
   arr = []
   if os == 0 and mascan == True:
     print("scanning using masscan")
-    command = f"sudo masscan 172.65.238.0-172.65.239.0 -p25565 --rate=100000 --exclude 255.255.255.255"
+    command = f"sudo masscan -p25565 172.65.238.0-172.65.239.0 --rate=100000 --exclude 255.255.255.255"
     bol = False
     if debug:
       print(command)
@@ -230,7 +230,7 @@ async def _mc(ctx):
   if os == 0 and mascan == True:
     arr = []
     print("scanning using masscan")
-    command = f"sudo masscan {lower_ip_bound}-{upper_ip_bound} -p25565 --rate={threads * 3} --exclude 255.255.255.255 -oJ outputs.json"
+    command = f"sudo masscan -p25565 {lower_ip_bound}-{upper_ip_bound} --rate={threads * 3} --exclude 255.255.255.255 -oJ outputs.json"
     if debug:
       print(command)
     for line in run_command(command):
@@ -241,6 +241,7 @@ async def _mc(ctx):
         else:
           if not debug:
             clean(line)
+          print(debug)
           line = "{0}:25565".format(line)
           await ctx.append(line)
           print(line)
