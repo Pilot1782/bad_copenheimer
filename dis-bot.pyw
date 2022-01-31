@@ -254,8 +254,8 @@ async def _mc(ctx):
           line = "{0}:25565".format(line)
           await ctx.append(line)
           arr.append(line)
-      except:
-        print("line fail")
+      except Exception as err:
+        print("line fail\n{0}".format(err))
     
     outp = arr
     
