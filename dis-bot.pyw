@@ -157,10 +157,14 @@ def clean(line):
       print("Skipped")
     else:
         arr = []
-        line = line.split()
-        arr = {x.replace('Discovered', '').replace('open', '').replace('port','').replace('25565/tcp','') for x in line}
-        line = "".join(arr)
-        return line
+        words = ["Discovered","open","port","25565/tcp","on"]
+        line = line.slpit(" ")
+        for i in line:
+          if i in words:
+            pass
+          else:
+            arr.append(i)
+        return "".join(arr)
 
 ##############################
 
