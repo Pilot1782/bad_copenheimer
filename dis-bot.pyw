@@ -250,7 +250,8 @@ async def _mc(ctx):
       try:
         if "D" in line:
           bol = True
-          cnt, cnt2 += 1
+          cnt += 1
+          cnt2 += 2
       except:
         bol = False
         cnt2 += 1
