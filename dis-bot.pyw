@@ -189,6 +189,7 @@ async def _mc(ctx):
     print("scanning using masscan")
     command = f"sudo masscan -p25565 172.65.238.0-172.65.239.0 --rate=100000 --exclude 255.255.255.255"
     bol = False
+    cnt = 0
     if debug:
       print(command)
     for line in run_command(command):
@@ -198,11 +199,12 @@ async def _mc(ctx):
       try:
         if "D" in line:
           bol = True
+          cnt += 1
       except:
         bol = False
     if bol:
       print("Test passed!")
-      await ctx.send("Test passed!")
+      await ctx.send("Test passed!\n{0} hosts found".format(cnt))
     else:
       print("Test failed.")
       await ctx.send("Test Failed.")
