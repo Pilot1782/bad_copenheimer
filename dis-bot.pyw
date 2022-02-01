@@ -259,7 +259,7 @@ async def _mc(ctx):
       print("Test passed!")
       await ctx.send("Test passed!\n{0} hosts found".format(cnt))
     else:
-      print("Test failed.\n{0} lines".format(cnt))
+      print("Test failed.\n{0} lines".format(cnt2))
       await ctx.send("Test Failed.")
     
     outp = arr
