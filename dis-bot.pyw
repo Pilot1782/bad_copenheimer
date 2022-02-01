@@ -242,15 +242,19 @@ async def _mc(ctx):
     if debug:
       print(command)
     for line in run_command(command):
+      print("before decoding")
       line = line.decode("utf-8")
+      print("after decoding")
       if debug:
         print(line)
+      print("trying the stuff")
       try:
         if "D" in line:
           bol = True
           cnt += 1
       except:
         bol = False
+    print("after finishing")
     if bol:
       print("Test passed!")
       await ctx.send("Test passed!\n{0} hosts found".format(cnt))
