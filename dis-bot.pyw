@@ -240,6 +240,8 @@ async def _mc(ctx):
     command = f"sudo masscan -p25565 {lower_ip_bound}-{upper_ip_bound} --rate={threads * 3} --exclude 255.255.255.255 -oJ outputs.json"
     bol = False
     dprint(command)
+    cnt = 0
+    cnt2 = 0
     for line in run_command(command):
       dprint("here")
       
@@ -248,15 +250,16 @@ async def _mc(ctx):
       try:
         if "D" in line:
           bol = True
-          cnt += 1
+          cnt, cnt2 += 1
       except:
         bol = False
+        cnt2 += 1
     print("after finishing")
     if bol:
       print("Test passed!")
       await ctx.send("Test passed!\n{0} hosts found".format(cnt))
     else:
-      print("Test failed.")
+      print("Test failed.\n{0} lines".format(cnt))
       await ctx.send("Test Failed.")
     
     outp = arr
