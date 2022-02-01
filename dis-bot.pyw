@@ -231,7 +231,7 @@ async def _mc(ctx):
   print(f"\nScanning on {lower_ip_bound} through {upper_ip_bound}, with {threads} threads and timeout of {timeout}")
 
   
-
+  print("right before the trouble starts")
   outp = []
   if os == 0 and mascan == True:
     arr = []
