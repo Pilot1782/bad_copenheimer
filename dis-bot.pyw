@@ -166,6 +166,10 @@ def clean(line):
             arr.append(i)
         return "".join(arr)
 
+def dprint(text):
+  if debug:
+    print(text)
+
 ##############################
 
 # Discord commands
@@ -186,12 +190,11 @@ async def _mc(ctx):
   print(f"Scanning {'172.65.238.0'}-{'172.65.240.255'}")
   arr = []
   if os == 0 and mascan == True:
-    print("scanning using masscan")
+    print("testing using masscan")
     command = f"sudo masscan -p25565 172.65.238.0-172.65.239.0 --rate=100000 --exclude 255.255.255.255"
     bol = False
     cnt = 0
-    if debug:
-      print(command)
+    dprint(command)
     for line in run_command(command):
       line = line.decode("utf-8")
       try:
@@ -209,8 +212,7 @@ async def _mc(ctx):
   else:
     command = f"java -Dfile.encoding=UTF-8 -jar {path} -nooutput -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {threads} -ti {timeout}"
     bol = False
-    if debug:
-      print(command)
+    dprint(command)
     for line in run_command(command):
       line = line.decode("utf-8")
       try:
@@ -231,23 +233,18 @@ async def _mc(ctx):
   print(f"\nScanning on {lower_ip_bound} through {upper_ip_bound}, with {threads} threads and timeout of {timeout}")
 
   
-  print("right before the trouble starts")
   outp = []
   if os == 0 and mascan == True:
     arr = []
     print("scanning using masscan")
     command = f"sudo masscan -p25565 {lower_ip_bound}-{upper_ip_bound} --rate={threads * 3} --exclude 255.255.255.255 -oJ outputs.json"
-    print("before the debug")
-    if debug:
-      print(command)
-    print("before running the command")
+    bol = False
+    dprint(command)
     for line in run_command(command):
-      print("before decoding")
+      dprint("here")
+      
       line = line.decode("utf-8")
-      print("after decoding")
-      if debug:
-        print(line)
-      print("trying the stuff")
+      dprint(line)
       try:
         if "D" in line:
           bol = True
