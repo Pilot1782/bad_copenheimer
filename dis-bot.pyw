@@ -241,6 +241,7 @@ async def _mc(ctx):
       print(command)
     for line in run_command(command):
       line = line.decode("utf-8")
+      print(line)
       try:
         if "rate" in line:
           print("Skipped")
