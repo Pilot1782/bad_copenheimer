@@ -240,6 +240,7 @@ async def _mc(ctx):
     print("before the debug")
     if debug:
       print(command)
+    print("before running the command")
     for line in run_command(command):
       print("before decoding")
       line = line.decode("utf-8")
