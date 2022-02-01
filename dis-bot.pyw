@@ -237,6 +237,7 @@ async def _mc(ctx):
     arr = []
     print("scanning using masscan")
     command = f"sudo masscan -p25565 {lower_ip_bound}-{upper_ip_bound} --rate={threads * 3} --exclude 255.255.255.255 -oJ outputs.json"
+    print("before the debug")
     if debug:
       print(command)
     for line in run_command(command):
