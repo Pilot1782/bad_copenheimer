@@ -243,21 +243,20 @@ async def _mc(ctx):
       print(command)
     for line in run_command(command):
       line = line.decode("utf-8")
+      if debug:
+        print(line)
       try:
-        if "rate" in line:
-          print("Skipped")
-        else:
-          if debug:
-            print(line)
-          else:
-            line = clean(line)
-            print(line)
-          print(debug)
-          line = "{0}:25565".format(line)
-          await ctx.append(line)
-          arr.append(line)
-      except Exception as err:
-        print("line fail\n{0}".format(err))
+        if "D" in line:
+          bol = True
+          cnt += 1
+      except:
+        bol = False
+    if bol:
+      print("Test passed!")
+      await ctx.send("Test passed!\n{0} hosts found".format(cnt))
+    else:
+      print("Test failed.")
+      await ctx.send("Test Failed.")
     
     outp = arr
     
