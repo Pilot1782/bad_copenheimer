@@ -261,6 +261,7 @@ async def _mc(ctx):
     else:
       print("Test failed.\n{0} lines".format(cnt2))
       await ctx.send("Test Failed.")
+      exit()
     
     outp = arr
     
