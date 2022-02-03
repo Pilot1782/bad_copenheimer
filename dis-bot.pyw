@@ -253,6 +253,7 @@ async def _mc(ctx):
         bol = False
     
     outp = arr
+    dprint(output)
     
   else:
     command = f"java -Dfile.encoding=UTF-8 -jar {path} -nooutput -range {lower_ip_bound}-{upper_ip_bound} -ports 25565-25577 -th {threads} -ti {timeout}"
