@@ -243,8 +243,6 @@ async def _mc(ctx):
     cnt = 0
     cnt2 = 0
     for line in run_command(command):
-      dprint("here")
-      
       line = line.decode("utf-8")
       dprint(line)
       try:
@@ -252,6 +250,7 @@ async def _mc(ctx):
           bol = True
           cnt += 1
           cnt2 += 2
+          await ctx.send(clean(line))
       except:
         bol = False
         cnt2 += 1
