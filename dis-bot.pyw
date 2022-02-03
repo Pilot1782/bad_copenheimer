@@ -98,10 +98,10 @@ def run_command(command):
                          shell=True)
     # Read stdout from subprocess until the buffer is empty !
     for line in iter(p.stdout.readline, b''):
-        if line: # Don't print blank lines
-            yield line
+      if line: # Don't print blank lines
+          yield line
     # This ensures the process has completed, AND sets the 'returncode' attr
-    while p.poll() is None:                                                                                                                                        
+    while p.poll() is None:
         sleep(.1) #Don't waste CPU-cycles
     # Empty STDERR buffer
     err = p.stderr.read()
@@ -237,7 +237,7 @@ async def _mc(ctx):
   if os == 0 and mascan == True:
     arr = []
     print("scanning using masscan")
-    command = f"sudo masscan -p25565 172.65.238.0-172.65.240.0 --rate={threads * 3} --exclude 255.255.255.255 -oJ outputs.json"
+    command = f"sudo masscan -p25565 172.65.238.0-172.65.240.0 --rate={threads * 3} --exclude 255.255.255.255 -oJ outputs.json".split(" ")
     bol = False
     dprint(command)
     cnt = 0
