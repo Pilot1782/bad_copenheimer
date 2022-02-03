@@ -158,7 +158,7 @@ def clean(line):
     else:
         arr = []
         words = ["Discovered","open","port","25565/tcp","on"]
-        line = line.slpit(" ")
+        line = line.split(" ")
         for i in line:
           if i in words:
             pass
