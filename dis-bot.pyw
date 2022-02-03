@@ -243,7 +243,7 @@ async def _mc(ctx):
     cnt = 0
     cnt2 = 0
     for ln in run_command(command):
-      ln = line.decode("utf-8")
+      lien = ln.decode("utf-8")
       dprint(line)
       try:
         if "D" in line:
