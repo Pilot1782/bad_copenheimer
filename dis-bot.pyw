@@ -237,13 +237,13 @@ async def _mc(ctx):
   if os == 0 and mascan == True:
     arr = []
     print("scanning using masscan")
-    command = f"sudo masscan -p25565 {lower_ip_bound}-{upper_ip_bound} --rate={threads * 3} --exclude 255.255.255.255 -oJ outputs.json"
+    command = f"sudo masscan -p25565 172.65.238.0-172.65.240.0 --rate={threads * 3} --exclude 255.255.255.255 -oJ outputs.json"
     bol = False
     dprint(command)
     cnt = 0
     cnt2 = 0
-    for line in run_command(command):
-      line = line.decode("utf-8")
+    for ln in run_command(command):
+      ln = line.decode("utf-8")
       dprint(line)
       try:
         if "D" in line:
