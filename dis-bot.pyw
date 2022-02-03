@@ -235,8 +235,7 @@ async def _mc(ctx):
   
   outp = []
   if os == 0 and mascan == True:
-    print("testing using masscan")
-    command = f"sudo masscan -p25565 172.65.238.0-{upper_ip_bound} --rate={threads * 3} --exclude 255.255.255.255"
+    command = f"sudo masscan -p25565 172.65.238.0-172.65.240.0 --rate={threads * 3} --exclude 255.255.255.255"
     bol = False
     cnt = 0
     dprint(command)
