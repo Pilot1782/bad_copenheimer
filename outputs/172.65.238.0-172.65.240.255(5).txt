@@ -1,2 +1,0 @@
-quboScanner by @zreply - Version 0.3.7 
-Scanner started on: Wed, 26 Jan 2022 17:03:45 GMT

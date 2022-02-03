@@ -36,8 +36,10 @@ with open(settings_path, "r") as read_file:
   data = json.load(read_file)
 
 testing = data["testing"] #bc it easier
-output_path = data["output-json"]
+home_dir = data["home-dir"]
+output_path = home_dir + "outputs.json"
 name = data["name"]
+usr_name = data["user"]
 TOKEN = data["token"]
 lower_ip_bound = data["lower_ip_bound"]
 upper_ip_bound = data["upper_ip_bound"]
@@ -45,7 +47,7 @@ threads = data["threads"]
 threads = int(threads)
 timeout = data["timeout"]
 timeout = int(timeout)
-path = data["path"]
+path = home_dir + "qubo.jar"
 os = data["os"]
 os = int(os)
 mascan = data["mascan"]
@@ -96,10 +98,10 @@ def run_command(command):
                          shell=True)
     # Read stdout from subprocess until the buffer is empty !
     for line in iter(p.stdout.readline, b''):
-        if line: # Don't print blank lines
-            yield line
+      if line: # Don't print blank lines
+          yield line
     # This ensures the process has completed, AND sets the 'returncode' attr
-    while p.poll() is None:                                                                                                                                        
+    while p.poll() is None:
         sleep(.1) #Don't waste CPU-cycles
     # Empty STDERR buffer
     err = p.stderr.read()
@@ -109,43 +111,8 @@ def run_command(command):
        return ("Error: " + str(err))
 
 # Login into a minecraft server
-def login(host,port,user,passwd):
-  import struct
-  import socket
-  import time
-  import urllib
-  from urllib.request import urlopen
-  host = host
-  port = port
-  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  s.connect((host, port))
-
-  logindata = {'user':user, 'password':passwd, 'version':'12'}
-  data = urllib.parse.quote_plus(json.dumps(logindata))
-  print('Sending data to login.minecraft.net...')
-  req = urllib.request.Request('https://minecraft.net', bytes(data,"utf-8"))
-  response = urlopen(req)
-  returndata = response.read().decode("utf-8")
-  returndata = returndata.split(":")
-  mcsessionid = returndata[3]
-  del req
-  del returndata
-  print("Session ID: " + mcsessionid)
-  data = {'user':user,'host':host,'port':port}
-
-
-  enc_user = bytes(user,"utf-8")
-  stringfmt = u'%(user)s;%(host)s:%(port)d'
-  string = stringfmt % data
-  structfmt = '>bh'
-  packfmt = '>bih{}shiibBB'.format(len(enc_user))
-  packetbytes = struct.pack(packfmt, 1, 23, len(data['user']), enc_user, 0, 0, 0, 0, 0, 0)
-  s.send(packetbytes)
-  connhash = s.recv(1024)
-  print("Connection Hash: " + connhash.decode("utf-8"))
-  print('Sending data to http://session.minecraft.net/game/joinserver.jsp?user=JackBeePee&sessionId=' + mcsessionid + '&serverId=' + connhash.decode("urf-8") + '...')
-  req = urllib.urlopen('http://session.minecraft.net/game/joinserver.jsp?user=JackBeePee&sessionId=' + mcsessionid + '&serverId=' + connhash)
-  returndata = req.read()
+def login(host,port,user,passwd,name):
+  x = subprocess.check_output("python3 {5}playerlist.pyw --auth {0}:{1} --session-name {2} --ofline-name {2} -p {3} {4}".format(user,passwd,name,port,host,home_dir))
 
 # Get the file output depending on the os
 def file_out():
@@ -190,10 +157,18 @@ def clean(line):
       print("Skipped")
     else:
         arr = []
-        line = line.split()
-        arr = {x.replace('Discovered', '').replace('open', '').replace('port','').replace('25565/tcp','') for x in line}
-        line = "".join(arr)
-        return line
+        words = ["Discovered","open","port","25565/tcp","on"]
+        line = line.split(" ")
+        for i in line:
+          if i in words:
+            pass
+          else:
+            arr.append(i)
+        return "".join(arr)
+
+def dprint(text):
+  if debug:
+    print(text)
 
 ##############################
 
@@ -215,13 +190,33 @@ async def _mc(ctx):
   print(f"Scanning {'172.65.238.0'}-{'172.65.240.255'}")
   arr = []
   if os == 0 and mascan == True:
-    print("scanning using masscan")
-    command = f"sudo masscan 172.65.238.0-172.65.239.0 -p25565 --rate=100000 --exclude 255.255.255.255"
+    print("testing using masscan")
+    command = f"sudo masscan -p25565 172.65.238.0-172.65.239.0 --rate=100000 --exclude 255.255.255.255"
     bol = False
+    cnt = 0
+    dprint(command)
     for line in run_command(command):
       line = line.decode("utf-8")
       try:
         if "D" in line:
+          bol = True
+          cnt += 1
+      except:
+        bol = False
+    if bol:
+      print("Test passed!")
+      await ctx.send("Test passed!\n{0} hosts found".format(cnt))
+    else:
+      print("Test failed.")
+      await ctx.send("Test Failed.")
+  else:
+    command = f"java -Dfile.encoding=UTF-8 -jar {path} -nooutput -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {threads} -ti {timeout}"
+    bol = False
+    dprint(command)
+    for line in run_command(command):
+      line = line.decode("utf-8")
+      try:
+        if "(" in line:
           bol = True
       except:
         bol = False
@@ -231,19 +226,6 @@ async def _mc(ctx):
     else:
       print("Test failed.")
       await ctx.send("Test Failed.")
-  else:
-    command = f"java -Dfile.encoding=UTF-8 -jar {path} -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {threads} -ti {timeout}"
-    for line in run_command(command):
-      line = line.decode("utf-8")
-      print(line)
-      if line == '' or line == None:
-        pass
-      else:
-        try:
-          if line.startswith("[") or line.startswith("(") and not testing:
-            await ctx.send(line)
-        except:
-          pass
 
 
   await ctx.send(f"\nStarting the scan at {ptime()}\nPinging {lower_ip_bound} through {upper_ip_bound}, using {threads} threads and timingout after {timeout} miliseconds.")
@@ -251,29 +233,33 @@ async def _mc(ctx):
   print(f"\nScanning on {lower_ip_bound} through {upper_ip_bound}, with {threads} threads and timeout of {timeout}")
 
   
-
   outp = []
   if os == 0 and mascan == True:
-    arr = []
-    print("scanning using masscan")
-    command = f"sudo masscan {lower_ip_bound}-{upper_ip_bound} -p25565 --rate={threads * 3} --exclude 255.255.255.255 -oJ outputs.json"
+    print("testing using masscan")
+    command = f"sudo masscan -p25565 172.65.238.0-172.65.239.0 --rate=100000 --exclude 255.255.255.255"
+    bol = False
+    cnt = 0
+    dprint(command)
     for line in run_command(command):
       line = line.decode("utf-8")
+      clean(line)
       try:
-        if "rate" in line:
-          print("Skipped")
-        else:
-          clean(line)
-          line = line + ":25565"
-          await ctx.append(line)
+        if "D" in line:
+          bol = True
+          cnt += 1
           arr.append(line)
+          print(line)
+          await ctx.send(line)
       except:
-        pass
+        bol = False
     
     outp = arr
+    
   else:
-    command = f"java -Dfile.encoding=UTF-8 -jar {path} -range {lower_ip_bound}-{upper_ip_bound} -ports 25565-25577 -th {threads} -ti {timeout}"
+    command = f"java -Dfile.encoding=UTF-8 -jar {path} -nooutput -range {lower_ip_bound}-{upper_ip_bound} -ports 25565-25577 -th {threads} -ti {timeout}"
     arr= []
+    if debug:
+      print(command)
     for line in run_command(command):
       line = line.decode("utf-8")
       print(line)
@@ -452,7 +438,7 @@ if __name__ == "__main__":
   print("Testing:{0}, Debugging:{1}\n".format(testing,debug))
   try:
     if testing:
-      login(user=name,host="mc.hypixel.net",passwd=passwd,port=25565)
+      login(user=usr_name,host="mc.hypixel.net",passwd=passwd,port=25565,name=name)
     else:
       bot.run(TOKEN)
   except Exception as err:

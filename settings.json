@@ -4,16 +4,16 @@
   "upper_ip_bound":"199.255.255.255",
   "threads":1020,
   "timeout":1000,
-  "path":"qubo.jar",
-  "output-json":"outputs.json",
+  "home-dir":"/home/usr/bad_copenheimer",
   "os":0,
   "os_comment":"1=Windows,0=Linux",
   "mascan":false,
   "time2":1000000,
+  "user":"Pilot1782@example.com",
   "name":"Pilot1782",
   "password":"Password123",
   "server":false,
   "server-port":"8000",
   "debugging":true,
-  "testing":false
+  "testing":true
 }
