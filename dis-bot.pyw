@@ -241,9 +241,9 @@ async def _mc(ctx):
     dprint(command)
     for line in run_command(command):
       line = line.decode("utf-8")
-      #line = clean(line)
+      line = clean(line)
       try:
-        if "D" in line:
+        if "." in line:
           bol = True
           cnt += 1
           arr.append(line)
