@@ -242,7 +242,7 @@ async def _mc(ctx):
     dprint(command)
     for line in run_command(command):
       line = line.decode("utf-8")
-      clean(line)
+      line = clean(line)
       try:
         if "D" in line:
           bol = True
