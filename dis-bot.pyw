@@ -235,33 +235,25 @@ async def _mc(ctx):
   
   outp = []
   if os == 0 and mascan == True:
-    arr = []
-    print("scanning using masscan")
-    command = f"sudo masscan -p25565 172.65.238.0-172.65.240.0 --rate={threads * 3} --exclude 255.255.255.255 -oJ outputs.json".split(" ")
+    print("testing using masscan")
+    command = f"sudo masscan -p25565 172.65.238.0-172.65.239.0 --rate=100000 --exclude 255.255.255.255"
     bol = False
-    dprint(command)
     cnt = 0
-    cnt2 = 0
-    for ln in run_command(command):
-      lien = ln.decode("utf-8")
-      dprint(line)
+    dprint(command)
+    for line in run_command(command):
+      line = line.decode("utf-8")
       try:
         if "D" in line:
           bol = True
           cnt += 1
-          cnt2 += 2
-          await ctx.send(clean(line))
       except:
         bol = False
-        cnt2 += 1
-    print("after finishing")
     if bol:
       print("Test passed!")
       await ctx.send("Test passed!\n{0} hosts found".format(cnt))
     else:
-      print("Test failed.\n{0} lines".format(cnt2))
+      print("Test failed.")
       await ctx.send("Test Failed.")
-      exit()
     
     outp = arr
     
