@@ -17,7 +17,7 @@ import json
 ###############################################################
 # Setting for Windows users and if you move the settings file #
 ###############################################################
-settings_path = '/home/runner/badcopenheimer/settings.json'
+settings_path = 'settings.json'
 ###############################
 # Below this is preconfigured #
 ###############################

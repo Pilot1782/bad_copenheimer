@@ -6,14 +6,12 @@ This is a discord bot that will scan ip adresses to see if they are minecraft se
 ## Installation
 To install, clone the repository and run setup.pyw, then open settings.json. Then put your discord bot token into 'YOUR TOKEN HERE' and change any of the prefrences you would like.
 
+To install the required packages run:
+> python3 setup.python3
+
+This installs all packages and update the paths in all files.
+
 In order for the player finder to work, you need a ojang account. Put this in the settings.json file.
-
-### Windows Users
-
-Enter the dis-bot.pyw and change the line:
-> settings_path = r"settings.json"
-
-Change "settings.json" to the path of the settings file in your computer.
 
 ## Usage
 The first time you use this bot, run 
