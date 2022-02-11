@@ -1,4 +1,4 @@
-# THis file will start a discord bot that only listens for the !stop command which will then kill all process that include the words python or python3
+# This file will start a discord bot that only listens for the !stop command which will then kill all process that include the words python or python3
 
 import discord
 import subprocess
@@ -9,9 +9,7 @@ import psutil
 
 bot = commands.Bot(command_prefix='!',help_command=None)
 
-settings_path = r"settings.json"
-with open(settings_path, "r") as read_file:
-  data = json.load(read_file)
+settings_path = '/home/runner/badcopenheimer/settings.json'
 
 TOKEN = data["token"]
 os = data["os"]

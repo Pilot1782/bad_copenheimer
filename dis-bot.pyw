@@ -17,8 +17,7 @@ import json
 ###############################################################
 # Setting for Windows users and if you move the settings file #
 ###############################################################
-settings_path = r"settings.json"
-
+settings_path = '/home/runner/badcopenheimer/settings.json'
 ###############################
 # Below this is preconfigured #
 ###############################
@@ -68,22 +67,15 @@ def write_json(new_data, filename='data.json'):
         file.seek(0)
         json.dump(file_data, file, indent = 4)
 
-# Prin the Time
+# Print the Time
 def ptime():
-  x = 0
-  arr = []
-  tim = time.localtime()
-
-  if tim.tm_hour > 12:
-    arr.append(str(tim.tm_hour - 7)) # Adjust for US Mountain Time
-  else:
-    arr.append(str(tim.tm_hour))
-  if tim.tm_min < 10:
-    arr.append("0" + str(tim.tm_min))
-  else:
-    arr.append(str(tim.tm_min))
-  
-  return ':'.join(arr)
+  x = time.localtime()
+  z = []
+  for i in x:
+    z.append(str(i))
+  y = ":".join(z)
+  z = f"{z[0]} {z[1]}/{z[2]} {z[3]}:{z[4]}:{z[5]}"
+  return z
 
 # Start a python server
 def hserver():
@@ -185,7 +177,7 @@ async def _mc(ctx):
   await ctx.send(f"Scanning started: {ptime()}")
   arr = []
 
-  ptime()
+  print(ptime())
   await ctx.send("Testing the Tool")
   print(f"Scanning {'172.65.238.0'}-{'172.65.240.255'}")
   arr = []
@@ -402,7 +394,7 @@ async def _help(ctx):
 async def _cscan(ctx,arg1,arg2):
   await ctx.send(f"Scanning started: {ptime()}")
 
-  ptime()
+  print(ptime())
   print(f"Scanning {arg1}-{arg2} outputting {False}")
   
   if os == 0 and mascan == True:

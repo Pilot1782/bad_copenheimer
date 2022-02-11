@@ -1,11 +1,90 @@
 import os
+import subprocess
+import time
+
+def ptime():
+  x = time.localtime()
+  z = []
+  for i in x:
+    z.append(str(i))
+  z = f"{z[0]} {z[1]}/{z[2]} {z[3]}:{z[4]}:{z[5]}"
+  return z
+path = ""
 
 def imports():
-  os.system("python3 -m pip install poetry")
-  os.system("python3 -m poetry install")
-  os.system("python -m pip install poetry")
-  os.system("python -m poetry install")
+  x = subprocess.check_output("python3 --version",shell=True)
+  try:
+    x = x.split(" ")
+    y = x[1].split(".")
+    if int(y[1]) >= 6:
+      os.system("python3 -m pip install poetry")
+      os.system("python3 -m poetry install")
+  except Exception as err:
+    str(err)
+    os.system("python -m pip install poetry")
+    os.system("python -m poetry install")
+  finally:
+    with open(f"{path}log.txt","w") as fp:
+      fp.write(f"[{ptime()}] Finished Install Packages and created setup_done.yay file.\n")
+
+def replace_line(file_name, line_num, text): # Yes i know this is a dumb way to solve it but it works
+    lines = open(file_name, 'r').readlines()
+    lines[line_num] = text
+    out = open(file_name, 'w')
+    out.writelines(lines)
+    out.close()
+
+def fix_files():
+  os.system("clear")
+  ost = ''
+  while ost != "\\" or ost != "/":
+    ost = input("\nIs this being run on windows, or linux? ")
+    if ost.lower() == "windows":
+      ost = "\\"
+      break
+    elif ost.lower() == "linux":
+      ost = "/"
+      break
+    else:
+      print("Input failed.")
+  
+  if ost == "\\":
+    inp = input("\nWhat is the directory the folder is stored in? ")
+    inp = r"{0}".format(inp)
+  elif ost == "/":
+    inp = input("What is the directory of the folder this is stored in (ex: /home/usr/Document/bad_copenheimer)?\n[Enter to auto fill] ")
+    if len(inp) >= 2:
+      inp = r"{0}".format(inp)
+    else:
+      inp = subprocess.check_output("pwd").decode("utf-8")
+      inp = inp.split("\n")
+      inp = "".join(inp[0])
+  else:
+    inp = subprocess.check_output("pwd").decode("utf-8")
+    inp = inp.split("\n")
+    inp = "".join(inp[0])
+  os.system("clear")
+  print(inp)
+  inp = inp + ost
+  global path
+  path = inp
+
+  my_file = os.path.exists(f"{inp}setup_done.yay")
+  if my_file:
+    print("Packages Already Imported, Exiting!")
+  else:
+    imports()
+    with open("setup_done.yay","w") as file:
+      pass
+    os.system("clear")
+  print("Updating file paths...")
+  print(inp)
+  replace_line(f"{inp}stopper.pyw",11,f"settings_path = '{inp}settings.json'\n")
+  
+  replace_line(f"{inp}dis-bot.pyw",19,f"settings_path = '{inp}settings.json'\n")
 
 if __name__ == "__main__":
-  imports()
-  input("\nSetup is Done!\nPlease change the settings.json file to suit your needs.")
+  fix_files()
+  input(f"\nSetup is Done at {ptime()}!\nPlease change the settings.json file to suit your needs.")
+  with open(f"{path}log.txt","w") as fp:
+    fp.write(f"[{ptime}] Finished Setup with no errors.")
