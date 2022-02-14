@@ -80,7 +80,7 @@ def fix_files():
   print("Updating file paths...")
   print(inp)
   replace_line(f"{inp}stopper.pyw",11,f"settings_path = '{inp}settings.json'\n")
-  
+  replace_line(f"{inp}settings.json",7,f'  "home-dir":"{inp}", ')
   replace_line(f"{inp}dis-bot.pyw",19,f"settings_path = '{inp}settings.json'\n")
 
 if __name__ == "__main__":

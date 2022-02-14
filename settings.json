@@ -4,9 +4,8 @@
   "upper_ip_bound":"199.255.255.255",
   "threads":1020,
   "timeout":1000,
-  "home-dir":"/home/usr/bad_copenheimer",
   "os":0,
-  "os_comment":"1=Windows,0=Linux",
+  "home-dir":"/home/runner/badcopenheimer", "os_comment":"1=Windows,0=Linux",
   "mascan":false,
   "time2":1000000,
   "user":"Pilot1782@example.com",
@@ -15,5 +14,5 @@
   "server":false,
   "server-port":"8000",
   "debugging":true,
-  "testing":true
+  "testing":false
 }

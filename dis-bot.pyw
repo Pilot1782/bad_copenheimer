@@ -31,7 +31,7 @@ client = discord.Client()
 bot = commands.Bot(command_prefix='!',help_command=None)
 
 
-with open(settings_path, "r") as read_file:
+with open(settings_path, "r") as read_file: # Open the settings file and start defineing variables from it
   data = json.load(read_file)
 
 testing = data["testing"] #bc it easier
@@ -46,9 +46,14 @@ threads = data["threads"]
 threads = int(threads)
 timeout = data["timeout"]
 timeout = int(timeout)
-path = home_dir + "qubo.jar"
 os = data["os"]
 os = int(os)
+if not home_dir.endswith("/") or not home_dir.endswith("\\"):
+  if os == 0:
+    home_dir = f"{home_dir}/"
+  else:
+    home_dir = f"{home_dir}\\"
+path = home_dir + "qubo.jar"
 mascan = data["mascan"]
 time2 = data["time2"]
 debug = data["debugging"]
@@ -114,6 +119,7 @@ def file_out():
       return i["ip"]
 
 # Look through your files and see if the server you scan has 'player' playing on it, going to be redon soon
+# The redoo may be implemented but i have to test the file first.
 def find(player):
   files = file_out()
   outp = []
