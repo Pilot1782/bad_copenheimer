@@ -8,6 +8,7 @@ from mcstatus import MinecraftServer
 import os
 import subprocess
 import json
+import multiprocessing
 
 
 ##############################################################
@@ -103,8 +104,13 @@ def run_command(command):
        return ("Error: " + str(err))
 
 # Login into a minecraft server
-def login(host,port,user,passwd,name):
-  x = subprocess.check_output("python3 {4}playerlist.pyw --auth {0}:{1} -p {2} {3}".format(user,passwd,port,host,home_dir), shell=True)
+flag = False
+def login(host):
+  global usr_name, passwd, home_dir, flag
+  for i in run_command("python3 {4}playerlist.pyw --auth {0}:{1} -p {2} {3}".format(usr_name,passwd,25565,host,home_dir)):
+    dprint(i.decode("utf-8"))
+    return i.decode("utf-8")
+    flag = True
 
 # Get the file output depending on the os
 def file_out():
@@ -431,11 +437,65 @@ if __name__ == "__main__":
   print("Testing:{0}, Debugging:{1}\n".format(testing,debug))
   try:
     if testing:
-      login(user=usr_name,host="mc.hypixel.net",passwd=passwd,port=25565,name=name)
+      proc = multiprocessing.Process(target=login,args=("mc.hypixel.net",))
+      proc.start()
+      time.sleep((timeout / 100)) # Timeout
+      dprint("Checking if process is still alive...")
+      if proc.is_alive() and not flag:
+        print("Process still alive, terminating.")
+        proc.terminate()
+        print("Process timed out and was killed.")
+      proc.join()
     else:
       bot.run(TOKEN)
   except Exception as err:
     if debug:
       print("\n{0}".format(err))
     print("\nSorry, Execution of this file has failed.")
-    # Now its 440 lines
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # Now its 500 lines

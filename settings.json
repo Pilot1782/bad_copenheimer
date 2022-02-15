@@ -3,7 +3,7 @@
   "lower_ip_bound":"10.0.0.0",
   "upper_ip_bound":"199.255.255.255",
   "threads":1020,
-  "timeout":1000,
+  "timeout":6000,
   "os":0,
   "home-dir":"/home/runner/badcopenheimer/",
   "mascan":false,
