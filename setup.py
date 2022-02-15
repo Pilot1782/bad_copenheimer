@@ -48,24 +48,10 @@ def fix_files():
     else:
       print("Input failed.")
   
-  if ost == "\\":
-    inp = input("\nWhat is the directory the folder is stored in? ")
-    inp = r"{0}".format(inp)
-  elif ost == "/":
-    inp = input("What is the directory of the folder this is stored in (ex: /home/usr/Document/bad_copenheimer)?\n[Enter to auto fill] ")
-    if len(inp) >= 2:
-      inp = r"{0}".format(inp)
-    else:
-      inp = subprocess.check_output("pwd").decode("utf-8")
-      inp = inp.split("\n")
-      inp = "".join(inp[0])
-  else:
-    inp = subprocess.check_output("pwd").decode("utf-8")
-    inp = inp.split("\n")
-    inp = "".join(inp[0])
+  inp = os.path.dirname(os.path.abspath(__file__))
+  
   os.system("clear")
   print(inp)
-  inp = inp + ost
   global path
   path = inp
 
@@ -80,7 +66,7 @@ def fix_files():
   print("Updating file paths...")
   print(inp)
   replace_line(f"{inp}stopper.pyw",11,f"settings_path = '{inp}settings.json'\n")
-  
+  replace_line(f"{inp}settings.json",7,f'  "home-dir":"{inp}", ')
   replace_line(f"{inp}dis-bot.pyw",19,f"settings_path = '{inp}settings.json'\n")
 
 if __name__ == "__main__":
