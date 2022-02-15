@@ -9,7 +9,7 @@ import psutil
 
 bot = commands.Bot(command_prefix='!',help_command=None)
 
-settings_path = 'settings.json'
+settings_path = '/home/runner/badcopenheimer/settings.json'
 
 TOKEN = data["token"]
 os = data["os"]

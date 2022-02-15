@@ -17,7 +17,7 @@ import json
 ###############################################################
 # Setting for Windows users and if you move the settings file #
 ###############################################################
-settings_path = 'settings.json'
+settings_path = '/home/runner/badcopenheimer/settings.json'
 ###############################
 # Below this is preconfigured #
 ###############################
@@ -48,11 +48,6 @@ timeout = data["timeout"]
 timeout = int(timeout)
 os = data["os"]
 os = int(os)
-if not home_dir.endswith("/") or not home_dir.endswith("\\"):
-  if os == 0:
-    home_dir = f"{home_dir}/"
-  else:
-    home_dir = f"{home_dir}\\"
 path = home_dir + "qubo.jar"
 mascan = data["mascan"]
 time2 = data["time2"]
@@ -109,7 +104,7 @@ def run_command(command):
 
 # Login into a minecraft server
 def login(host,port,user,passwd,name):
-  x = subprocess.check_output("python3 {5}playerlist.pyw --auth {0}:{1} --session-name {2} --ofline-name {2} -p {3} {4}".format(user,passwd,name,port,host,home_dir))
+  x = subprocess.check_output("python3 {4}playerlist.pyw --auth {0}:{1} -p {2} {3}".format(user,passwd,port,host,home_dir), shell=True)
 
 # Get the file output depending on the os
 def file_out():

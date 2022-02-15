@@ -5,7 +5,7 @@
   "threads":1020,
   "timeout":1000,
   "os":0,
-  "home-dir":"/home/runner/badcopenheimer", "os_comment":"1=Windows,0=Linux",
+  "home-dir":"/home/runner/badcopenheimer/",
   "mascan":false,
   "time2":1000000,
   "user":"Pilot1782@example.com",
