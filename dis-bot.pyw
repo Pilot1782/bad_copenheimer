@@ -15,22 +15,18 @@ import multiprocessing
 #To change the main settings, edit the settings.json file.#
 ##############################################################
 
-###############################################################
-# Setting for Windows users and if you move the settings file #
-###############################################################
-settings_path = '/home/runner/badcopenheimer/settings.json'
+
 ###############################
 # Below this is preconfigured #
 ###############################
 
-# Check if you are root for running masscan
-if subprocess.check_output("whoami").decode("utf-8") != 'root\n' and os == 0:
-  raise PermissionError(f"Please run as root, not as {subprocess.check_output('whoami').decode('utf-8')}")
+
 
 # Varaible getting defeined
 client = discord.Client()
 bot = commands.Bot(command_prefix='!',help_command=None)
 
+settings_path = os.path.dirname(os.path.abspath(__file__)) + "\\settings.json"
 
 with open(settings_path, "r") as read_file: # Open the settings file and start defineing variables from it
   data = json.load(read_file)
@@ -60,6 +56,9 @@ passwd = data["password"]
 server = data["server"]
 sport = data["server-port"]
 
+# Check if you are root for running masscan
+if subprocess.check_output("whoami").decode("utf-8") != 'root\n' and os == 0:
+  raise PermissionError(f"Please run as root, not as {subprocess.check_output('whoami').decode('utf-8')}")
 
 # Functions getting defeined
 
@@ -440,15 +439,7 @@ if __name__ == "__main__":
   print("Testing:{0}, Debugging:{1}\n".format(testing,debug))
   try:
     if testing:
-      proc = multiprocessing.Process(target=login,args=("mc.hypixel.net",))
-      proc.start()
-      time.sleep((timeout / 100)) # Timeout
-      dprint("Checking if process is still alive...")
-      if proc.is_alive() and not flag:
-        print("Process still alive, terminating.")
-        proc.terminate()
-        print("Process timed out and was killed.")
-      proc.join()
+      bot.run(TOKEN)
     else:
       bot.run(TOKEN)
   except Exception as err:

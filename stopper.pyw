@@ -12,7 +12,10 @@ bot = commands.Bot(command_prefix='!',help_command=None)
 settings_path = '/home/runner/badcopenheimer/settings.json'
 with open(settings_path) as json_file:
   data = json.load(json_file)
-  TOKEN = data["token"]
+  if not data["TOKEN"]:
+    TOKEN = data["TOKEN"]
+  else:
+    TOKEN = os.getenv("TOKEN")
   os = data["os"]
 
 def winkill():

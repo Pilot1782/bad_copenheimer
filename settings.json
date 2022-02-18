@@ -4,7 +4,7 @@
   "upper_ip_bound":"199.255.255.255",
   "threads":1020,
   "timeout":6000,
-  "os":0,
+  "os":1,
   "home-dir":"/home/runner/badcopenheimer/",
   "mascan":false,
   "time2":1000000,
@@ -14,5 +14,5 @@
   "server":false,
   "server-port":"8000",
   "debugging":true,
-  "testing":false
+  "testing":true
 }
