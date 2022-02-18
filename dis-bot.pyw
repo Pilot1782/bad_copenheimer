@@ -21,7 +21,6 @@ import multiprocessing
 ###############################
 
 
-
 # Varaible getting defeined
 client = discord.Client()
 bot = commands.Bot(command_prefix='!',help_command=None)
