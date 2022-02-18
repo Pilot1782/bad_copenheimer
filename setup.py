@@ -51,6 +51,7 @@ def fix_files():
   inp = os.path.dirname(os.path.abspath(__file__))
   
   os.system("clear")
+  inp = inp + ost
   print(inp)
   global path
   path = inp
