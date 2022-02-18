@@ -40,7 +40,10 @@ home_dir = data["home-dir"]
 output_path = home_dir + "outputs.json"
 name = data["name"]
 usr_name = data["user"]
-TOKEN = data["token"]
+if not testing:
+  TOKEN = data["TOKEN"]
+else:
+  TOKEN = os.getenv("TOKEN")
 lower_ip_bound = data["lower_ip_bound"]
 upper_ip_bound = data["upper_ip_bound"]
 threads = data["threads"]
