@@ -118,16 +118,13 @@ def file_out():
 # Look through your files and see if the server you scan has 'player' playing on it, going to be redon soon
 # The redoo may be implemented but i have to test the file first.
 def find(player):
-  files = file_out()
   outp = []
-  msg = []
-  
-  if files == "No Output folder made.":
-    return "No Output folder made."
-  else:
+  with open(f"{home_dir}outputs.json", "r") as f:
+    data = json.load(f)
     try:
-      for i in files:
-        server = MinecraftServer.lookup("example.org:1234")
+      for i in data:
+        ip = i["ip"]
+        server = MinecraftServer.lookup(f"{ip}:25565")
 
         status = server.status()
         print("The server has {0} players and replied in {1} ms".format(status.players.online, status.latency))
