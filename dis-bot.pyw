@@ -43,7 +43,7 @@ timeout = int(timeout)
 os = data["os"]
 os = int(os)
 path = home_dir + "qubo.jar"
-mascan = data["mascan"]
+mascan = data["masscan"]
 time2 = data["time2"]
 debug = data["debugging"]
 passwd = data["password"]
@@ -165,9 +165,24 @@ def dprint(text):
   if debug:
     print(text)
 
-##############################
+def scan(ip1, ip2):
+  global mascan, home_dir, path, timeout, threads, os
+  if os == 0 and mascan == True:
+    command = f"sudo masscan -p25565 {ip1}-{ip2} --rate={threads * 3} --exclude 255.255.255.255"
+    for i in run_command(command):
+      dprint(i.decode("utf-8"))
+      if "Discovered" in i.decode("utf-8"):
+        yield clean(i.decode("utf-8"))
+  else:
+    command = f"java -Dfile.encoding=UTF-8 -jar {path} -nooutput -range {ip1}-{ip2} -ports 25565-25577 -th {threads} -ti {timeout}"
+    for i in run_command(command):
+      dprint(i.decode("utf-8"))
+      if "Discovered" in i.decode("utf-8"):
+        yield clean(i.decode("utf-8"))
 
-# Discord commands
+####################
+# Discord commands #
+####################
 
 # On login to server
 @bot.command()
@@ -177,8 +192,7 @@ async def on_ready(self):
 # Scan the large list
 @bot.command(name='mc')
 async def _mc(ctx):
-  proc = multiprocessing.Process(target=run_command, args=("python3.10 stopper.pyw",))
-  proc.start()
+  
 
   await ctx.send(f"Scanning started: {ptime()}")
   arr = []
@@ -193,8 +207,7 @@ async def _mc(ctx):
     bol = False
     cnt = 0
     dprint(command)
-    for line in run_command(command):
-      line = line.decode("utf-8")
+    for line in scan("172.65.238.0","172.65.239.0"):
       try:
         if "D" in line:
           bol = True
@@ -399,50 +412,20 @@ async def _help(ctx):
   await ctx.send("Usage of all commands.\n\n!mc scans the range of ip specified in the dis-bot.pyw file.\n\n!status gets the status of the specified server.\nUsage:!status 10.0.0.0:25565\nTo test the connectivity of the servers in the output file.\n\n!find scans all know servers in the outputs folder and returns if the given player is found.\nUsage:!find player123\n!cscan makes a custom scan\nUsage:\n!cscann 172.65.230.0 172.65.255.255")
   print("Printed Help")
 
-# Scan a custom set of ips
-@bot.command(name='cscan')
-async def _cscan(ctx,arg1,arg2):
-  await ctx.send(f"Scanning started: {ptime()}")
-
-  print(ptime())
-  print(f"Scanning {arg1}-{arg2} outputting {False}")
-  
-  if os == 0 and mascan == True:
-    print("scanning using masscan")
-    command = f"sudo masscan {arg1}-{arg2} -p25565,25566,25567 --rate=100000 --exclude 255.255.255.255"
-    for line in run_command(command):
-      line = line.decode("utf-8")
-      try:
-        if "rate" in line:
-          print("Skipped")
-        else:
-          print(line)
-          await ctx.send(line)
-      except:
-        await ctx.send(".")
-  elif os == 1:
-    command = f"java -Dfile.encoding=UTF-8 -jar {path} -range {arg1}-{arg2} -ports 25565-25577 -th {threads} -ti {timeout}".split()
-    for line in run_command(command):
-      line = line.decode("utf-8")
-      print(line)
-      if line == '' or line == None:
-        pass
-      else:
-        try:
-          await ctx.send(line)
-        except:
-          await ctx.send(".")
-  await ctx.send(f"\n\nScanning finished at {ptime()}")
-
-
 # Print whether debugging and testing are active
 if __name__ == "__main__":
   print("Testing:{0}, Debugging:{1}\n".format(testing,debug))
   try:
     if testing:
+      proc = multiprocessing.Process(target=run_command, args=("python3 stopper.pyw",))
+      proc.start()
       bot.run(TOKEN)
+      proc.join()
     else:
+      proc = multiprocessing.Process(target=run_command, args=("python3 stopper.pyw",))
+      proc.start()
       bot.run(TOKEN)
+      proc.join()
   except Exception as err:
     if debug:
       print("\n{0}".format(err))

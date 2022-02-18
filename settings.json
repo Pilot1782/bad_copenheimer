@@ -7,8 +7,12 @@
   "os":1,
   "home-dir":"D:\\Carson\\Programming\\Python_Stuff\\bad_copeheimer-main\\bad_copeheimer-main\\bad_copenheimer\\settings.json\\", 
   "password":"Password123",
+  "name":"Pilot1782",
+  "user":"Pilot1782",
   "server":false,
-  "server-port":"8000",
+  "server-port":"8080",
+  "masscan":false,
+  "time2":1000,
   "debugging":true,
   "testing":true
 }
