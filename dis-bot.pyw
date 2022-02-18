@@ -11,21 +11,16 @@ import json
 import multiprocessing
 
 
-##############################################################
-#To change the main settings, edit the settings.json file.#
-##############################################################
 
-
-###############################
-# Below this is preconfigured #
-###############################
-
+'''
+To change the main settings, edit the settings.json file.
+Below this is preconfigured
+'''
+settings_path = '/mnt/d/Carson/Programming/Python_Stuff/bad_copeheimer-main/bad_copeheimer-main/bad_copenheimer/settings.json'
 
 # Varaible getting defeined
 client = discord.Client()
 bot = commands.Bot(command_prefix='!',help_command=None)
-
-settings_path = os.path.dirname(os.path.abspath(__file__)) + "\\settings.json"
 
 with open(settings_path, "r") as read_file: # Open the settings file and start defineing variables from it
   data = json.load(read_file)
