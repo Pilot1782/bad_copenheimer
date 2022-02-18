@@ -17,7 +17,7 @@ import multiprocessing
 
 ###############################################################
 # Setting for Windows users and if you move the settings file #
-###############################################################
+settings_path = 'D:\Carson\Programming\Python_Stuff\bad_copeheimer-main\bad_copeheimer-main\bad_copenheimer\settings.json'
 settings_path = '/home/runner/badcopenheimer/settings.json'
 ###############################
 # Below this is preconfigured #
@@ -181,6 +181,17 @@ async def on_ready(self):
 # Scan the large list
 @bot.command(name='mc')
 async def _mc(ctx):
+  # Start a process that runs stoper.pyw
+  def stopper():
+    if testing:
+      os.system("python3 {0}stoper.pyw --test".format(home_dir))
+    else:
+      os.system("python3 {0}stoper.pyw".format(home_dir))
+  
+  proc = multiprocessing.Process(target=stopper)
+  proc.start()
+  
+
   await ctx.send(f"Scanning started: {ptime()}")
   arr = []
 
@@ -252,7 +263,7 @@ async def _mc(ctx):
         bol = False
     
     outp = arr
-    dprint(output)
+    dprint(outp)
     
   else:
     command = f"java -Dfile.encoding=UTF-8 -jar {path} -nooutput -range {lower_ip_bound}-{upper_ip_bound} -ports 25565-25577 -th {threads} -ti {timeout}"
@@ -312,6 +323,11 @@ async def _mc(ctx):
                             separators=(',',': '))
  
     print('Successfully appended {0} lines to the JSON file'.format(len(data)))
+
+    if proc.is_alive():
+      proc.terminate()
+
+    proc.join()
     
 # Get the status of a specified server or all of the saved servers
 @bot.command(name='status')

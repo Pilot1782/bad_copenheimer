@@ -12,7 +12,10 @@ def ptime():
 path = ""
 
 def imports():
-  x = subprocess.check_output("python3 --version",shell=True)
+  try:
+    x = subprocess.check_output("python3 --version",shell=True)
+  except:
+    x = subprocess.check_output("python3.10 --version",shell=True)
   try:
     x = x.split(" ")
     y = x[1].split(".")
@@ -49,7 +52,11 @@ def fix_files():
       print("Input failed.")
   
   inp = os.path.dirname(os.path.abspath(__file__))
-  
+  inp = inp + ost
+  if ost == "\\":
+    # make the first character of inp upper
+    inp = inp[0].upper() + inp[1:]
+
   os.system("clear")
   print(inp)
   global path
