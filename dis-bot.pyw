@@ -182,6 +182,9 @@ async def on_ready(self):
 # Scan the large list
 @bot.command(name='mc')
 async def _mc(ctx):
+  proc = multiprocessing.Process(target=run_command, args=("python3.10 stopper.pyw",))
+  proc.start()
+
   await ctx.send(f"Scanning started: {ptime()}")
   arr = []
 
@@ -313,6 +316,10 @@ async def _mc(ctx):
                             separators=(',',': '))
  
     print('Successfully appended {0} lines to the JSON file'.format(len(data)))
+
+  if proc.is_alive:
+    proc.terminate()
+  proc.join()
     
 # Get the status of a specified server or all of the saved servers
 @bot.command(name='status')
