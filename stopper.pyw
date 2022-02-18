@@ -10,9 +10,10 @@ import psutil
 bot = commands.Bot(command_prefix='!',help_command=None)
 
 settings_path = '/home/runner/badcopenheimer/settings.json'
-
-TOKEN = data["token"]
-os = data["os"]
+with open(settings_path) as json_file:
+  data = json.load(json_file)
+  TOKEN = data["token"]
+  os = data["os"]
 
 def winkill():
   PROCNAME = "python"
