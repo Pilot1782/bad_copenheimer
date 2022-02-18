@@ -9,7 +9,7 @@ import psutil
 
 bot = commands.Bot(command_prefix='!',help_command=None)
 
-settings_path = 'D:\Carson\Programming\Python_Stuff\bad_copeheimer-main\bad_copeheimer-main\bad_copenheimer\settings.json'
+settings_path = 'D:\\Carson\\Programming\\Python_Stuff\\bad_copeheimer-main\\bad_copeheimer-main\\bad_copenheimer\\settings.json'
 with open(settings_path) as json_file:
   data = json.load(json_file)
   if not data["TOKEN"]:
