@@ -16,7 +16,7 @@ import multiprocessing
 To change the main settings, edit the settings.json file.
 Below this is preconfigured
 '''
-settings_path = '/mnt/d/Carson/Programming/Python_Stuff/bad_copeheimer-main/bad_copeheimer-main/bad_copenheimer/settings.json'
+
 settings_path = 'D:\\Carson\\Programming\\Python_Stuff\\bad_copeheimer-main\\bad_copeheimer-main\\bad_copenheimer\\settings.json'
 # Varaible getting defeined
 client = discord.Client()
@@ -177,6 +177,12 @@ def scan(ip1, ip2):
       if "Discovered" in i.decode("utf-8"):
         yield clean(i.decode("utf-8"))
 
+def halt():
+  for line in run_command(f"{home_dir}stopper.pyw"):
+    if "halt" in line:
+      global flag
+      flag = True
+
 ####################
 # Discord commands #
 ####################
@@ -189,7 +195,6 @@ async def on_ready(self):
 # Scan the large list
 @bot.command(name='mc')
 async def _mc(ctx):
-  
 
   await ctx.send(f"Scanning started: {ptime()}")
   arr = []
@@ -200,15 +205,15 @@ async def _mc(ctx):
   arr = []
   if os == 0 and mascan == True:
     print("testing using masscan")
-    command = f"sudo masscan -p25565 172.65.238.0-172.65.239.0 --rate=100000 --exclude 255.255.255.255"
-    bol = False
-    cnt = 0
-    dprint(command)
+
     for line in scan("172.65.238.0","172.65.239.0"):
+      if flag == True:
+        break
       try:
         if "D" in line:
           bol = True
           cnt += 1
+          break
       except:
         bol = False
     if bol:

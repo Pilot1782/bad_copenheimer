@@ -41,11 +41,7 @@ def linkill():
 
 @bot.command(name="stop")
 async def _stop(ctx):
-  if os == 1:
-    winkill()
-  else:
-    linkill()
+  print("halt")
 
 if __name__ == "__main__":
-  #bot.run(TOKEN)
-  linkill()
+  bot.run(TOKEN)
