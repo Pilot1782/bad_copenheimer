@@ -171,11 +171,12 @@ def scan(ip1, ip2):
       if "Discovered" in i.decode("utf-8"):
         yield clean(i.decode("utf-8"))
   else:
-    command = f"java -Dfile.encoding=UTF-8 -jar {path} -nooutput -range {ip1}-{ip2} -ports 25565-25577 -th {threads} -ti {timeout}"
+    command = f"java -Dfile.encoding=UTF-8 -jar {path} -range {ip1}-{ip2} -ports 25565-25577 -th {threads} -ti {timeout}"
     for i in run_command(command):
       dprint(i.decode("utf-8"))
       if "Discovered" in i.decode("utf-8"):
         yield clean(i.decode("utf-8"))
+    os.removedirs(f"{home_dir}outputs")
 
 def halt():
   for line in run_command(f"{home_dir}stopper.pyw"):
