@@ -176,7 +176,8 @@ def scan(ip1, ip2):
       dprint(i.decode("utf-8"))
       if "Discovered" in i.decode("utf-8"):
         yield clean(i.decode("utf-8"))
-    os.removedirs(f"{home_dir}outputs")
+    import os as osys
+    osys.removedirs(f"{home_dir}outputs")
 
 def halt():
   for line in run_command(f"{home_dir}stopper.pyw"):
@@ -211,6 +212,7 @@ async def _mc(ctx):
       if flag == True:
         break
       try:
+        dprint(line)
         if "D" in line:
           bol = True
           cnt += 1
@@ -227,8 +229,8 @@ async def _mc(ctx):
     command = f"java -Dfile.encoding=UTF-8 -jar {path} -nooutput -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {threads} -ti {timeout}"
     bol = False
     dprint(command)
-    for line in run_command(command):
-      line = line.decode("utf-8")
+    for line in scan('172.65.238.0','172.65.240.255'):
+      dprint(line)
       try:
         if "(" in line:
           bol = True
