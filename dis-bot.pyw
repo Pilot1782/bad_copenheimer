@@ -42,6 +42,10 @@ timeout = data["timeout"]
 timeout = int(timeout)
 os = data["os"]
 os = int(os)
+if os == 1:
+  osp = "\\"
+else:
+  osp = "/"
 path = home_dir + "qubo.jar"
 mascan = data["masscan"]
 time2 = data["time2"]
@@ -177,7 +181,11 @@ def scan(ip1, ip2):
       if "Discovered" in i.decode("utf-8"):
         yield clean(i.decode("utf-8"))
     import os as osys
-    osys.removedirs(f"{home_dir}outputs")
+    osys.chdir("outputs")
+    files = osys.listdir(osys.getcwd())
+    for i in files:
+      if i.endswith(".txt"):
+        osys.remove(f"{home_dir}outputs\\{i}")
 
 def halt():
   for line in run_command(f"{home_dir}stopper.pyw"):
@@ -236,12 +244,15 @@ async def _mc(ctx):
           bol = True
       except:
         bol = False
+      if bol:
+        break
     if bol:
       print("Test passed!")
       await ctx.send("Test passed!")
     else:
       print("Test failed.")
       await ctx.send("Test Failed.")
+      raise SystemError("Test failed.")
 
 
   await ctx.send(f"\nStarting the scan at {ptime()}\nPinging {lower_ip_bound} through {upper_ip_bound}, using {threads} threads and timingout after {timeout} miliseconds.")
