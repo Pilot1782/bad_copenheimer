@@ -9,10 +9,13 @@ import psutil
 
 bot = commands.Bot(command_prefix='!',help_command=None)
 
-settings_path = '/home/runner/badcopenheimer/settings.json'
+settings_path = 'settings.json'
 with open(settings_path) as json_file:
   data = json.load(json_file)
-  TOKEN = data["token"]
+  if not data["TOKEN"]:
+    TOKEN = data["TOKEN"]
+  else:
+    TOKEN = os.getenv("TOKEN")
   os = data["os"]
 
 def winkill():
@@ -38,11 +41,14 @@ def linkill():
 
 @bot.command(name="stop")
 async def _stop(ctx):
+  print("halt")
+
+@bot.command(name="kill")
+async def _kill(ctx):
   if os == 1:
     winkill()
   else:
     linkill()
 
 if __name__ == "__main__":
-  #bot.run(TOKEN)
-  linkill()
+  bot.run(TOKEN)

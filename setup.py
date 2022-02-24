@@ -12,7 +12,10 @@ def ptime():
 path = ""
 
 def imports():
-  x = subprocess.check_output("python3 --version",shell=True)
+  try:
+    x = subprocess.check_output("python3 --version",shell=True)
+  except:
+    x = subprocess.check_output("python3.10 --version",shell=True)
   try:
     x = x.split(" ")
     y = x[1].split(".")
@@ -51,6 +54,8 @@ def fix_files():
   inp = os.path.dirname(os.path.abspath(__file__))
   
   os.system("clear")
+  inp = inp + ost
+  inp = inp[0].upper() + inp[1:]
   print(inp)
   global path
   path = inp
@@ -64,13 +69,17 @@ def fix_files():
       pass
     os.system("clear")
   print("Updating file paths...")
+  inp = r"{}".format(inp)
+  # Replace \ with \\ in inp
+  inp = inp.replace("\\","\\\\")
   print(inp)
   replace_line(f"{inp}stopper.pyw",11,f"settings_path = '{inp}settings.json'\n")
-  replace_line(f"{inp}settings.json",7,f'  "home-dir":"{inp}", ')
   replace_line(f"{inp}dis-bot.pyw",19,f"settings_path = '{inp}settings.json'\n")
+  inp = r"{}".format(inp)
+  replace_line(f"{inp}settings.json",7,r'  "home-dir":"{}", {}'.format(inp,"\n"))
 
 if __name__ == "__main__":
   fix_files()
   input(f"\nSetup is Done at {ptime()}!\nPlease change the settings.json file to suit your needs.")
   with open(f"{path}log.txt","w") as fp:
-    fp.write(f"[{ptime}] Finished Setup with no errors.")
+    fp.write(f"[{ptime()}] Finished Setup with no errors.")

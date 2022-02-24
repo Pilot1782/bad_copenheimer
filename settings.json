@@ -1,18 +1,18 @@
 {
   "token":"YOUR TOKEN HERE",
-  "lower_ip_bound":"10.0.0.0",
-  "upper_ip_bound":"199.255.255.255",
+  "lower_ip_bound":"172.65.238.255",
+  "upper_ip_bound":"172.65.240.255",
   "threads":1020,
   "timeout":6000,
-  "os":0,
-  "home-dir":"/home/runner/badcopenheimer/",
-  "mascan":false,
-  "time2":1000000,
-  "user":"Pilot1782@example.com",
-  "name":"Pilot1782",
+  "os":1,
+  "home-dir":"bad_copenheimer", 
   "password":"Password123",
+  "name":"Pilot1782",
+  "user":"Pilot1782",
   "server":false,
-  "server-port":"8000",
+  "server-port":"8080",
+  "masscan":false,
+  "time2":1000,
   "debugging":true,
-  "testing":false
+  "testing":true
 }
