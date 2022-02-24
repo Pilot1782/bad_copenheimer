@@ -178,7 +178,7 @@ def scan(ip1, ip2):
     command = f"java -Dfile.encoding=UTF-8 -jar {path} -range {ip1}-{ip2} -ports 25565-25577 -th {threads} -ti {timeout}"
     for i in run_command(command):
       dprint(i.decode("utf-8"))
-      if "Discovered" in i.decode("utf-8"):
+      if "(" in i.decode("utf-8"):
         yield clean(i.decode("utf-8"))
     import os as osys
     osys.chdir("outputs")
@@ -223,7 +223,6 @@ async def _mc(ctx):
         dprint(line)
         if "D" in line:
           bol = True
-          cnt += 1
           break
       except:
         bol = False
@@ -237,14 +236,10 @@ async def _mc(ctx):
     command = f"java -Dfile.encoding=UTF-8 -jar {path} -nooutput -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {threads} -ti {timeout}"
     bol = False
     dprint(command)
-    for line in scan('172.65.238.0','172.65.240.255'):
+    for line in list(scan('172.65.238.0','172.65.240.255')):
       dprint(line)
-      try:
-        if "(" in line:
-          bol = True
-      except:
-        bol = False
-      if bol:
+      if "(" in line:
+        bol = True
         break
     if bol:
       print("Test passed!")
@@ -252,7 +247,7 @@ async def _mc(ctx):
     else:
       print("Test failed.")
       await ctx.send("Test Failed.")
-      raise SystemError("Test failed.")
+
 
 
   await ctx.send(f"\nStarting the scan at {ptime()}\nPinging {lower_ip_bound} through {upper_ip_bound}, using {threads} threads and timingout after {timeout} miliseconds.")
@@ -316,8 +311,9 @@ async def _mc(ctx):
             f.append(j)
       b.append("".join(f))
     
-    print("{0}\n{1}".format(b,len(b)))
+    dprint("{0}\n{1}".format(b,len(b)))
     outp = b
+
   await ctx.send(f"\nScanning finished at {ptime()}")
   with open(output_path) as fp:
     data = json.load(fp)
@@ -333,13 +329,15 @@ async def _mc(ctx):
         data.append({"ip": i,"timestamp": "1641565033","ports": [{"port": 25565,"proto": "tcp","status": "open","reason": "syn-ack","ttl": 64}]})
     filename = output_path
 
+    dprint(outp)
 
     with open(filename, 'w') as json_file:
        json.dump(data, json_file, 
                             indent=4,  
                             separators=(',',': '))
- 
+    dprint(data)
     print('Successfully appended {0} lines to the JSON file'.format(len(data)))
+    await ctx.send('Successfully appended {0} lines to the JSON file'.format(len(data)))
 
   if proc.is_alive:
     proc.terminate()
