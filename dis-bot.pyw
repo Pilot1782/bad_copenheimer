@@ -17,7 +17,7 @@ To change the main settings, edit the settings.json file.
 Below this is preconfigured
 '''
 
-settings_path = 'D:\\Carson\\Programming\\Python_Stuff\\bad_copeheimer-main\\bad_copeheimer-main\\bad_copenheimer\\settings.json'
+settings_path = 'settings.json'
 # Varaible getting defeined
 client = discord.Client()
 bot = commands.Bot(command_prefix='!',help_command=None)
@@ -217,7 +217,7 @@ async def _mc(ctx):
     print("testing using masscan")
 
     for line in scan("172.65.238.0","172.65.239.0"):
-      if flag == True:
+      if flag:
         break
       try:
         dprint(line)
@@ -237,7 +237,8 @@ async def _mc(ctx):
     bol = False
     dprint(command)
     for line in list(scan('172.65.238.0','172.65.240.255')):
-      dprint(line)
+      if flag:
+        break
       if "(" in line:
         bol = True
         break
@@ -261,9 +262,9 @@ async def _mc(ctx):
     bol = False
     cnt = 0
     dprint(command)
-    for line in run_command(command):
-      line = line.decode("utf-8")
-      line = clean(line)
+    for line in scan(lower_ip_bound, upper_ip_bound):
+      if flag:
+        break
       try:
         if "." in line:
           bol = True
@@ -282,9 +283,9 @@ async def _mc(ctx):
     arr= []
     if debug:
       print(command)
-    for line in run_command(command):
-      line = line.decode("utf-8")
-      print(line)
+    for line in scan(lower_ip_bound, upper_ip_bound):
+      if flag:
+        break
       if line == '' or line == None:
         pass
       else:
@@ -423,7 +424,7 @@ async def _find(ctx,arg):
 # List all of the commands and how to use them
 @bot.command(name='help')
 async def _help(ctx):
-  await ctx.send("Usage of all commands.\n\n!mc scans the range of ip specified in the dis-bot.pyw file.\n\n!status gets the status of the specified server.\nUsage:!status 10.0.0.0:25565\nTo test the connectivity of the servers in the output file.\n\n!find scans all know servers in the outputs folder and returns if the given player is found.\nUsage:!find player123\n!cscan makes a custom scan\nUsage:\n!cscann 172.65.230.0 172.65.255.255")
+  await ctx.send("Usage of all commands.\n\n!mc scans the range of ip specified in the dis-bot.pyw file.\n\n!status gets the status of the specified server.\nUsage:!status 10.0.0.0:25565\nTo test the connectivity of the servers in the output file.\n\n!find scans all know servers in the outputs folder and returns if the given player is found.\nUsage:!find player123\n!cscan makes a custom scan\nUsage:\n!cscann 172.65.230.0 172.65.255.255\n\n!stop usable when ran with !mc, stops the scan from completing\nUsage: !stop\n\n!kill Last Resort Only!, Kills all python procs.\nUsage: !kill")
   print("Printed Help")
 
 # Print whether debugging and testing are active
