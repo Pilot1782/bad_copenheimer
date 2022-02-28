@@ -1,5 +1,5 @@
 {
-  "token":"YOUR TOKEN HERE",
+  "TOKEN":"YOUR TOKEN HERE",
   "lower_ip_bound":"172.65.238.255",
   "upper_ip_bound":"172.65.240.255",
   "threads":1020,
@@ -13,6 +13,6 @@
   "server-port":"8080",
   "masscan":false,
   "time2":1000,
-  "debugging":true,
+  "debugging":false,
   "testing":true
 }
