@@ -14,8 +14,9 @@ path = ""
 def imports():
   try:
     x = subprocess.check_output("python3 --version",shell=True)
-  except:
-    x = subprocess.check_output("python3.10 --version",shell=True)
+  except subprocess.CalledProcessError as err:
+    import funcs
+    funcs.logerror(err)
   try:
     x = x.split(" ")
     y = x[1].split(".")
@@ -75,8 +76,10 @@ def fix_files():
   print("Updating file paths...")
   inp = r"{}".format(inp)
   # Replace \ with \\ in inp
+  replace_line(f"{inp}.env",1,r'PATH={}settings.json'.format(inp))
+  inp = inp.replace("\\","\\\\")
   print(inp)
-  replace_line(f"{inp}.env",1,r'PATH={}settings.json'.format(inp,"\n"))
+  replace_line(f"{inp}settings.json",7,r'  "home-dir": "{}",{}'.format(inp,"\n"))
 
 if __name__ == "__main__":
   fix_files()
