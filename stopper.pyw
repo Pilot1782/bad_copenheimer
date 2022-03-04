@@ -2,20 +2,18 @@
 
 import discord
 import subprocess
-import os
+import os as osys
 from discord.ext import commands
 import json
 import psutil
 
 bot = commands.Bot(command_prefix='!',help_command=None)
 
-settings_path = os.getenv("PATH")
+settings_path = osys.getenv("PATH")
+
 with open(settings_path) as json_file:
   data = json.load(json_file)
-  if not data["TOKEN"]:
-    TOKEN = data["TOKEN"]
-  else:
-    TOKEN = os.getenv("TOKEN")
+  TOKEN = data["token"]
   os = data["os"]
 
 def winkill():

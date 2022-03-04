@@ -53,7 +53,11 @@ def fix_files():
       print("Input failed.")
   
   inp = os.path.dirname(os.path.abspath(__file__))
-  
+  inp = inp + ost
+  if ost == "\\":
+    # make the first character of inp upper
+    inp = inp[0].upper() + inp[1:]
+
   os.system("clear")
   inp = inp + ost
   inp = inp[0].upper() + inp[1:]

@@ -12,10 +12,18 @@ import multiprocessing
 from funcs import *
 
 
-'''
-To change the main settings, edit the settings.json file.
-Below this is preconfigured
-'''
+##############################################################
+#To change the main settings, edit the settings.json file.#
+##############################################################
+
+settings_path = osys.getenc("PATH")
+###############################
+# Below this is preconfigured #
+###############################
+
+# Check if you are root for running masscan
+if subprocess.check_output("whoami").decode("utf-8") != 'root\n' and os == 0:
+  raise PermissionError(f"Please run as root, not as {subprocess.check_output('whoami').decode('utf-8')}")
 
 settings_path = osys.getenv("PATH")
 # Varaible getting defeined
@@ -77,7 +85,17 @@ async def on_ready(self):
 
 # Scan the large list
 @bot.command(name='mc')
-async def _mc(ctx, args):
+async def _mc(ctx):
+  # Start a process that runs stoper.pyw
+  def stopper():
+    if testing:
+      os.system("python3 {0}stoper.pyw --test".format(home_dir))
+    else:
+      os.system("python3 {0}stoper.pyw".format(home_dir))
+  
+  proc = multiprocessing.Process(target=stopper)
+  proc.start()
+
 
   await ctx.send(f"Scanning started: {ptime()}")
   arr = []
