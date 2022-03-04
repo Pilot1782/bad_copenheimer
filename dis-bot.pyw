@@ -77,7 +77,7 @@ async def on_ready(self):
 
 # Scan the large list
 @bot.command(name='mc')
-async def _mc(ctx):
+async def _mc(ctx, args):
 
   await ctx.send(f"Scanning started: {ptime()}")
   arr = []
@@ -122,7 +122,9 @@ async def _mc(ctx):
       print("Test failed.")
       await ctx.send("Test Failed.")
 
-
+  if len(args) > 0:
+    lower_ip_bound = args[0]
+    upper_ip_bound = args[1]
 
   await ctx.send(f"\nStarting the scan at {ptime()}\nPinging {lower_ip_bound} through {upper_ip_bound}, using {threads} threads and timingout after {timeout} miliseconds.")
       
@@ -239,6 +241,7 @@ async def _status(ctx,*args):
       except Exception as err:
         await ctx.send(f"Failed to scan {i}.\n")
         print("Failed to scan {0}.\n{1}".format(i,err))
+        logerror(err)
         
       try: #Try quering server
         from mcstatus import MinecraftServer
@@ -246,9 +249,10 @@ async def _status(ctx,*args):
         query = server.query()
         print("The server has the following players online: {0}".format(", ".join(query.players.names)))
         await ctx.send("The server has the following players online: {0}".format(", ".join(query.players.names)))
-      except:
+      except Exception as err:
         print(f"Failed to query {i}")
         await ctx.send(f"Failed to query {i}.")
+        logerror(err)
   else:
     with open(output_path) as json_file:
       data = json.load(json_file)
@@ -275,11 +279,13 @@ async def _status(ctx,*args):
               er.append(str(e))
             print("Failed to scan {0} due to {1} \n {2}:{3}".format(p, e, c, u))
             c += 1
+            logerror(e)
         except Exception as err: #Catches all other errors
           if not str(err) in er:
             er.append(str(err))
           print("Failed to scan {0} due to {1} \n {2}:{3}".format(p, err, c, u))
           c += 1
+          logerror(err)
       er = list(set(er)) #Remove duplicates
       er = "\n".join(er)
       await ctx.send("Scanning finished.\n{1} out of {0} are up.\nThe following Errors occured:\n{2}".format(len(data), u, er))
@@ -308,8 +314,8 @@ To test the connectivity of the servers in the output file.
 !find scans all know servers in the outputs folder and returns if the given player is found. (Very WIP)
 Usage:!find player123
 
-!cscan makes a custom scan
-Usage: !cscann 172.65.230.0 172.65.255.255
+Custom scan, scan a custom set of ips.
+Usage: !mc 10.0.0. 10.0.0.255
 
 !stop usable when ran with !mc, stops the scan from completing
 Usage: !stop
@@ -336,6 +342,7 @@ if __name__ == "__main__":
     if debug:
       print("\n{0}".format(err))
     print("\nSorry, Execution of this file has failed.")
+    logerror(err)
 
 
 
