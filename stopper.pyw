@@ -2,14 +2,15 @@
 
 import discord
 import subprocess
-import os
+import os as osys
 from discord.ext import commands
 import json
 import psutil
 
 bot = commands.Bot(command_prefix='!',help_command=None)
 
-settings_path = 'D:\Carson\Programming\Python_Stuff\bad_copeheimer-main\bad_copeheimer-main\bad_copenheimer\settings.json'
+settings_path = osys.getenv("PATH")
+
 with open(settings_path) as json_file:
   data = json.load(json_file)
   TOKEN = data["token"]
@@ -38,11 +39,14 @@ def linkill():
 
 @bot.command(name="stop")
 async def _stop(ctx):
+  print("halt")
+
+@bot.command(name="kill")
+async def _kill(ctx):
   if os == 1:
     winkill()
   else:
     linkill()
 
 if __name__ == "__main__":
-  #bot.run(TOKEN)
-  linkill()
+  bot.run(TOKEN)

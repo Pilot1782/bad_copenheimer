@@ -58,6 +58,8 @@ def fix_files():
     inp = inp[0].upper() + inp[1:]
 
   os.system("clear")
+  inp = inp + ost
+  inp = inp[0].upper() + inp[1:]
   print(inp)
   global path
   path = inp
@@ -71,13 +73,13 @@ def fix_files():
       pass
     os.system("clear")
   print("Updating file paths...")
+  inp = r"{}".format(inp)
+  # Replace \ with \\ in inp
   print(inp)
-  replace_line(f"{inp}stopper.pyw",11,f"settings_path = '{inp}settings.json'\n")
-  replace_line(f"{inp}settings.json",7,f'  "home-dir":"{inp}", ')
-  replace_line(f"{inp}dis-bot.pyw",19,f"settings_path = '{inp}settings.json'\n")
+  replace_line(f"{inp}.env",1,r'PATH={}settings.json'.format(inp,"\n"))
 
 if __name__ == "__main__":
   fix_files()
   input(f"\nSetup is Done at {ptime()}!\nPlease change the settings.json file to suit your needs.")
   with open(f"{path}log.txt","w") as fp:
-    fp.write(f"[{ptime}] Finished Setup with no errors.")
+    fp.write(f"[{ptime()}] Finished Setup with no errors.")

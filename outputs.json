@@ -1,1 +1,54 @@
-[]
+[
+    {
+        "ip": "127.0.0.1",
+        "timestamp": "1641565033",
+        "ports": [
+            {
+                "port": 25565,
+                "proto": "tcp",
+                "status": "open",
+                "reason": "syn-ack",
+                "ttl": 64
+            }
+        ]
+    },
+    {
+        "ip": "172.65.240.39",
+        "timestamp": "1641565033",
+        "ports": [
+            {
+                "port": 25565,
+                "proto": "tcp",
+                "status": "open",
+                "reason": "syn-ack",
+                "ttl": 64
+            }
+        ]
+    },
+    {
+        "ip": "172.65.240.147",
+        "timestamp": "1641565033",
+        "ports": [
+            {
+                "port": 25565,
+                "proto": "tcp",
+                "status": "open",
+                "reason": "syn-ack",
+                "ttl": 64
+            }
+        ]
+    },
+    {
+        "ip": "172.65.239.18",
+        "timestamp": "1641565033",
+        "ports": [
+            {
+                "port": 25565,
+                "proto": "tcp",
+                "status": "open",
+                "reason": "syn-ack",
+                "ttl": 64
+            }
+        ]
+    }
+]
