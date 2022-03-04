@@ -77,8 +77,46 @@ def fix_files():
   print(inp)
   replace_line(f"{inp}settings.json",7,r'  "home-dir": "{}",{}'.format(inp,"\n"))
 
+def settings():
+  with open(f"{path}settings.json","r") as fp:
+    settings = fp.read()
+    settings = settings.split("\n")
+    arr = []
+    c = 0
+    for i in settings:
+      if i != "" and i != "{" and i != "}":
+        i = i.split('":')
+        i[0] = i[0] + '"'
+        inp = input(f"{i[0]}:")
+        if inp != "":
+          i[1] = inp
+          if c == 9 or c == 11 or c == 13:
+            if i[1].lower().startswith("f"):
+              i[1] = "false,"
+            elif i[1].lower().startswith("t"):
+              i[1] = "true,"
+          elif c == 14:
+            if i[1].lower().startswith("f"):
+              i[1] = "false"
+            elif i[1].lower().startswith("t"):
+              i[1] = "true"
+          else:
+            i[1] = f'"{i[1]}"'
+        i = ":".join(i)
+      print(i)
+      arr.append(i)
+      c += 1
+
+  text = "\n".join(arr)
+  if input(f"{text}\n\nSave? (Y/N)").lower() == "y":
+    with open(f"{path}settings.json","w") as fp:
+      fp.write(text)
+
 if __name__ == "__main__":
+  '''
   fix_files()
-  input(f"\nSetup is Done at {ptime()}!\nPlease change the settings.json file to suit your needs.")
+  input(f"\nSetup is Done at {ptime()}!\nPlease change the settings.json file to suit your needs or press ENTER to start editing it now.")
   with open(f"{path}log.txt","w") as fp:
     fp.write(f"[{ptime()}] Finished Setup with no errors.")
+  os.system("clear")'''
+  settings()
