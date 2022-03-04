@@ -9,7 +9,7 @@ import psutil
 
 bot = commands.Bot(command_prefix='!',help_command=None)
 
-settings_path = 'settings.json'
+settings_path = os.getenv("PATH")
 with open(settings_path) as json_file:
   data = json.load(json_file)
   if not data["TOKEN"]:
