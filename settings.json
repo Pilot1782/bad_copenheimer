@@ -5,7 +5,7 @@
   "threads":1020,
   "timeout":6000,
   "os":1,
-  "home-dir":"D:\\Carson\\Programming\\Python_Stuff\\bad_copeheimer-main\\bad_copeheimer-main\\bad_copenheimer\\",
+  "home-dir":"/home/user/badcopenheimer/",
   "user":"Pilot1782",
   "server":false,
   "server-port":"8080",
