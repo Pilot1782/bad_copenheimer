@@ -85,7 +85,7 @@ async def on_ready(self):
 
 # Scan the large list
 @bot.command(name='mc')
-async def _mc(ctx):
+async def _mc(ctx, args):
   # Start a process that runs stoper.pyw
   def stopper():
     if testing:
