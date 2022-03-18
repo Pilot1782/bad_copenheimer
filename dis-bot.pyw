@@ -16,13 +16,13 @@ from funcs import *
 #To change the main settings, edit the settings.json file.#
 ##############################################################
 
-settings_path = osys.getenc("PATH")
+settings_path = osys.getenv("PATH")
 ###############################
 # Below this is preconfigured #
 ###############################
 
 # Check if you are root for running masscan
-if subprocess.check_output("whoami").decode("utf-8") != 'root\n' and os == 0:
+if os == 0 and subprocess.check_output("whoami",shell=True).decode("utf-8") != 'root\n':
   raise PermissionError(f"Please run as root, not as {subprocess.check_output('whoami').decode('utf-8')}")
 
 settings_path = osys.getenv("PATH")
@@ -36,7 +36,6 @@ with open(settings_path, "r") as read_file: # Open the settings file and start d
 testing = data["testing"] #bc it easier
 home_dir = data["home-dir"]
 output_path = home_dir + "outputs.json"
-name = data["name"]
 usr_name = data["user"]
 if not testing:
   TOKEN = data["TOKEN"]
@@ -143,6 +142,15 @@ async def _mc(ctx, args):
   if len(args) > 0:
     lower_ip_bound = args[0]
     upper_ip_bound = args[1]
+  
+    testar = args[0].split(".")
+    if len(testar) != 4:
+      await ctx.send("Invalid IP")
+      exit()
+    testar = args[1].split(".")
+    if len(testar) != 4:
+      await ctx.send("Invalid IP")
+      exit()
 
   await ctx.send(f"\nStarting the scan at {ptime()}\nPinging {lower_ip_bound} through {upper_ip_bound}, using {threads} threads and timingout after {timeout} miliseconds.")
       
