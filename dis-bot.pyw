@@ -22,7 +22,7 @@ settings_path = osys.getenv("PATH")
 ###############################
 
 # Check if you are root for running masscan
-if subprocess.check_output("whoami").decode("utf-8") != 'root\n' and os == 0:
+if os == 0 and subprocess.check_output("whoami",shell=True).decode("utf-8") != 'root\n':
   raise PermissionError(f"Please run as root, not as {subprocess.check_output('whoami').decode('utf-8')}")
 
 settings_path = osys.getenv("PATH")
@@ -36,7 +36,6 @@ with open(settings_path, "r") as read_file: # Open the settings file and start d
 testing = data["testing"] #bc it easier
 home_dir = data["home-dir"]
 output_path = home_dir + "outputs.json"
-name = data["name"]
 usr_name = data["user"]
 if not testing:
   TOKEN = data["TOKEN"]
@@ -85,7 +84,7 @@ async def on_ready(self):
 
 # Scan the large list
 @bot.command(name='mc')
-async def _mc(ctx):
+async def _mc(ctx, args):
   # Start a process that runs stoper.pyw
   def stopper():
     if testing:
@@ -143,6 +142,15 @@ async def _mc(ctx):
   if len(args) > 0:
     lower_ip_bound = args[0]
     upper_ip_bound = args[1]
+  
+    testar = args[0].split(".")
+    if len(testar) != 4:
+      await ctx.send("Invalid IP")
+      exit()
+    testar = args[1].split(".")
+    if len(testar) != 4:
+      await ctx.send("Invalid IP")
+      exit()
 
   await ctx.send(f"\nStarting the scan at {ptime()}\nPinging {lower_ip_bound} through {upper_ip_bound}, using {threads} threads and timingout after {timeout} miliseconds.")
       
@@ -323,22 +331,25 @@ async def _find(ctx,arg):
 async def _help(ctx):
   await ctx.send("""Usage of all commands.
   
-!mc scans the range of ip specified in the dis-bot.pyw file.
+!mc | scans the range of ip specified in the dis-bot.pyw file.
+Usage: !mc [ip range]
 
-!status gets the status of the specified server.
+!status | gets the status of the specified server.
 Usage:!status 10.0.0.0:25565
-To test the connectivity of the servers in the output file.
 
-!find scans all know servers in the outputs folder and returns if the given player is found. (Very WIP)
+To test the connectivity of the servers in the output file.
+Usage:!status
+
+!find | scans all know servers in the outputs folder and returns if the given player is found. (Very WIP)
 Usage:!find player123
 
-Custom scan, scan a custom set of ips.
+Custom scans, scan a custom set of ips.
 Usage: !mc 10.0.0. 10.0.0.255
 
-!stop usable when ran with !mc, stops the scan from completing
+!stop | usable when ran with !mc, stops the scan from completing
 Usage: !stop
 
-!kill Last Resort Only!, Kills all python procs.
+!kill | Last Resort Only!, Kills all python procs.
 Usage: !kill""")
   print("Printed Help")
 

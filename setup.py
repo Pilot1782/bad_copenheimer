@@ -117,10 +117,11 @@ def settings():
       fp.write(text)
 
 if __name__ == "__main__":
-  '''
   fix_files()
-  input(f"\nSetup is Done at {ptime()}!\nPlease change the settings.json file to suit your needs or press ENTER to start editing it now.")
+  inp2 = input(f"\nSetup is Done at {ptime()}!\nPlease change the settings.json file to suit your needs or type 'y' to start editing it now.")
+  if inp2 != "":
+    settings()
+  
   with open(f"{path}log.txt","w") as fp:
     fp.write(f"[{ptime()}] Finished Setup with no errors.")
-  os.system("clear")'''
-  settings()
+  os.system("clear")
