@@ -331,22 +331,25 @@ async def _find(ctx,arg):
 async def _help(ctx):
   await ctx.send("""Usage of all commands.
   
-!mc scans the range of ip specified in the dis-bot.pyw file.
+!mc | scans the range of ip specified in the dis-bot.pyw file.
+Usage: !mc [ip range]
 
-!status gets the status of the specified server.
+!status | gets the status of the specified server.
 Usage:!status 10.0.0.0:25565
-To test the connectivity of the servers in the output file.
 
-!find scans all know servers in the outputs folder and returns if the given player is found. (Very WIP)
+To test the connectivity of the servers in the output file.
+Usage:!status
+
+!find | scans all know servers in the outputs folder and returns if the given player is found. (Very WIP)
 Usage:!find player123
 
-Custom scan, scan a custom set of ips.
+Custom scans, scan a custom set of ips.
 Usage: !mc 10.0.0. 10.0.0.255
 
-!stop usable when ran with !mc, stops the scan from completing
+!stop | usable when ran with !mc, stops the scan from completing
 Usage: !stop
 
-!kill Last Resort Only!, Kills all python procs.
+!kill | Last Resort Only!, Kills all python procs.
 Usage: !kill""")
   print("Printed Help")
 
