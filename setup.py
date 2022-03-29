@@ -1,14 +1,6 @@
 import os
 import subprocess
-import time
-
-def ptime():
-  x = time.localtime()
-  z = []
-  for i in x:
-    z.append(str(i))
-  z = f"{z[0]} {z[1]}/{z[2]} {z[3]}:{z[4]}:{z[5]}"
-  return z
+from funcs import ptime
 path = ""
 
 def imports():
@@ -41,7 +33,7 @@ def replace_line(file_name, line_num, text): # Yes i know this is a dumb way to 
 def fix_files():
   os.system("clear")
   ost = ''
-  while ost != "\\" or ost != "/":
+  while ost != "\\"or ost != "/":
     ost = input("\nIs this being run on windows, or linux? ")
     if ost.lower() == "windows":
       ost = "\\"
@@ -53,14 +45,12 @@ def fix_files():
       print("Input failed.")
   
   inp = os.path.dirname(os.path.abspath(__file__))
-  inp = inp + ost
-  if ost == "\\":
-    # make the first character of inp upper
-    inp = inp[0].upper() + inp[1:]
 
   os.system("clear")
   inp = inp + ost
   inp = inp[0].upper() + inp[1:]
+  # Replace \ with \\ in inp
+  inp = inp.replace("\\","\\\\")
   print(inp)
   global path
   path = inp
@@ -75,7 +65,6 @@ def fix_files():
     os.system("clear")
   print("Updating file paths...")
   inp = r"{}".format(inp)
-  # Replace \ with \\ in inp
   replace_line(f"{inp}.env",1,r'PATH={}settings.json'.format(inp))
   print(inp)
   replace_line(f"{inp}settings.json",7,r'  "home-dir": "{}",{}'.format(inp,"\n"))
