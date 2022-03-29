@@ -4,14 +4,8 @@ A Python impelentation of a discord bot that acts as a server scanner.
 This is a discord bot that will scan ip adresses to see if they are minecraft servers and will post the results in your channel.
 
 ## Installation
-To install, clone the repository and run setup.pyw, then open settings.json. Then put your discord bot token into 'YOUR TOKEN HERE' and change any of the prefrences you would like.
 
-To install the required packages run:
-> python3 setup.python3
-
-This installs all packages and update the paths in all files.
-
-In order for the player finder to work, you need a ojang account. Put this in the settings.json file.
+[Installation Page](https://www.github.com/Pilot1782/bad_copenheimer/wiki/Installation)
 
 ## Usage
 The first time you use this bot, run 
