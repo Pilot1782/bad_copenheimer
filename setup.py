@@ -77,7 +77,6 @@ def fix_files():
   inp = r"{}".format(inp)
   # Replace \ with \\ in inp
   replace_line(f"{inp}.env",1,r'PATH={}settings.json'.format(inp))
-  inp = inp.replace("\\","\\\\")
   print(inp)
   replace_line(f"{inp}settings.json",7,r'  "home-dir": "{}",{}'.format(inp,"\n"))
 
