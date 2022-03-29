@@ -32,8 +32,6 @@ In order for !find and !status to work properly the server should have enable-qu
 
 >!mc
 
->!cscan
-
 
 # Todo
 
