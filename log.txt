@@ -1,1 +1,3 @@
-[2022 3/29 9:43:16] Finished Setup with no errors.
+[2022 4/1 11:9:9] Finished Setup with no errors.
+[2022 4/1 11:10:44] Improper token has been passed.
+[2022 4/1 11:11:21] Improper token has been passed.

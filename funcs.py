@@ -128,6 +128,7 @@ def find(player):
     print('\n'.join(outp))
     return 'Done\n'.join(outp)
 
+#Clean masscan output
 def clean(line):
     if "rate" in line:
       print("Skipped")
@@ -142,10 +143,12 @@ def clean(line):
             arr.append(i)
         return "".join(arr)
 
+#Print but for debugging
 def dprint(text):
   if debug:
     print(text)
 
+#Scan to increase simplicity
 def scan(ip1, ip2):
   global mascan, home_dir, path, timeout, threads, os
   if os == 0 and mascan == True:
@@ -167,12 +170,15 @@ def scan(ip1, ip2):
       if i.endswith(".txt"):
         osys.remove(f"{home_dir}outputs\\{i}")
 
+#Stop command
 def halt():
   for line in run_command(f"{home_dir}stopper.pyw"):
     if "halt" in line:
       global flag
       flag = True
 
+#If error then log it
 def logerror(text):
+  print(text)
   with open(f"{home_dir}log.txt", "a") as f:
     f.write(f"[{ptime()}] {text}\n")

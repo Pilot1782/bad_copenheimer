@@ -111,5 +111,5 @@ if __name__ == "__main__":
     settings()
   
   with open(f"{path}log.txt","w") as fp:
-    fp.write(f"[{ptime()}] Finished Setup with no errors.")
+    fp.write(f"[{ptime()}] Finished Setup with no errors.\n")
   os.system("clear")

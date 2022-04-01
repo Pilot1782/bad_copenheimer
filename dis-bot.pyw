@@ -69,6 +69,7 @@ try:
 except Exception as e:
   if e == PermissionError:
     print(f"Please run as root, not as {subprocess.check_output('whoami',shell=True).decode('utf-8')}")
+    logerror(e)
     exit()
 
 
@@ -368,58 +369,5 @@ if __name__ == "__main__":
       bot.run(TOKEN)
       proc.join()
   except Exception as err:
-    if debug:
-      print("\n{0}".format(err))
-    print("\nSorry, Execution of this file has failed.")
+    print("\n\nSorry, Execution of this file has failed.\n")
     logerror(err)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # Now its 500 lines
