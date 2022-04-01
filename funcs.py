@@ -178,7 +178,7 @@ def halt():
       flag = True
 
 #If error then log it
-def logerror(text):
+def log(text):
   print(text)
   with open(f"{home_dir}log.txt", "a") as f:
     f.write(f"[{ptime()}] {text}\n")

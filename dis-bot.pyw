@@ -69,7 +69,7 @@ try:
 except Exception as e:
   if e == PermissionError:
     print(f"Please run as root, not as {subprocess.check_output('whoami',shell=True).decode('utf-8')}")
-    logerror(e)
+    log(e)
     exit()
 
 
@@ -86,6 +86,7 @@ async def on_ready(self):
 # Scan the large list
 @bot.command(name='mc')
 async def _mc(ctx, args):
+  log("Command: mc run" + str(args))
   # Start a process that runs stoper.pyw
   def stopper():
     if testing:
@@ -241,6 +242,7 @@ async def _mc(ctx, args):
     dprint(data)
     print('Successfully appended {0} lines to the JSON file'.format(len(data)))
     await ctx.send('Successfully appended {0} lines to the JSON file'.format(len(data)))
+    log("Successfully appended {0} lines to the JSON file".format(len(data)))
 
   if proc.is_alive:
     proc.terminate()
@@ -256,7 +258,7 @@ async def _status(ctx,*args):
 
   if len(msg) > 0:
     print(f"Scan of {msg} requested.")
-        
+    log(f"Scan of {msg} requested.")
     for i in args:
       try: #Try getting the status
         from mcstatus import MinecraftServer
@@ -268,7 +270,7 @@ async def _status(ctx,*args):
       except Exception as err:
         await ctx.send(f"Failed to scan {i}.\n")
         print("Failed to scan {0}.\n{1}".format(i,err))
-        logerror(err)
+        log(err)
         
       try: #Try quering server
         from mcstatus import MinecraftServer
@@ -279,7 +281,7 @@ async def _status(ctx,*args):
       except Exception as err:
         print(f"Failed to query {i}")
         await ctx.send(f"Failed to query {i}.")
-        logerror(err)
+        log(err)
   else:
     with open(output_path) as json_file:
       data = json.load(json_file)
@@ -306,13 +308,13 @@ async def _status(ctx,*args):
               er.append(str(e))
             print("Failed to scan {0} due to {1} \n {2}:{3}".format(p, e, c, u))
             c += 1
-            logerror(e)
+            log(e)
         except Exception as err: #Catches all other errors
           if not str(err) in er:
             er.append(str(err))
           print("Failed to scan {0} due to {1} \n {2}:{3}".format(p, err, c, u))
           c += 1
-          logerror(err)
+          log(err)
       er = list(set(er)) #Remove duplicates
       er = "\n".join(er)
       await ctx.send("Scanning finished.\n{1} out of {0} are up.\nThe following Errors occured:\n{2}".format(len(data), u, er))
@@ -370,4 +372,4 @@ if __name__ == "__main__":
       proc.join()
   except Exception as err:
     print("\n\nSorry, Execution of this file has failed.\n")
-    logerror(err)
+    log(err)

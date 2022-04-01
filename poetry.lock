@@ -271,6 +271,14 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
+name = "multiprocessing"
+version = "2.6.2.1"
+description = "Backport of the multiprocessing package to Python 2.4 and 2.5"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "pathlib"
 version = "1.0.1"
 description = "Object-oriented filesystem paths"
@@ -504,7 +512,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "9920a209b14d945a16f68152f583ff913a7d729a18350fbb51a9be10b87e0d45"
+content-hash = "bb616032b08537bdc89ab98e12f1449391631aeff7c74ac4526298aaf9945c82"
 
 [metadata.files]
 aiohttp = [
@@ -760,6 +768,13 @@ multidict = [
     {file = "multidict-6.0.2-cp39-cp39-win32.whl", hash = "sha256:23b616fdc3c74c9fe01d76ce0d1ce872d2d396d8fa8e4899398ad64fb5aa214a"},
     {file = "multidict-6.0.2-cp39-cp39-win_amd64.whl", hash = "sha256:4bae31803d708f6f15fd98be6a6ac0b6958fcf68fda3c77a048a4f9073704aae"},
     {file = "multidict-6.0.2.tar.gz", hash = "sha256:5ff3bd75f38e4c43f1f470f2df7a4d430b821c4ce22be384e1459cb57d6bb013"},
+]
+multiprocessing = [
+    {file = "multiprocessing-2.6.2.1-py2.4-win32.egg", hash = "sha256:d5f56e123606e8bc792164fe7bd12a5657533f1b936abb65b48385a8d8193176"},
+    {file = "multiprocessing-2.6.2.1-py2.5-win32.egg", hash = "sha256:109f4c89ea5c80814817d6636be5e1ec01f8567fdff84ea058ceeae46dbe4bd3"},
+    {file = "multiprocessing-2.6.2.1.tar.gz", hash = "sha256:ef3b81ad85d7de252e5491b1daac028e17f9741cbe3625032e6eaa4ad4c79900"},
+    {file = "multiprocessing-2.6.2.1.win32-py2.4.exe", hash = "sha256:3e74e3d6a4df52299392498b85427f3eb6d3f93d249d8ba649fe6a2135b3a73d"},
+    {file = "multiprocessing-2.6.2.1.win32-py2.5.exe", hash = "sha256:b6369e44b62543b1be3afdbb4c1c2d9b1b290a7ed67c6a20f8fd014b5b727760"},
 ]
 pathlib = [
     {file = "pathlib-1.0.1.tar.gz", hash = "sha256:6940718dfc3eff4258203ad5021090933e5c04707d5ca8cc9e73c94a7894ea9f"},
