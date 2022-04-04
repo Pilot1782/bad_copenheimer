@@ -61,7 +61,7 @@ passwd = data["password"]
 server = data["server"]
 sport = data["server-port"]
 
-# Check if you are root for running
+# Check if you are root for linux
 try:
   if os == 0:
     if subprocess.check_output("whoami", shell=True).decode("utf-8") != 'root\n':
