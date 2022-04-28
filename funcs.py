@@ -64,7 +64,9 @@ def hserver():
     os.system("python -m http.server {0}".format(sport))
 
 # Run a command and get line by line output
-def run_command(command):
+def run_command(command,powershell=False):
+    if powershell:
+      command = f"C:\Windows\system32\WindowsPowerShell\\v1.0\powershell.exe -command {command}"
     p = subprocess.Popen(command,
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE,
@@ -73,6 +75,7 @@ def run_command(command):
     for line in iter(p.stdout.readline, b''):
       if line: # Don't print blank lines
           yield line
+          print(line.decode("utf-8"))
     # This ensures the process has completed, AND sets the 'returncode' attr
     while p.poll() is None:
         time.sleep(.1) #Don't waste CPU-cycles
@@ -81,6 +84,7 @@ def run_command(command):
     if p.returncode != 0:
        # The run_command() function is responsible for logging STDERR 
        print(str(err))
+       log(str(err))
        return ("Error: " + str(err))
 
 # Login into a minecraft server

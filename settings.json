@@ -12,6 +12,7 @@
   "server-port":"8080",
   "masscan":false,
   "time2":1000,
-  "debugging":false,
-  "testing":false
+  "stop":false,
+  "debugging":true,
+  "testing":true
 }

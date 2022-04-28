@@ -63,7 +63,7 @@ attrs = ">=19.2.0"
 six = "*"
 
 [package.extras]
-visualize = ["graphviz (>0.5.1)", "Twisted (>=16.1.1)"]
+visualize = ["graphviz (>0.5.1)", "Twisted (>=22.2.0)"]
 
 [[package]]
 name = "bitstring"

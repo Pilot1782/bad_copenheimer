@@ -1,6 +1,6 @@
+from turtle import home
 from requests import get
 import discord
-from dotenv import load_dotenv
 from discord.ext import commands
 import time
 from time import sleep
@@ -77,11 +77,6 @@ except Exception as e:
 ####################
 # Discord commands #
 ####################
-
-# On login to server
-@bot.command()
-async def on_ready(self):
-  print('Logged on as {0}!'.format(self.user))
 
 # Scan the large list
 @bot.command(name='mc')
@@ -356,15 +351,25 @@ Usage: !stop
 Usage: !kill""")
   print("Printed Help")
 
+#Startup
+def startup():
+  bot.run(TOKEN)
+
 # Print whether debugging and testing are active
 if __name__ == "__main__":
   print("Testing:{0}, Debugging:{1}\n".format(testing,debug))
   try:
     if testing:
-      proc = multiprocessing.Process(target=run_command, args=("python3 stopper.pyw",))
-      proc.start()
-      bot.run(TOKEN)
-      proc.join()
+      proc2 = multiprocessing.Process(target=startup,args=())
+      proc2.start()
+
+      for line in run_command("python stopper.pyw",powershell=True):
+        if line.decode("utf-8") == "BAIL|A*(&HDO#QDH":
+          proc2.terminate()
+          print("Stopped")
+          break
+
+      proc2.join()
     else:
       proc = multiprocessing.Process(target=run_command, args=("python3 stopper.pyw",))
       proc.start()
