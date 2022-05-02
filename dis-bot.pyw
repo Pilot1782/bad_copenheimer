@@ -363,8 +363,11 @@ if __name__ == "__main__":
       flag = True
       proc2 = multiprocessing.Process(target=startup,args=())
       proc2.start()
-
-      for line in run_command(r"%LOCALAPPDATA%\Programs\Python\Python310\python.exe stopper.pyw"):
+      if os == 1:
+        pypath = r"%LOCALAPPDATA%\Programs\Python\Python310\python.exe"
+      else:
+        pypath = "python3"
+      for line in run_command(r"{} stopper.pyw".format(pypath)):
         print(line.decode("utf-8"))
         if line.decode("utf-8") == "BAIL|A*(&HDO#QDH" and proc2.is_alive():
           proc2.terminate()
@@ -378,5 +381,5 @@ if __name__ == "__main__":
       bot.run(TOKEN)
       proc.join()
   except Exception as err:
-    print("\n\nSorry, Execution of this file has failed.\n")
+    print("\n\nSorry, Execution of this file has failed, see the log for more details.\n")
     log(err)
