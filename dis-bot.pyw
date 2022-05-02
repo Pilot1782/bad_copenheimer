@@ -360,11 +360,13 @@ if __name__ == "__main__":
   print("Testing:{0}, Debugging:{1}\n".format(testing,debug))
   try:
     if testing:
+      flag = True
       proc2 = multiprocessing.Process(target=startup,args=())
       proc2.start()
 
-      for line in run_command("python stopper.pyw",powershell=True):
-        if line.decode("utf-8") == "BAIL|A*(&HDO#QDH":
+      for line in run_command(r"C:\Users\carso\AppData\Local\Programs\Python\Python310\python.exe stopper.pyw"):
+        print(line.decode("utf-8"))
+        if line.decode("utf-8") == "BAIL|A*(&HDO#QDH" and proc2.is_alive():
           proc2.terminate()
           print("Stopped")
           break

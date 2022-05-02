@@ -75,7 +75,6 @@ def run_command(command,powershell=False):
     for line in iter(p.stdout.readline, b''):
       if line: # Don't print blank lines
           yield line
-          print(line.decode("utf-8"))
     # This ensures the process has completed, AND sets the 'returncode' attr
     while p.poll() is None:
         time.sleep(.1) #Don't waste CPU-cycles
@@ -183,6 +182,6 @@ def halt():
 
 #If error then log it
 def log(text):
-  print(text)
+  print("[Error]"+text)
   with open(f"{home_dir}log.txt", "a") as f:
     f.write(f"[{ptime()}] {text}\n")
