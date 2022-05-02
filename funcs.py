@@ -173,6 +173,6 @@ def halt():
       global flag
       flag = True
 
-def logerror(text):
-  with open(f"{home_dir}log.txt", "a") as f:
+def logerror(text, path=home_dir):
+  with open(f"{path}log.txt", "a") as f:
     f.write(f"[{ptime()}] {text}\n")

@@ -1,6 +1,6 @@
 import os
 import subprocess
-from funcs import ptime
+from funcs import ptime, logerror
 path = ""
 
 def imports():
@@ -8,7 +8,7 @@ def imports():
     x = subprocess.check_output("python3 --version",shell=True)
   except subprocess.CalledProcessError as err:
     import funcs
-    funcs.logerror(err)
+    funcs.logerror(err, path=path)
   try:
     x = x.split(" ")
     y = x[1].split(".")
@@ -111,5 +111,5 @@ if __name__ == "__main__":
     settings()
   
   with open(f"{path}log.txt","w") as fp:
-    fp.write(f"[{ptime()}] Finished Setup with no errors.")
+    logerror("Finished Setup with no errors.")
   os.system("clear")
