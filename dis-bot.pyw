@@ -2,8 +2,6 @@ from requests import get
 import discord
 from dotenv import load_dotenv
 from discord.ext import commands
-import time
-from time import sleep
 from mcstatus import MinecraftServer
 import os as osys
 import subprocess
@@ -60,6 +58,7 @@ debug = data["debugging"]
 passwd = data["password"]
 server = data["server"]
 sport = data["server-port"]
+pypath = data["py-path"]
 
 # Check if you are root for running
 try:
@@ -358,12 +357,12 @@ if __name__ == "__main__":
   print("Testing:{0}, Debugging:{1}\n".format(testing,debug))
   try:
     if testing:
-      proc = multiprocessing.Process(target=run_command, args=("python3 stopper.pyw",))
+      proc = multiprocessing.Process(target=run_command, args=(f"{pypath} stopper.pyw",))
       proc.start()
       bot.run(TOKEN)
       proc.join()
     else:
-      proc = multiprocessing.Process(target=run_command, args=("python3 stopper.pyw",))
+      proc = multiprocessing.Process(target=run_command, args=(f"{pypath} stopper.pyw",))
       proc.start()
       bot.run(TOKEN)
       proc.join()

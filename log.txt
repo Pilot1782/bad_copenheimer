@@ -1,1 +1,2 @@
-[2022 3/29 9:43:16] Finished Setup with no errors.
+[2022 5/2 9:46:48] Finished Install Packages and created setup_done.yay file.
+[2022 5/2 9:57:30] Improper token has been passed.
