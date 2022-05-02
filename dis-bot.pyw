@@ -364,7 +364,7 @@ if __name__ == "__main__":
       proc2 = multiprocessing.Process(target=startup,args=())
       proc2.start()
 
-      for line in run_command(r"C:\Users\carso\AppData\Local\Programs\Python\Python310\python.exe stopper.pyw"):
+      for line in run_command(r"%LOCALAPPDATA%\Programs\Python\Python310\python.exe stopper.pyw"):
         print(line.decode("utf-8"))
         if line.decode("utf-8") == "BAIL|A*(&HDO#QDH" and proc2.is_alive():
           proc2.terminate()
