@@ -7,12 +7,13 @@
   "os":1,
   "home-dir": "D:\\Carson\\Programming\\Python_Stuff\\bad_copeheimer-main\\bad_copeheimer-main\\bad_copenheimer\\",
   "user":"Pilot1782",
-  "password":"12345",
+  "password":"Password123",
   "server":false,
   "server-port":"8080",
   "masscan":false,
   "time2":1000,
-  "stop":false,
-  "debugging":true,
-  "testing":true
+  "lin-py":"python3",
+  "win-py":"%LOCALAPPDATA%\\Programs\\Python\\Python310\\python.exe",
+  "debugging":false,
+  "testing":false
 }
