@@ -31,3 +31,4 @@
 [2022 4/29 9:58:24] b"'whoami' is not recognized as an internal or external command,\r\noperable program or batch file.\r\n"
 [2022 5/2 9:26:42] b'The system cannot find the path specified.\r\n'
 [2022 5/2 9:29:35] b'The system cannot find the path specified.\r\n'
+[2022 5/5 14:21:14] 'Client' object has no attribute 'run'

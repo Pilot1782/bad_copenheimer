@@ -182,6 +182,141 @@ def halt():
 
 #If error then log it
 def log(text, path=home_dir):
-  print("[Error]"+text)
   with open(f"{path}log.txt", "a") as f:
     f.write(f"[{ptime()}] {text}\n")
+
+#Scan a range
+def scan_range(ip1, ip2):
+  yield f"Scanning started: {ptime()}"
+
+  flag = False
+  print(ptime())
+  yield "Testing the Tool"
+  print(f"Scanning {'172.65.238.0'}-{'172.65.240.255'}")
+  arr = []
+  if os == 0 and mascan == True:
+    print("testing using masscan")
+
+    for line in scan("172.65.238.0","172.65.239.0"):
+      if flag:
+        break
+      try:
+        dprint(line)
+        if "D" in line:
+          bol = True
+          break
+      except:
+        bol = False
+    if bol:
+      dprint("Test passed!")
+      yield "Test passed!"
+    else:
+      dprint("Test failed.")
+      log("Test failed.")
+      yield "Test Failed."
+  else:
+    command = f"java -Dfile.encoding=UTF-8 -jar {path} -nooutput -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {threads} -ti {timeout}"
+    bol = False
+    dprint(command)
+    for line in list(scan('172.65.238.0','172.65.240.255')):
+      if flag:
+        break
+      if "(" in line:
+        bol = True
+        break
+    if bol:
+      dprint("Test passed!")
+      yield "Test passed!"
+    else:
+      dprint("Test failed.")
+      yield "Test Failed."
+  
+  yield f"\nStarting the scan at {ptime()}\nPinging {lower_ip_bound} through {upper_ip_bound}, using {threads} threads and timingout after {timeout} miliseconds."
+      
+  print(f"\nScanning on {lower_ip_bound} through {upper_ip_bound}, with {threads} threads and timeout of {timeout}")
+
+  
+  outp = []
+  if os == 0 and mascan == True:
+    command = f"sudo masscan -p25565 {lower_ip_bound}-{upper_ip_bound} --rate={threads * 3} --exclude 255.255.255.255"
+    bol = False
+    cnt = 0
+    dprint(command)
+    for line in scan(lower_ip_bound, upper_ip_bound):
+      if flag:
+        break
+      try:
+        if "." in line:
+          bol = True
+          cnt += 1
+          arr.append(line)
+          print(line)
+          yield line
+      except:
+        bol = False
+    
+    outp = arr
+    dprint(outp)
+    
+  else:
+    command = f"java -Dfile.encoding=UTF-8 -jar {path} -nooutput -range {lower_ip_bound}-{upper_ip_bound} -ports 25565-25577 -th {threads} -ti {timeout}"
+    arr= []
+    if debug:
+      print(command)
+    for line in scan(lower_ip_bound, upper_ip_bound):
+      if flag:
+        break
+      if line == '' or line == None:
+        pass
+      else:
+        try:
+          if line.startswith("[") or line.startswith("("):
+            yield line
+            arr.append(line)
+        except:
+          pass
+    a = []
+    for i in arr:
+      if i.startswith("(1") or i.startswith("(2"):
+        a.append(i)
+    b = []
+    for i in a:
+      f = []
+      for j in i:
+        if j == ":":
+          break
+        else:
+          if j == "(":
+            pass
+          else:
+            f.append(j)
+      b.append("".join(f))
+    
+    dprint("{0}\n{1}".format(b,len(b)))
+    outp = b
+
+  yield f"\nScanning finished at {ptime()}"
+  with open(output_path) as fp:
+    data = json.load(fp)
+    for i in outp:
+      bol = False
+      for j in data:
+        if i in j['ip']:
+          bol = False
+          break
+        else:
+          bol = True
+      if bol:
+        data.append({"ip": i,"timestamp": "1641565033","ports": [{"port": 25565,"proto": "tcp","status": "open","reason": "syn-ack","ttl": 64}]})
+    filename = output_path
+
+    dprint(outp)
+
+    with open(filename, 'w') as json_file:
+       json.dump(data, json_file, 
+                            indent=4,  
+                            separators=(',',': '))
+    dprint(data)
+    print('Successfully appended {0} lines to the JSON file'.format(len(data)))
+    yield 'Successfully appended {0} lines to the JSON file'.format(len(data))
+    log("Successfully appended {0} lines to the JSON file".format(len(data)))
