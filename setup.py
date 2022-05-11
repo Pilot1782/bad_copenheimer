@@ -1,35 +1,24 @@
 import os
 import subprocess
-from funcs import ptime, logerror
+from funcs import ptime
 path = ""
-py_path = ""
-import json
 
 def imports():
-  with open(f"{path}settings.json","r") as fp:
-    settings = json.load(fp)
-    py_path1 = ''
-    if settings["os"] == 0:
-      py_path1 = "python3"
-    else:
-      py_path1 = settings["win-py"]
-    global py_path
-    py_path = py_path1
   try:
-    x = subprocess.check_output(py_path+" --version",shell=True)
+    x = subprocess.check_output("python3 --version",shell=True)
   except subprocess.CalledProcessError as err:
     import funcs
-    funcs.logerror(err, path=path)
+    funcs.logerror(err)
   try:
     x = x.split(" ")
     y = x[1].split(".")
     if int(y[1]) >= 6:
-      os.system(py_path+" -m pip install poetry")
-      os.system(py_path+" -m poetry install")
+      os.system("python3 -m pip install poetry")
+      os.system("python3 -m poetry install")
   except Exception as err:
     str(err)
-    os.system(py_path+" -m pip install poetry")
-    os.system(py_path+" -m poetry install")
+    os.system("python -m pip install poetry")
+    os.system("python -m poetry install")
   finally:
     with open(f"{path}log.txt","w") as fp:
       fp.write(f"[{ptime()}] Finished Install Packages and created setup_done.yay file.\n")
@@ -79,7 +68,6 @@ def fix_files():
   replace_line(f"{inp}.env",1,r'PATH={}settings.json'.format(inp))
   print(inp)
   replace_line(f"{inp}settings.json",7,r'  "home-dir": "{}",{}'.format(inp,"\n"))
-  replace_line(f"{inp}settings.json",14,r'  "py-path": "{}",{}'.format(py_path,"\n"))
 
 def settings():
   with open(f"{path}settings.json","r") as fp:
@@ -119,9 +107,9 @@ def settings():
 if __name__ == "__main__":
   fix_files()
   inp2 = input(f"\nSetup is Done at {ptime()}!\nPlease change the settings.json file to suit your needs or type 'y' to start editing it now.")
-  if inp2 == "y":
+  if inp2 != "":
     settings()
   
   with open(f"{path}log.txt","w") as fp:
-    logerror("Finished Setup with no errors.")
+    fp.write(f"[{ptime()}] Finished Setup with no errors.\n")
   os.system("clear")
