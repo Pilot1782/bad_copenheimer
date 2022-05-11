@@ -187,6 +187,24 @@ async def status(ctx: interactions.CommandContext, ip: str):
       await ctx.send("Scanning finished.\n{1} out of {0} are up.\nThe following Errors occured:\n{2}".format(len(data), u, er))
       print("Scanning finished.\n{1} out of {0} are up.\nThe following Errors occured:\n{2}".format(len(data), u, er))
 
+#Help command
+@bot.command(
+    name="help",
+    description="Show the help message",
+)
+async def help(ctx: interactions.CommandContext):
+  await ctx.send("""
+################################################################################
+/server scan <ip_lower_bound> <ip_upper_bound>
+scans the ip range and returns the status of the servers
+
+/server status <ip>
+returns the status of the server
+
+/server help
+shows this message
+################################################################################
+""")
 
 #Startup
 def startup():
