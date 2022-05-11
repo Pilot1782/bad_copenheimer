@@ -77,7 +77,7 @@ except Exception as e:
 
 # Scan the large list
 @bot.command(
-    name="sserver_scan",
+    name="server_scan",
     description="scan some ips",
     options = [
         interactions.Option(
@@ -217,10 +217,25 @@ if __name__ == "__main__":
 
       proc2.join()
     else:
-      proc = multiprocessing.Process(target=run_command, args=("python3 stopper.pyw",))
-      proc.start()
-      bot.run(TOKEN)
-      proc.join()
+      flag = True
+      dprint("Starting bot...")
+      proc2 = multiprocessing.Process(target=startup,args=())
+      proc2.start()
+
+      if os == 1:
+        pypath = r"%LOCALAPPDATA%\Programs\Python\Python310\python.exe"
+      else:
+        pypath = "python3"
+      
+      dprint("Starting emergency bot...")
+      for line in run_command(r"{} stopper.pyw".format(pypath)):
+        print(line.decode("utf-8"))
+        if line.decode("utf-8") == "BAIL|A*(&HDO#QDH" and proc2.is_alive():
+          proc2.terminate()
+          print("Stopped")
+          break
+
+      proc2.join()
   except Exception as err:
     print("\n\nSorry, Execution of this file has failed, see the log for more details.\n")
     log(err)

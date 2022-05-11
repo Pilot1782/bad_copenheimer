@@ -8,7 +8,7 @@
   "home-dir": "a non specific path",
   "user":"Pilot1782",
   "password":"Password123",
-  "guild-id": 12345678901234567890123456789012,
+  "guild-id": 1234,
   "server":false,
   "server-port":"8080",
   "masscan":false,
@@ -16,5 +16,5 @@
   "lin-py":"python3",
   "win-py":"%LOCALAPPDATA%\\Programs\\Python\\Python310\\python.exe",
   "debugging":false,
-  "testing":true
+  "testing":false
 }
