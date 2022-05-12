@@ -14,11 +14,11 @@ Moving the bot to a slash command basis. Ultimate goal of clicking a link to add
 ## Usage
 The first time you use this bot, run 
 
->!help
+>/help
 
 This shows all of the commands you can use and their usage. Then to create your server list, run:
 
->!mc
+>/server scan
 
 This will get a list of all active minecraft servers, you may want to set the threads higher than the current value. This will take several hours to complete.
 
@@ -28,13 +28,11 @@ In order for !find and !status to work properly the server should have enable-qu
 
 ### All Possible Commands
 
->!help
+>/help
 
->!find
+>/status
 
->!status
-
->!mc
+>/server scan
 
 
 # Todo
@@ -43,4 +41,4 @@ In order for !find and !status to work properly the server should have enable-qu
 
 **2:** Create a [Meteor Client](https://github.com/MeteorDevelopment/meteor-client) addon and implement the scanner results into the addon allowing you to join servers based on "whitelist, modded, vinilla etc."
 
-**3:** Implement Slash Commands
+**3:** Add a player scanner
