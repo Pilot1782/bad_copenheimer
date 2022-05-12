@@ -106,6 +106,9 @@ async def server_scan(ctx: interactions.CommandContext, ip_lower_bound: str, ip_
       await ctx.send("Invalid IP")
       exit()
 
+  for line in scan(lower_ip_bound, upper_ip_bound):
+    await ctx.send(line)
+
 
     
 @bot.command(
