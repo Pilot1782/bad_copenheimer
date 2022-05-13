@@ -37,8 +37,4 @@ In order for !find and !status to work properly the server should have enable-qu
 
 # Todo
 
-**1:** Use send login packets to check is the server is whitelisted
-
-**2:** Create a [Meteor Client](https://github.com/MeteorDevelopment/meteor-client) addon and implement the scanner results into the addon allowing you to join servers based on "whitelist, modded, vinilla etc."
-
-**3:** Add a player scanner
+#### Moved to [Project](https://github.com/users/Pilot1782/projects/1)
