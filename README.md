@@ -24,7 +24,7 @@ This will get a list of all active minecraft servers, you may want to set the th
 
 ## Important
 
-In order for !find and !status to work properly the server should have enable-query=true in the server.properties file
+In order for /status to work properly the server should have enable-query=true in the server.properties file. This allows the server to brodcast who is currently logged onto the server.
 
 ### All Possible Commands
 
