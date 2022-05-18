@@ -32,7 +32,10 @@ body:
       label: Version
       description: What version of our software are you running?
       options:
-        - 1.7 (Default)
+        - 1.9.1 (Default)
+        - 1.9
+        - 1.8
+        - 1.7
         - 1.6
         - 1.5
         - 1.4
