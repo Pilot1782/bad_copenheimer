@@ -13,6 +13,9 @@ def ptime():
   z = f"{z[0]} {z[1]}/{z[2]} {z[3]}:{z[4]}:{z[5]}"
   return z
 
+def cls():
+  os.system('cls' if os.name=='nt' else 'clear')
+
 def imports():
   try:
     x = subprocess.check_output("python3 --version",shell=True)
@@ -41,7 +44,7 @@ def replace_line(file_name, line_num, text): # Yes i know this is a dumb way to 
     out.close()
 
 def fix_files():
-  os.system("clear")
+  cls()
   ost = ''
   while ost != "\\"or ost != "/":
     ost = input("\nIs this being run on windows, or linux? ")
@@ -56,7 +59,7 @@ def fix_files():
   
   inp = os.path.dirname(os.path.abspath(__file__))
 
-  os.system("clear")
+  cls()
   inp = inp + ost
   inp = inp[0].upper() + inp[1:]
   # Replace \ with \\ in inp
@@ -72,7 +75,7 @@ def fix_files():
     imports()
     with open("setup_done.yay","w") as file:
       pass
-    os.system("clear")
+    cls()
   print("Updating file paths...")
   inp = r"{}".format(inp)
   with open(inp+".env", "w") as file:
@@ -124,4 +127,4 @@ if __name__ == "__main__":
   
   with open(f"{path}log.txt","w") as fp:
     fp.write(f"[{ptime()}] Finished Setup with no errors.\n")
-  os.system("clear")
+  cls()
