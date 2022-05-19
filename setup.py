@@ -36,7 +36,7 @@ def imports():
     with open(f"{path}log.txt","w") as fp:
       fp.write(f"[{ptime()}] Finished Install Packages and created setup_done.yay file.\n")
 
-def replace_line(file_name, line_num, text): # Yes i know this is a dumb way to solve it but it works
+def replace_line(file_name, line_num, text): # Yes i know this is a dumb way to solve it but it works also consitant indentation
     lines = open(file_name, 'r').readlines()
     lines[line_num] = text
     out = open(file_name, 'w')
@@ -122,7 +122,7 @@ def settings():
 if __name__ == "__main__":
   fix_files()
   inp2 = input(f"\nSetup is Done at {ptime()}!\nPlease change the settings.json file to suit your needs or type 'y' to start editing it now.")
-  if inp2 != "":
+  if inp2 == "y":
     settings()
   
   with open(f"{path}log.txt","w") as fp:

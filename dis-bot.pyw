@@ -216,6 +216,7 @@ def startup():
 # Print whether debugging and testing are active
 if __name__ == "__main__":
   print("Testing:{0}, Debugging:{1}\n".format(testing,debug))
+  log("Startup has been called, "+str(testing)+": testing and "+str(debug)+": debugging")
   try:
     if testing:
       flag = True
