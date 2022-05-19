@@ -75,6 +75,8 @@ def fix_files():
     os.system("clear")
   print("Updating file paths...")
   inp = r"{}".format(inp)
+  with open(inp+".env", "w") as file:
+    pass
   replace_line(f"{inp}.env",1,r'PATH={}settings.json'.format(inp))
   print(inp)
   replace_line(f"{inp}settings.json",7,r'  "home-dir": "{}",{}'.format(inp,"\n"))
