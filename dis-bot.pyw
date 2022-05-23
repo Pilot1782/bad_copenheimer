@@ -197,7 +197,7 @@ async def status(ctx: interactions.CommandContext, ip: str):
 )
 async def help(ctx: interactions.CommandContext):
   await ctx.send("""
-################################################################################
+########################################################
 /server scan <ip_lower_bound> <ip_upper_bound>
 scans the ip range and returns the status of the servers
 
@@ -206,7 +206,7 @@ returns the status of the server
 
 /server help
 shows this message
-################################################################################
+########################################################
 """)
 
 #Startup
