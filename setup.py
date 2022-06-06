@@ -1,47 +1,27 @@
 import os
 import subprocess
-
+from funcs import ptime, dprint
 path = ""
 
-def ptime():
-  import time
-  x = time.localtime()
-  z = []
-  for i in x:
-    z.append(str(i))
-  y = ":".join(z)
-  z = f"{z[0]} {z[1]}/{z[2]} {z[3]}:{z[4]}:{z[5]}"
-  return z
-
-def cls():
-  os.system('cls' if os.name=='nt' else 'clear')
-
 def imports():
-  if os == 1:
-    pypath = r"%LOCALAPPDATA%\Programs\Python\Python310\python.exe"
-  else:
-    pypath = "python3"
-
   try:
-    x = subprocess.check_output("{} --version".format(pypath),shell=True)
+    x = subprocess.check_output("python3 --version",shell=True)
   except subprocess.CalledProcessError as err:
     import funcs
-    funcs.logerror(err)
+    funcs.log(err)
   try:
     x = x.split(" ")
     y = x[1].split(".")
     if int(y[1]) >= 6:
-      os.system("python3 -m pip install poetry")
-      os.system("python3 -m poetry install")
+      os.system("python3 -m pip install -r requirements.txt")
   except Exception as err:
     str(err)
-    os.system("python -m pip install poetry")
-    os.system("python -m poetry install")
+    os.system("python -m pip install -r requirements.txt")
   finally:
     with open(f"{path}log.txt","w") as fp:
       fp.write(f"[{ptime()}] Finished Install Packages and created setup_done.yay file.\n")
 
-def replace_line(file_name, line_num, text): # Yes i know this is a dumb way to solve it but it works also consitant indentation
+def replace_line(file_name, line_num, text): # Yes i know this is a dumb way to solve it but it works
     lines = open(file_name, 'r').readlines()
     lines[line_num] = text
     out = open(file_name, 'w')
@@ -49,7 +29,7 @@ def replace_line(file_name, line_num, text): # Yes i know this is a dumb way to 
     out.close()
 
 def fix_files():
-  cls()
+  os.system("clear")
   ost = ''
   while ost != "\\"or ost != "/":
     ost = input("\nIs this being run on windows, or linux? ")
@@ -64,12 +44,12 @@ def fix_files():
   
   inp = os.path.dirname(os.path.abspath(__file__))
 
-  cls()
+  os.system("clear")
   inp = inp + ost
   inp = inp[0].upper() + inp[1:]
   # Replace \ with \\ in inp
   inp = inp.replace("\\","\\\\")
-  print(inp)
+  dprint(inp)
   global path
   path = inp
 
@@ -80,13 +60,11 @@ def fix_files():
     imports()
     with open("setup_done.yay","w") as file:
       pass
-    cls()
+    os.system("clear")
   print("Updating file paths...")
   inp = r"{}".format(inp)
-  with open(inp+".env", "w") as file:
-    pass
-  replace_line(f"{inp}.env",1,r'PATH={}settings.json'.format(inp))
-  print(inp)
+  replace_line(f"{inp}.env",0,r'PATH={}settings.json'.format(inp))
+  dprint(inp)
   replace_line(f"{inp}settings.json",7,r'  "home-dir": "{}",{}'.format(inp,"\n"))
 
 def settings():
@@ -127,9 +105,9 @@ def settings():
 if __name__ == "__main__":
   fix_files()
   inp2 = input(f"\nSetup is Done at {ptime()}!\nPlease change the settings.json file to suit your needs or type 'y' to start editing it now.")
-  if inp2 == "y":
+  if inp2 != "":
     settings()
   
   with open(f"{path}log.txt","w") as fp:
     fp.write(f"[{ptime()}] Finished Setup with no errors.\n")
-  cls()
+  os.system("clear")
