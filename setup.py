@@ -1,6 +1,6 @@
 import os
 import subprocess
-from funcs import ptime
+from funcs import ptime, dprint
 path = ""
 
 def imports():
@@ -8,17 +8,15 @@ def imports():
     x = subprocess.check_output("python3 --version",shell=True)
   except subprocess.CalledProcessError as err:
     import funcs
-    funcs.logerror(err)
+    funcs.log(err)
   try:
     x = x.split(" ")
     y = x[1].split(".")
     if int(y[1]) >= 6:
-      os.system("python3 -m pip install poetry")
-      os.system("python3 -m poetry install")
+      os.system("python3 -m pip install -r requirements.txt")
   except Exception as err:
     str(err)
-    os.system("python -m pip install poetry")
-    os.system("python -m poetry install")
+    os.system("python -m pip install -r requirements.txt")
   finally:
     with open(f"{path}log.txt","w") as fp:
       fp.write(f"[{ptime()}] Finished Install Packages and created setup_done.yay file.\n")
@@ -51,7 +49,7 @@ def fix_files():
   inp = inp[0].upper() + inp[1:]
   # Replace \ with \\ in inp
   inp = inp.replace("\\","\\\\")
-  print(inp)
+  dprint(inp)
   global path
   path = inp
 
@@ -65,8 +63,8 @@ def fix_files():
     os.system("clear")
   print("Updating file paths...")
   inp = r"{}".format(inp)
-  replace_line(f"{inp}.env",1,r'PATH={}settings.json'.format(inp))
-  print(inp)
+  replace_line(f"{inp}.env",0,r'PATH={}settings.json'.format(inp))
+  dprint(inp)
   replace_line(f"{inp}settings.json",7,r'  "home-dir": "{}",{}'.format(inp,"\n"))
 
 def settings():

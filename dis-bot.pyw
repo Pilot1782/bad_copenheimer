@@ -75,14 +75,21 @@ except Exception as e:
 # Discord commands #
 ####################
 
+dprint("Checking server_scan")
 # Scan the large list
 @bot.command(
     name="server_scan",
     description="scan some ips",
     options = [
         interactions.Option(
-            name="text",
-            description="What you want to say",
+            name="Lower IP Bound",
+            description="Lower Ip Bound",
+            type=interactions.OptionType.STRING,
+            required=True,
+        ),
+        interactions.Option(
+            name="Upper IP Bound",
+            description="Upper Ip Bound",
             type=interactions.OptionType.STRING,
             required=True,
         ),
@@ -110,7 +117,8 @@ async def server_scan(ctx: interactions.CommandContext, ip_lower_bound: str, ip_
     await ctx.send(line)
 
 
-    
+dprint("Checking status")
+# Scan the large list
 @bot.command(
  name="status",
  description="Check the status of the given ip or check all in the json file",
@@ -190,6 +198,8 @@ async def status(ctx: interactions.CommandContext, ip: str):
       await ctx.send("Scanning finished.\n{1} out of {0} are up.\nThe following Errors occured:\n{2}".format(len(data), u, er))
       print("Scanning finished.\n{1} out of {0} are up.\nThe following Errors occured:\n{2}".format(len(data), u, er))
 
+
+dprint("Checking list")
 #Help command
 @bot.command(
     name="help",

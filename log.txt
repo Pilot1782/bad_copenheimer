@@ -1,0 +1,1 @@
+[2022 6/6 11:27:11] Finished Install Packages and created setup_done.yay file.
