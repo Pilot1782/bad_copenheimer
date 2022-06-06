@@ -78,7 +78,7 @@ except Exception as e:
 dprint("Checking server_scan")
 # Scan the large list
 @bot.command(
-    name="server_scan",
+    name="server-scan",
     description="scan some ips",
     options = [
         interactions.Option(
