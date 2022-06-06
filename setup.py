@@ -17,8 +17,13 @@ def cls():
   os.system('cls' if os.name=='nt' else 'clear')
 
 def imports():
+  if os == 1:
+    pypath = r"%LOCALAPPDATA%\Programs\Python\Python310\python.exe"
+  else:
+    pypath = "python3"
+
   try:
-    x = subprocess.check_output("python3 --version",shell=True)
+    x = subprocess.check_output("{} --version".format(pypath),shell=True)
   except subprocess.CalledProcessError as err:
     import funcs
     funcs.logerror(err)

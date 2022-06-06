@@ -17,9 +17,7 @@ settings_path = osys.getenv("PATH")
 # Below this is preconfigured #
 ###############################
 
-# Check if you are root for running masscan
-if os == 0 and subprocess.check_output("whoami",shell=True).decode("utf-8") != 'root\n':
-  raise PermissionError(f"Please run as root, not as {subprocess.check_output('whoami').decode('utf-8')}")
+
 
 settings_path = osys.getenv("PATH")
 # Varaible getting defeined
@@ -58,6 +56,7 @@ passwd = data["password"]
 server = data["server"]
 sport = data["server-port"]
 
+
 # Check if you are root for linux
 try:
   if os == 0:
@@ -81,14 +80,28 @@ except Exception as e:
     description="scan some ips",
     options = [
         interactions.Option(
-            name="text",
-            description="What you want to say",
+            name="Ip Lower Bound",
+            description="The lower bound of the ip range",
+            type=interactions.OptionType.STRING,
+            required=True,
+        ),
+        interactions.Option(
+            name="Ip Upper Bound",
+            description="The upper bound of the ip range",
             type=interactions.OptionType.STRING,
             required=True,
         ),
     ],
 )
 async def server_scan(ctx: interactions.CommandContext, ip_lower_bound: str, ip_upper_bound: str):
+  """_summary_
+
+  Args:
+      ctx (interactions.CommandContext): _description_
+      ip_lower_bound (str): _description_
+      ip_upper_bound (str): _description_
+  """
+
   iplower = ip_lower_bound
   ipupper = ip_upper_bound
   log("Command: mc run" + iplower + "|" + ipupper)
@@ -124,7 +137,10 @@ async def server_scan(ctx: interactions.CommandContext, ip_lower_bound: str, ip_
  ],
 )
 async def status(ctx: interactions.CommandContext, ip: str):
-# Get the status of a specified server or all of the saved servers
+  """_summary_
+  
+  Args:
+      ip (str): The ips to check, seperated by a space, ie 'ip1 ip2 ip3'"""
 
   if len(ip) > 0:
     print(f"Scan of {ip} requested.")
