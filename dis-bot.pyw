@@ -140,7 +140,8 @@ async def status(ctx: interactions.CommandContext, ip: str):
   """_summary_
   
   Args:
-      ip (str): The ips to check, seperated by a space, ie 'ip1 ip2 ip3'"""
+      ip (str): The ips to check, seperated by a space, ie 'ip1 ip2 ip3'
+  """
 
   if len(ip) > 0:
     print(f"Scan of {ip} requested.")
