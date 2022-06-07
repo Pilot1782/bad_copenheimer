@@ -17,9 +17,7 @@ settings_path = osys.getenv("PATH")
 # Below this is preconfigured #
 ###############################
 
-# Check if you are root for running masscan
-if os == 0 and subprocess.check_output("whoami",shell=True).decode("utf-8") != 'root\n':
-  raise PermissionError(f"Please run as root, not as {subprocess.check_output('whoami').decode('utf-8')}")
+
 
 settings_path = osys.getenv("PATH")
 # Varaible getting defeined
@@ -57,6 +55,7 @@ debug = data["debugging"]
 passwd = data["password"]
 server = data["server"]
 sport = data["server-port"]
+
 
 # Check if you are root for linux
 try:
@@ -96,6 +95,14 @@ dprint("Checking server_scan")
     ],
 )
 async def server_scan(ctx: interactions.CommandContext, ip_lower_bound: str, ip_upper_bound: str):
+  """_summary_
+
+  Args:
+      ctx (interactions.CommandContext): _description_
+      ip_lower_bound (str): _description_
+      ip_upper_bound (str): _description_
+  """
+
   iplower = ip_lower_bound
   ipupper = ip_upper_bound
   log("Command: mc run" + iplower + "|" + ipupper)
@@ -132,7 +139,11 @@ dprint("Checking status")
  ],
 )
 async def status(ctx: interactions.CommandContext, ip: str):
-# Get the status of a specified server or all of the saved servers
+  """_summary_
+  
+  Args:
+      ip (str): The ips to check, seperated by a space, ie 'ip1 ip2 ip3'
+  """
 
   if len(ip) > 0:
     print(f"Scan of {ip} requested.")
@@ -207,7 +218,7 @@ dprint("Checking list")
 )
 async def help(ctx: interactions.CommandContext):
   await ctx.send("""
-################################################################################
+########################################################
 /server scan <ip_lower_bound> <ip_upper_bound>
 scans the ip range and returns the status of the servers
 
@@ -216,7 +227,7 @@ returns the status of the server
 
 /server help
 shows this message
-################################################################################
+########################################################
 """)
 
 #Startup
@@ -226,6 +237,7 @@ def startup():
 # Print whether debugging and testing are active
 if __name__ == "__main__":
   print("Testing:{0}, Debugging:{1}\n".format(testing,debug))
+  log("Startup has been called, "+str(testing)+": testing and "+str(debug)+": debugging")
   try:
     if testing:
       flag = True

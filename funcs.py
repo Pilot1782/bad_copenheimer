@@ -3,6 +3,7 @@ import json
 import time
 import os
 from mcstatus import MinecraftServer
+import multiprocessing
 
 settings_path = os.getenv("PATH")
 
