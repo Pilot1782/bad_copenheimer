@@ -192,7 +192,7 @@ class funcs:
 
   #If error then log it
   def log(self, text):
-    with open(f"{self.path}log.txt", "a") as f:
+    with open(f"{self.home_dir}log.txt", "a") as f:
       f.write(f"[{self.ptime()}] {text}\n")
 
   #Scan a range
