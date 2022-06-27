@@ -73,7 +73,7 @@ except Exception as e:
 # Discord commands #
 ####################
 
-fncs.dprint("Checking server_scan")
+fncs.dprint("Checking scan")
 # Scan the large list
 @bot.command(
     name="server_scan",
