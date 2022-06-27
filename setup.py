@@ -1,14 +1,40 @@
 import os
 import subprocess
-from funcs import ptime, dprint
+from funcs import funcs
 path = ""
+
+# Get system path
+ost = ''
+while ost != "\\"or ost != "/":
+  ost = input("\nIs this being run on windows, or linux? ")
+  if ost.lower() == "windows":
+    ost = "\\"
+    break
+  elif ost.lower() == "linux":
+    ost = "/"
+    break
+  else:
+    print("Input failed.")
+  
+inp = os.path.dirname(os.path.abspath(__file__))
+
+os.system("clear")
+inp = inp + ost
+inp = inp[0].upper() + inp[1:]
+fncs = funcs(inp+"settings.json") #setup funcs
+
+# Replace \ with \\ in inp
+inp = inp.replace("\\","\\\\")
+fncs.dprint(inp)
+path = inp
 
 def imports():
   try:
-    x = subprocess.check_output("python3 --version",shell=True)
+    #x = subprocess.check_output("python3 --version",shell=True)
+    x = subprocess.check_output("python3.10 --version",shell=True)
   except subprocess.CalledProcessError as err:
-    import funcs
-    funcs.log(err)
+    #fncs.log(err)
+    pass
   try:
     x = x.split(" ")
     y = x[1].split(".")
@@ -19,7 +45,7 @@ def imports():
     os.system("python -m pip install -r requirements.txt")
   finally:
     with open(f"{path}log.txt","w") as fp:
-      fp.write(f"[{ptime()}] Finished Install Packages and created setup_done.yay file.\n")
+      fp.write(f"[{fncs.ptime()}] Finished Install Packages and created setup_done.yay file.\n")
 
 def replace_line(file_name, line_num, text): # Yes i know this is a dumb way to solve it but it works
     lines = open(file_name, 'r').readlines()
@@ -30,29 +56,8 @@ def replace_line(file_name, line_num, text): # Yes i know this is a dumb way to 
 
 def fix_files():
   os.system("clear")
-  ost = ''
-  while ost != "\\"or ost != "/":
-    ost = input("\nIs this being run on windows, or linux? ")
-    if ost.lower() == "windows":
-      ost = "\\"
-      break
-    elif ost.lower() == "linux":
-      ost = "/"
-      break
-    else:
-      print("Input failed.")
-  
-  inp = os.path.dirname(os.path.abspath(__file__))
 
-  os.system("clear")
-  inp = inp + ost
-  inp = inp[0].upper() + inp[1:]
-  # Replace \ with \\ in inp
-  inp = inp.replace("\\","\\\\")
-  dprint(inp)
-  global path
-  path = inp
-
+  global inp
   my_file = os.path.exists(f"{inp}setup_done.yay")
   if my_file:
     print("Packages Already Imported, Exiting!")
@@ -64,7 +69,7 @@ def fix_files():
   print("Updating file paths...")
   inp = r"{}".format(inp)
   replace_line(f"{inp}.env",0,r'PATH={}settings.json'.format(inp))
-  dprint(inp)
+  fncs.dprint(inp)
   replace_line(f"{inp}settings.json",7,r'  "home-dir": "{}",{}'.format(inp,"\n"))
 
 def settings():
@@ -100,14 +105,14 @@ def settings():
   text = "\n".join(arr)
   if input(f"{text}\n\nSave? (Y/N)").lower() == "y":
     with open(f"{path}settings.json","w") as fp:
-      fp.write(text)
+      fp.write("\r"+text+"\n")
 
 if __name__ == "__main__":
   fix_files()
-  inp2 = input(f"\nSetup is Done at {ptime()}!\nPlease change the settings.json file to suit your needs or type 'y' to start editing it now.")
+  inp2 = input(f"\nSetup is Done at {fncs.ptime()}!\nPlease change the settings.json file to suit your needs or type 'y' to start editing it now.")
   if inp2 != "":
     settings()
   
   with open(f"{path}log.txt","w") as fp:
-    fp.write(f"[{ptime()}] Finished Setup with no errors.\n")
+    fp.write(f"[{fncs.ptime()}] Finished Setup with no errors.\n")
   os.system("clear")
