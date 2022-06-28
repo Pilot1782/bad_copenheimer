@@ -23,8 +23,6 @@ inp = inp + ost
 inp = inp[0].upper() + inp[1:]
 fncs = funcs(inp+"settings.json") #setup funcs
 
-# Replace \ with \\ in inp
-inp = inp.replace("\\","\\\\")
 fncs.dprint(inp)
 path = inp
 
