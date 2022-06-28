@@ -80,13 +80,13 @@ fncs.dprint("Checking scan")
     description="scan some ips",
     options = [
         interactions.Option(
-            name="Lower IP Bound",
+            name="lower_ip_bound",
             description="Lower Ip Bound",
             type=interactions.OptionType.STRING,
             required=True,
         ),
         interactions.Option(
-            name="Upper IP Bound",
+            name="upper_ip_bound",
             description="Upper Ip Bound",
             type=interactions.OptionType.STRING,
             required=True,
