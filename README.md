@@ -3,10 +3,6 @@ A Python impelentation of a discord bot that acts as a server scanner.
 
 This is a discord bot that will scan ip adresses to see if they are minecraft servers and will post the results in your channel.
 
-## Current Status
-
-Moving the bot to a slash command basis. Ultimate goal of clicking a link to add the bot then downloading the file of servers.
-
 ## Installation
 
 [Installation Page](https://www.github.com/Pilot1782/bad_copenheimer/wiki/Installation)
