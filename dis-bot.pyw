@@ -1,6 +1,4 @@
 import interactions
-from time import sleep
-from mcstatus import MinecraftServer
 import os as osys
 import subprocess
 import json
@@ -25,35 +23,35 @@ with open(
     settings_path, "r"
 ) as read_file:  # Open the settings file and start defineing variables from it
     data = json.load(read_file)
-testing = data["testing"]  # bc it easier
-home_dir = data["home-dir"]
-output_path = home_dir + "outputs.json"
-usr_name = data["user"]
-if not testing:
-    TOKEN = data["TOKEN"]
-    guildid = data["guild-id"]
-else:
-    guildid = osys.getenv("GUILDID")
-    TOKEN = osys.getenv("TOKEN")
-lower_ip_bound = data["lower_ip_bound"]
-upper_ip_bound = data["upper_ip_bound"]
-threads = data["threads"]
-threads = int(threads)
-timeout = data["timeout"]
-timeout = int(timeout)
-os = data["os"]
-os = int(os)
-if os == 1:
-    osp = "\\"
-else:
-    osp = "/"
-path = home_dir + "qubo.jar"
-mascan = data["masscan"]
-time2 = data["time2"]
-debug = data["debugging"]
-passwd = data["password"]
-server = data["server"]
-sport = data["server-port"]
+    testing = data["testing"]  # bc it easier
+    home_dir = data["home-dir"]
+    output_path = home_dir + "outputs.json"
+    usr_name = data["user"]
+    if not testing:
+        TOKEN = data["TOKEN"]
+        guildid = data["guild-id"]
+    else:
+        guildid = osys.getenv("GUILDID")
+        TOKEN = osys.getenv("TOKEN")
+    lower_ip_bound = data["lower_ip_bound"]
+    upper_ip_bound = data["upper_ip_bound"]
+    threads = data["threads"]
+    threads = int(threads)
+    timeout = data["timeout"]
+    timeout = int(timeout)
+    os = data["os"]
+    os = int(os)
+    if os == 1:
+        osp = "\\"
+    else:
+        osp = "/"
+    path = home_dir + "qubo.jar"
+    mascan = data["masscan"]
+    time2 = data["time2"]
+    debug = data["debugging"]
+    passwd = data["password"]
+    server = data["server"]
+    sport = data["server-port"]
 
 
 # Check if you are root for linux
@@ -94,15 +92,13 @@ fncs.dprint("Checking scan")
         ),
     ],
 )
-async def server_scan(
-    ctx: interactions.CommandContext, ip_lower_bound: str, ip_upper_bound: str
-):
+async def server_scan(ctx: interactions.CommandContext, ip_lower_bound: str, ip_upper_bound: str):
     """_summary_
 
     Args:
-        ctx (interactions.CommandContext): _description_
-        ip_lower_bound (str): _description_
-        ip_upper_bound (str): _description_
+        ctx (interactions.CommandContext): The context of the command
+        ip_lower_bound (str)
+        ip_upper_bound (str)
     """
 
     iplower = ip_lower_bound
