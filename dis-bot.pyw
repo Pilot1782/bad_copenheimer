@@ -277,7 +277,7 @@ if __name__ == "__main__":
         if testing:
             flag = True
             fncs.dprint("Starting bot...")
-            proc2 = multiprocessing.Process(target=startup, args=())
+            proc2 = multiprocessing.Process(target=startup)
             proc2.start()
 
             if os == 1:
