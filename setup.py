@@ -67,7 +67,8 @@ def fix_files():
     imports()
     with open("setup_done.yay","w") as file:
       pass
-    os.system("clear")
+
+
   print("Updating file paths...")
   inp = r"{}".format(inp)
   replace_line(f"{inp}.env",0,r'{}PATH={}settings.json{}'.format("\r",inp,"\n"))
@@ -81,7 +82,7 @@ def verify():
 
 
 if __name__ == "__main__":
-  osys.system('cls' if os.name == 'nt' else 'clear')
+  os.system('cls' if os.name == 'nt' else 'clear')
   fix_files()
   verify()
   
