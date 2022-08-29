@@ -2,7 +2,7 @@ import subprocess
 import json
 import time
 import os as osys
-from mcstatus import MinecraftServer
+from mcstatus import JavaServer
 import multiprocessing
 
 
@@ -125,7 +125,7 @@ class funcs:
             try:
                 for i in data:
                     ip = i["ip"]
-                    server = MinecraftServer.lookup(f"{ip}:25565")
+                    server = JavaServer.lookup(f"{ip}:25565")
 
                     status = server.status()
                     print(
