@@ -52,6 +52,10 @@ def replace_line(file_name, line_num, text): # Yes i know this is a dumb way to 
     out.writelines(lines)
     out.close()
 
+def printfl(path):
+  with open(path) as fp:
+    return path+"\n"+fp.read()
+
 def fix_files():
   os.system("clear")
 
@@ -70,47 +74,16 @@ def fix_files():
   fncs.dprint(inp)
   replace_line(f"{inp}settings.json",7,r'  "home-dir": "{}",{}'.format(inp,"\n"))
 
-def settings():
-  with open(f"{path}settings.json","r") as fp:
-    settings = fp.read()
-    settings = settings.split("\n")
-    arr = []
-    c = 0
-    for i in settings:
-      if i != "" and i != "{" and i != "}":
-        i = i.split('":')
-        i[0] = i[0] + '"'
-        inp = input(f"{i[0]}:")
-        if inp != "":
-          i[1] = inp
-          if c == 9 or c == 11 or c == 13:
-            if i[1].lower().startswith("f"):
-              i[1] = "false,"
-            elif i[1].lower().startswith("t"):
-              i[1] = "true,"
-          elif c == 14:
-            if i[1].lower().startswith("f"):
-              i[1] = "false"
-            elif i[1].lower().startswith("t"):
-              i[1] = "true"
-          else:
-            i[1] = f'"{i[1]}"'
-        i = ":".join(i)
-      print(i)
-      arr.append(i)
-      c += 1
+def verify():
+  print("Please verify the following information is correct")
+  print(printfl(inp+".env"),end+"\n==================================\n")
+  print(printfl(inp+"settings.json"))
 
-  text = "\n".join(arr)
-  if input(f"{text}\n\nSave? (Y/N)").lower() == "y":
-    with open(f"{path}settings.json","w") as fp:
-      fp.write("\r"+text+"\n")
 
 if __name__ == "__main__":
+  osys.system('cls' if os.name == 'nt' else 'clear')
   fix_files()
-  inp2 = input(f"\nSetup is Done at {fncs.ptime()}!\nPlease change the settings.json file to suit your needs or type 'y' to start editing it now.")
-  if inp2 != "":
-    settings()
+  verify()
   
   with open(f"{path}log.txt","w") as fp:
     fp.write(f"[{fncs.ptime()}] Finished Setup with no errors.\n")
-  os.system("clear")
