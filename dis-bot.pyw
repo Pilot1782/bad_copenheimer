@@ -257,6 +257,11 @@ shows this message
 """
     )
 
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, bot.HTTPException):
+        print("You are ratelimited") # Send whatever you want.
+
 
 # Startup
 def startup():
