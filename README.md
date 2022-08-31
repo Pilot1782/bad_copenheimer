@@ -30,6 +30,9 @@ In order for /status to work properly the server should have enable-query=true i
 
 >/server_scan
 
+# Help
+
+Please check the wiki before posting an issue and read throught the [troubleshooting](https://github.com/Pilot1782/bad_copenheimer/wiki/troubleshooting) first.
 
 # Todo
 
