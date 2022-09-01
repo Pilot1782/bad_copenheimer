@@ -18,7 +18,7 @@ while ost != "\\"or ost != "/":
   
 inp = os.path.dirname(os.path.abspath(__file__))
 
-os.system("clear")
+os.system('cls' if os.name == 'nt' else 'clear')
 inp = inp + ost
 inp = inp[0].upper() + inp[1:]
 fncs = funcs(inp+"settings.json") #setup funcs
