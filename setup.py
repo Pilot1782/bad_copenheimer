@@ -1,6 +1,5 @@
 import ast
 import os
-import subprocess
 from funcs import funcs
 path = ""
 
