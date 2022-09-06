@@ -303,11 +303,10 @@ class funcs:
                 for j in i:
                     if j == ":":
                         break
+                    if j == "(":
+                        pass
                     else:
-                        if j == "(":
-                            pass
-                        else:
-                            f.append(j)
+                        f.append(j)
                 b.append("".join(f))
             self.dprint("{0}\n{1}".format(b, len(b)))
             outp = b
@@ -320,8 +319,7 @@ class funcs:
                     if i in j["ip"]:
                         bol = False
                         break
-                    else:
-                        bol = True
+                    bol = True
                 if bol:
                     data.append(
                         {

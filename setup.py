@@ -10,11 +10,10 @@ while ost != "\\"or ost != "/":
   if ost.lower() == "windows":
     ost = "\\"
     break
-  elif ost.lower() == "linux":
+  if ost.lower() == "linux":
     ost = "/"
     break
-  else:
-    print("Input failed.")
+  print("Input failed.")
   
 inp = os.path.dirname(os.path.abspath(__file__))
 
