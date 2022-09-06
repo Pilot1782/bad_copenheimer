@@ -174,7 +174,7 @@ class funcs:
     # Scan to increase simplicity
     def scan(ip1, ip2, self):
         global mascan, home_dir, path, timeout, threads, os
-        if os == 0 and mascan == True:
+        if os == 0 and mascan is True:
             command = f"sudo masscan -p25565 {ip1}-{ip2} --rate={threads * 3} --exclude 255.255.255.255"
             for i in self.run_command(command):
                 self.dprint(i.decode("utf-8"))
@@ -214,7 +214,7 @@ class funcs:
         yield "Testing the Tool"
         print(f"Scanning {'172.65.238.0'}-{'172.65.240.255'}")
         arr = []
-        if os == 0 and mascan == True:
+        if os == 0 and mascan is True:
             print("testing using masscan")
 
             for line in self.scan("172.65.238.0", "172.65.239.0"):
@@ -257,7 +257,7 @@ class funcs:
         )
 
         outp = []
-        if os == 0 and mascan == True:
+        if os == 0 and mascan is True:
             command = f"sudo masscan -p25565 {self.lower_ip_bound}-{self.upper_ip_bound} --rate={threads * 3} --exclude 255.255.255.255"
             bol = False
             cnt = 0
@@ -284,7 +284,7 @@ class funcs:
             for line in self.scan(self.lower_ip_bound, self.upper_ip_bound):
                 if flag:
                     break
-                if line == "" or line == None:
+                if line == "" or line is None:
                     pass
                 else:
                     try:
