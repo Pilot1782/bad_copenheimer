@@ -3,7 +3,6 @@ import json
 import time
 import os as osys
 from mcstatus import JavaServer
-import multiprocessing
 
 
 class funcs:
