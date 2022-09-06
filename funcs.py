@@ -187,7 +187,6 @@ class funcs:
                 self.dprint(i.decode("utf-8"))
                 if "(" in i.decode("utf-8"):
                     yield self.clean(i.decode("utf-8"))
-            import os as osys
 
             osys.chdir("outputs")
             files = osys.listdir(osys.getcwd())
