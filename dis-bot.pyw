@@ -6,9 +6,9 @@ import multiprocessing
 from funcs import funcs
 
 
-##############################################################
+############################################################
 # To change the main settings, edit the settings.json file.#
-##############################################################
+############################################################
 settings_path = osys.getenv("PATH")
 
 ###############################
@@ -262,6 +262,7 @@ shows this message
 async def on_command_error(ctx, error):
     if isinstance(error, bot.HTTPException):
         print("You are ratelimited")
+        fncs.log("You are ratelimited")
 
 
 # Startup
@@ -280,28 +281,10 @@ if __name__ == "__main__":
         + ": debugging"
     )
     try:
-        if testing:
+        if True:
             flag = True
             fncs.dprint("Starting bot...")
             proc2 = multiprocessing.Process(target=startup)
-            proc2.start()
-
-            if os == 1:
-                pypath = r"%LOCALAPPDATA%\Programs\Python\Python310\python.exe"
-            else:
-                pypath = "python3"
-            fncs.dprint("Starting emergency bot...")
-            for line in fncs.run_command(r"{} stopper.pyw".format(pypath)):
-                print(line.decode("utf-8"))
-                if line.decode("utf-8") == "BAIL|A*(&HDO#QDH" and proc2.is_alive():
-                    proc2.terminate()
-                    print("Stopped")
-                    break
-            proc2.join()
-        else:
-            flag = True
-            fncs.dprint("Starting bot...")
-            proc2 = multiprocessing.Process(target=startup, args=())
             proc2.start()
 
             if os == 1:

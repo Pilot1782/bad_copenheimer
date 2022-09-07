@@ -16,5 +16,5 @@
   "lin-py":"python3",
   "win-py":"%LOCALAPPDATA%\\Programs\\Python\\Python310\\python.exe",
   "debugging":true,
-  "testing":false
+  "testing":true
 }
