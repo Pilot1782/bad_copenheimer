@@ -1,5 +1,5 @@
+import ast
 import os
-import subprocess
 from funcs import funcs
 path = ""
 
@@ -10,15 +10,14 @@ while ost != "\\"or ost != "/":
   if ost.lower() == "windows":
     ost = "\\"
     break
-  elif ost.lower() == "linux":
+  if ost.lower() == "linux":
     ost = "/"
     break
-  else:
-    print("Input failed.")
-  
+  print("Input failed.")
+
 inp = os.path.dirname(os.path.abspath(__file__))
 
-os.system("clear")
+os.system('cls' if os.name == 'nt' else 'clear')
 inp = inp + ost
 inp = inp[0].upper() + inp[1:]
 fncs = funcs(inp+"settings.json") #setup funcs
@@ -27,23 +26,10 @@ fncs.dprint(inp)
 path = inp
 
 def imports():
-  try:
-    #x = subprocess.check_output("python3 --version",shell=True)
-    x = subprocess.check_output("python3.10 --version",shell=True)
-  except subprocess.CalledProcessError as err:
-    #fncs.log(err)
-    pass
-  try:
-    x = x.split(" ")
-    y = x[1].split(".")
-    if int(y[1]) >= 6:
-      os.system("python3 -m pip install -r requirements.txt")
-  except Exception as err:
-    str(err)
-    os.system("python -m pip install -r requirements.txt")
-  finally:
-    with open(f"{path}log.txt","w") as fp:
-      fp.write(f"[{fncs.ptime()}] Finished Install Packages and created setup_done.yay file.\n")
+  os.system("python -m pip install -r requirements.txt")
+
+  with open(f"{path}log.txt","w") as fp:
+    fp.write(f"[{fncs.ptime()}] Finished Install Packages and created setup_done.yay file.\n")
 
 def replace_line(file_name, line_num, text): # Yes i know this is a dumb way to solve it but it works
     lines = open(file_name, 'r').readlines()
@@ -68,16 +54,15 @@ def fix_files():
     with open("setup_done.yay","w") as file:
       pass
 
-
   print("Updating file paths...")
   inp = r"{}".format(inp)
-  replace_line(f"{inp}.env",0,r'{}PATH={}settings.json{}'.format("\r",inp,"\n"))
+  ast.literal_eval('replace_line(f"{inp}.env",0,r\'{}PATH={}settings.json{}\'.format("\r",inp,"\n"))' if inp("Do you want to use enviroment variables? (y/n) ").lower() == "y" else 'replace_line(f"{inp}dis-bot.pyw",11,r\'{}settings_path = "{}settings.json{}"\'.format("\r",inp,"\n"))')
   fncs.dprint(inp)
   replace_line(f"{inp}settings.json",7,r'  "home-dir": "{}",{}'.format(inp,"\n"))
 
 def verify():
-  print("Please verify the following information is correct")
-  print(printfl(inp+".env"),end+"\n==================================\n")
+  print("Please verify the following information is correct\n")
+  print(printfl(inp+".env",end+"\n==================================\n"))
   print(printfl(inp+"settings.json"))
 
 
@@ -85,6 +70,6 @@ if __name__ == "__main__":
   os.system('cls' if os.name == 'nt' else 'clear')
   fix_files()
   verify()
-  
+
   with open(f"{path}log.txt","w") as fp:
     fp.write(f"[{fncs.ptime()}] Finished Setup with no errors.\n")

@@ -10,6 +10,7 @@ from funcs import funcs
 # To change the main settings, edit the settings.json file.#
 ##############################################################
 settings_path = osys.getenv("PATH")
+
 ###############################
 # Below this is preconfigured #
 ###############################

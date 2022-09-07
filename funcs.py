@@ -3,7 +3,6 @@ import json
 import time
 import os as osys
 from mcstatus import JavaServer
-import multiprocessing
 
 
 class funcs:
@@ -76,7 +75,7 @@ class funcs:
     # Run a command and get line by line output
     def run_command(self, command, powershell=False):
         if powershell:
-            command = f"C:\Windows\system32\WindowsPowerShell\\v1.0\powershell.exe -command {command}"
+            command = rf"C:\Windows\system32\WindowsPowerShell\\v1.0\powershell.exe -command {command}"
         p = subprocess.Popen(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
         )
@@ -99,7 +98,6 @@ class funcs:
     flag = False
 
     def login(host, self):
-        global usr_name, passwd, home_dir, flag
         for i in self.run_command(
             "python3 {4}playerlist.pyw --auth {0}:{1} -p {2} {3}".format(
                 usr_name, passwd, 25565, host, home_dir
@@ -174,8 +172,7 @@ class funcs:
 
     # Scan to increase simplicity
     def scan(ip1, ip2, self):
-        global mascan, home_dir, path, timeout, threads, os
-        if os == 0 and mascan == True:
+        if os == 0 and mascan is True:
             command = f"sudo masscan -p25565 {ip1}-{ip2} --rate={threads * 3} --exclude 255.255.255.255"
             for i in self.run_command(command):
                 self.dprint(i.decode("utf-8"))
@@ -187,7 +184,6 @@ class funcs:
                 self.dprint(i.decode("utf-8"))
                 if "(" in i.decode("utf-8"):
                     yield self.clean(i.decode("utf-8"))
-            import os as osys
 
             osys.chdir("outputs")
             files = osys.listdir(osys.getcwd())
@@ -216,7 +212,7 @@ class funcs:
         yield "Testing the Tool"
         print(f"Scanning {'172.65.238.0'}-{'172.65.240.255'}")
         arr = []
-        if os == 0 and mascan == True:
+        if os == 0 and mascan is True:
             print("testing using masscan")
 
             for line in self.scan("172.65.238.0", "172.65.239.0"):
@@ -259,7 +255,7 @@ class funcs:
         )
 
         outp = []
-        if os == 0 and mascan == True:
+        if os == 0 and mascan is True:
             command = f"sudo masscan -p25565 {self.lower_ip_bound}-{self.upper_ip_bound} --rate={threads * 3} --exclude 255.255.255.255"
             bol = False
             cnt = 0
@@ -286,7 +282,7 @@ class funcs:
             for line in self.scan(self.lower_ip_bound, self.upper_ip_bound):
                 if flag:
                     break
-                if line == "" or line == None:
+                if line == "" or line is None:
                     pass
                 else:
                     try:
@@ -305,11 +301,10 @@ class funcs:
                 for j in i:
                     if j == ":":
                         break
+                    if j == "(":
+                        pass
                     else:
-                        if j == "(":
-                            pass
-                        else:
-                            f.append(j)
+                        f.append(j)
                 b.append("".join(f))
             self.dprint("{0}\n{1}".format(b, len(b)))
             outp = b
@@ -322,8 +317,7 @@ class funcs:
                     if i in j["ip"]:
                         bol = False
                         break
-                    else:
-                        bol = True
+                    bol = True
                 if bol:
                     data.append(
                         {
