@@ -14,7 +14,7 @@ while ost != "\\"or ost != "/":
     ost = "/"
     break
   print("Input failed.")
-  
+
 inp = os.path.dirname(os.path.abspath(__file__))
 
 os.system('cls' if os.name == 'nt' else 'clear')
@@ -27,7 +27,7 @@ path = inp
 
 def imports():
   os.system("python -m pip install -r requirements.txt")
-  
+
   with open(f"{path}log.txt","w") as fp:
     fp.write(f"[{fncs.ptime()}] Finished Install Packages and created setup_done.yay file.\n")
 
@@ -70,6 +70,6 @@ if __name__ == "__main__":
   os.system('cls' if os.name == 'nt' else 'clear')
   fix_files()
   verify()
-  
+
   with open(f"{path}log.txt","w") as fp:
     fp.write(f"[{fncs.ptime()}] Finished Setup with no errors.\n")
