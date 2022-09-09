@@ -24,7 +24,7 @@ class funcs:
             home_dir = data["home-dir"]
         else:
             TOKEN = osys.getenv("TOKEN")
-            home_dir = osys.getenv("PATH")[-13:]
+            home_dir = osys.getenv("PATH")[:-13]
         
         self.testing = data["testing"]
         self.home_dir = home_dir

@@ -275,10 +275,7 @@ if __name__ == "__main__":
     print("Testing:{0}, Debugging:{1}\n".format(testing, debug))
     fncs.log(
         "Startup has been called, "
-        + str(testing)
-        + ": testing and "
-        + str(debug)
-        + ": debugging"
+        + "Testing:{0}, Debugging:{1}\n".format(testing, debug)
     )
     try:
         if True:
