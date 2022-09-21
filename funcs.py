@@ -1,3 +1,11 @@
+"""
+STOP HERE
+
+Beyond this point is code unmaintained and at risk of mabye being important.
+Once this file was made, no proper docs on the methods have been made except those that i sometimes remember.
+The code is half formatted and not very readable, variable names are not always true to their value
+"""
+
 import subprocess
 import json
 import time
