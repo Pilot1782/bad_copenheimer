@@ -1,8 +1,17 @@
+"""
+STOP HERE
+
+Beyond this point is code unmaintained and at risk of mabye being important.
+Once this file was made, no proper docs on the methods have been made except those that i sometimes remember.
+The code is half formatted and not very readable, variable names are not always true to their value
+"""
+
 import subprocess
 import json
 import time
 import os as osys
 from mcstatus import JavaServer
+import multiprocessing
 
 
 class funcs:
@@ -16,20 +25,16 @@ class funcs:
         ) as read_file:  # Open the settings file and start defineing variables from it
             global data
             data = json.load(read_file)
-        
-        # Define based on testing
         testing = data["testing"]  # bc it easier
-        if not testing:
-            TOKEN = data["TOKEN"]
-            home_dir = data["home-dir"]
-        else:
-            TOKEN = osys.getenv("TOKEN")
-            home_dir = osys.getenv("PATH")[:-13]
-        
         self.testing = data["testing"]
+        home_dir = data["home-dir"]
         self.home_dir = home_dir
         output_path = home_dir + "outputs.json"
         usr_name = data["user"]
+        if not testing:
+            TOKEN = data["TOKEN"]
+        else:
+            TOKEN = osys.getenv("TOKEN")
         lower_ip_bound = data["lower_ip_bound"]
         upper_ip_bound = data["upper_ip_bound"]
         threads = data["threads"]
@@ -74,12 +79,12 @@ class funcs:
     # Start a python server
     def hserver(self):
         if self.server:
-            osys.system("python -m http.server {0}".format(self.sport))
+            os.system("python -m http.server {0}".format(self.sport))
 
     # Run a command and get line by line output
     def run_command(self, command, powershell=False):
         if powershell:
-            command = rf"C:\Windows\system32\WindowsPowerShell\\v1.0\powershell.exe -command {command}"
+            command = f"C:\Windows\system32\WindowsPowerShell\\v1.0\powershell.exe -command {command}"
         p = subprocess.Popen(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
         )
@@ -102,14 +107,15 @@ class funcs:
     flag = False
 
     def login(host, self):
+        global usr_name, passwd, home_dir, flag
         for i in self.run_command(
             "python3 {4}playerlist.pyw --auth {0}:{1} -p {2} {3}".format(
-                self.usr_name, self.passwd, 25565, host, self.home_dir
+                usr_name, passwd, 25565, host, home_dir
             )
         ):
             self.dprint(i.decode("utf-8"))
-            flag = True
             return i.decode("utf-8")
+            flag = True
 
     # Get the file output depending on the os
     def file_out(self):
@@ -120,9 +126,9 @@ class funcs:
 
     # Look through your files and see if the server you scan has 'player' playing on it, going to be redon soon
     # The redoo may be implemented but i have to test the file first.
-    def find(self,player):
+    def find(player):
         outp = []
-        with open(f"{self.home_dir}outputs.json", "r") as f:
+        with open(f"{home_dir}outputs.json", "r") as f:
             data = json.load(f)
             try:
                 for i in data:
@@ -176,28 +182,30 @@ class funcs:
 
     # Scan to increase simplicity
     def scan(ip1, ip2, self):
-        if osys == 0 and self.mascan is True:
-            command = f"sudo masscan -p25565 {ip1}-{ip2} --rate={self.threads * 3} --exclude 255.255.255.255"
+        global mascan, home_dir, path, timeout, threads, os
+        if os == 0 and mascan == True:
+            command = f"sudo masscan -p25565 {ip1}-{ip2} --rate={threads * 3} --exclude 255.255.255.255"
             for i in self.run_command(command):
                 self.dprint(i.decode("utf-8"))
                 if "Discovered" in i.decode("utf-8"):
                     yield self.clean(i.decode("utf-8"))
         else:
-            command = f"java -Dfile.encoding=UTF-8 -jar {self.path} -range {ip1}-{ip2} -ports 25565-25577 -th {self.threads} -ti {self.timeout}"
+            command = f"java -Dfile.encoding=UTF-8 -jar {path} -range {ip1}-{ip2} -ports 25565-25577 -th {threads} -ti {timeout}"
             for i in self.run_command(command):
                 self.dprint(i.decode("utf-8"))
                 if "(" in i.decode("utf-8"):
                     yield self.clean(i.decode("utf-8"))
+            import os as osys
 
             osys.chdir("outputs")
             files = osys.listdir(osys.getcwd())
             for i in files:
                 if i.endswith(".txt"):
-                    osys.remove(f"{self.home_dir}outputs\\{i}")
+                    osys.remove(f"{home_dir}outputs\\{i}")
 
     # Stop command
     def halt(self):
-        for line in self.run_command(f"{self.home_dir}stopper.pyw"):
+        for line in self.run_command(f"{home_dir}stopper.pyw"):
             if "halt" in line:
                 global flag
                 flag = True
@@ -216,7 +224,7 @@ class funcs:
         yield "Testing the Tool"
         print(f"Scanning {'172.65.238.0'}-{'172.65.240.255'}")
         arr = []
-        if osys == 0 and self.mascan is True:
+        if os == 0 and mascan == True:
             print("testing using masscan")
 
             for line in self.scan("172.65.238.0", "172.65.239.0"):
@@ -237,7 +245,7 @@ class funcs:
                 self.log("Test failed.")
                 yield "Test Failed."
         else:
-            command = f"java -Dfile.encoding=UTF-8 -jar {self.path} -nooutput -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {self.threads} -ti {self.timeout}"
+            command = f"java -Dfile.encoding=UTF-8 -jar {path} -nooutput -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {threads} -ti {timeout}"
             bol = False
             self.dprint(command)
             for line in list(self.scan("172.65.238.0", "172.65.240.255")):
@@ -252,15 +260,15 @@ class funcs:
             else:
                 self.dprint("Test failed.")
                 yield "Test Failed."
-        yield f"\nStarting the scan at {self.ptime()}\nPinging {self.lower_ip_bound} through {self.upper_ip_bound}, using {self.threads} threads and timingout after {self.timeout} miliseconds."
+        yield f"\nStarting the scan at {self.ptime()}\nPinging {self.lower_ip_bound} through {self.upper_ip_bound}, using {threads} threads and timingout after {timeout} miliseconds."
 
         print(
-            f"\nScanning on {self.lower_ip_bound} through {self.upper_ip_bound}, with {self.threads} threads and timeout of {self.timeout}"
+            f"\nScanning on {self.lower_ip_bound} through {self.upper_ip_bound}, with {threads} threads and timeout of {timeout}"
         )
 
         outp = []
-        if osys == 0 and self.mascan is True:
-            command = f"sudo masscan -p25565 {self.lower_ip_bound}-{self.upper_ip_bound} --rate={self.threads * 3} --exclude 255.255.255.255"
+        if os == 0 and mascan == True:
+            command = f"sudo masscan -p25565 {self.lower_ip_bound}-{self.upper_ip_bound} --rate={threads * 3} --exclude 255.255.255.255"
             bol = False
             cnt = 0
             self.dprint(command)
@@ -279,14 +287,14 @@ class funcs:
             outp = arr
             self.dprint(outp)
         else:
-            command = f"java -Dfile.encoding=UTF-8 -jar {self.path} -nooutput -range {self.lower_ip_bound}-{self.upper_ip_bound} -ports 25565-25577 -th {self.threads} -ti {self.timeout}"
+            command = f"java -Dfile.encoding=UTF-8 -jar {path} -nooutput -range {self.lower_ip_bound}-{self.upper_ip_bound} -ports 25565-25577 -th {threads} -ti {timeout}"
             arr = []
             if self.debug:
                 print(command)
             for line in self.scan(self.lower_ip_bound, self.upper_ip_bound):
                 if flag:
                     break
-                if line == "" or line is None:
+                if line == "" or line == None:
                     pass
                 else:
                     try:
@@ -305,10 +313,11 @@ class funcs:
                 for j in i:
                     if j == ":":
                         break
-                    if j == "(":
-                        pass
                     else:
-                        f.append(j)
+                        if j == "(":
+                            pass
+                        else:
+                            f.append(j)
                 b.append("".join(f))
             self.dprint("{0}\n{1}".format(b, len(b)))
             outp = b
@@ -321,7 +330,8 @@ class funcs:
                     if i in j["ip"]:
                         bol = False
                         break
-                    bol = True
+                    else:
+                        bol = True
                 if bol:
                     data.append(
                         {

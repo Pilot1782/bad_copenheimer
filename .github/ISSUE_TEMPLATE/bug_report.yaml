@@ -41,6 +41,16 @@ body:
         - 1.4
     validations:
       required: true
+  - type: dropdown
+    id: Branch
+    attributes:
+      label: Branch
+      description: What branh of our software are you running?
+      options:
+        - main (Default)
+        - dev-builds
+    validations:
+      required: true
   - type: textarea
     id: logs
     attributes:
