@@ -108,8 +108,8 @@ class funcs:
             )
         ):
             self.dprint(i.decode("utf-8"))
-            return i.decode("utf-8")
             flag = True
+            return i.decode("utf-8")
 
     # Get the file output depending on the os
     def file_out(self):
