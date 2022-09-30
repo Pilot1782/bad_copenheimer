@@ -84,7 +84,7 @@ class funcs:
     # Run a command and get line by line output
     def run_command(self, command, powershell=False):
         if powershell:
-            command = f"C:\Windows\system32\WindowsPowerShell\\v1.0\powershell.exe -command {command}"
+            command = rf"C:\Windows\system32\WindowsPowerShell\\v1.0\powershell.exe -command {command}"
         p = subprocess.Popen(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
         )
