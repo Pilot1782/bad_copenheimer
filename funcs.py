@@ -107,7 +107,6 @@ class funcs:
     flag = False
 
     def login(host, self):
-        global usr_name, passwd, home_dir, flag
         for i in self.run_command(
             "python3 {4}playerlist.pyw --auth {0}:{1} -p {2} {3}".format(
                 usr_name, passwd, 25565, host, home_dir
@@ -182,7 +181,6 @@ class funcs:
 
     # Scan to increase simplicity
     def scan(ip1, ip2, self):
-        global mascan, home_dir, path, timeout, threads, os
         if os == 0 and mascan is True:
             command = f"sudo masscan -p25565 {ip1}-{ip2} --rate={threads * 3} --exclude 255.255.255.255"
             for i in self.run_command(command):
