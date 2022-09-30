@@ -44,8 +44,10 @@ with open(
     os = int(os)
     if os == 1:
         osp = "\\"
+        pypath = data["win-py"]
     else:
         osp = "/"
+        pypath = data["lin-py"]
     path = home_dir + "qubo.jar"
     mascan = data["masscan"]
     time2 = data["time2"]
@@ -58,14 +60,14 @@ with open(
 # Check if you are root for linux
 try:
     if os == 0:
-        if subprocess.check_output("whoami", shell=True).decode("utf-8") != "root\n":
+        if subprocess.check_output("/bin/whoami".decode("utf-8")) != "root\n":
             raise PermissionError(
-                f"Please run as root, not as {subprocess.check_output('whoami', shell=True).decode('utf-8')}"
+                f"Please run as root, not as {subprocess.check_output('/bin/whoami').decode('utf-8')}"
             )
 except Exception as e:
     if e == PermissionError:
         print(
-            f"Please run as root, not as {subprocess.check_output('whoami',shell=True).decode('utf-8')}"
+            f"Please run as root, not as {subprocess.check_output('/bin/whoami',shell=True).decode('utf-8')}"
         )
         fncs.log(e)
         exit()
@@ -264,6 +266,10 @@ async def on_command_error(ctx, error):
         print("You are ratelimited")
         fncs.log("You are ratelimited")
 
+@bot.event
+async def on_ready():
+    print(f'Logged on as {bot.user}!')
+
 
 # Startup
 def startup():
@@ -284,17 +290,14 @@ if __name__ == "__main__":
             proc2 = multiprocessing.Process(target=startup)
             proc2.start()
 
-            if os == 1:
-                pypath = r"%LOCALAPPDATA%\Programs\Python\Python310\python.exe"
-            else:
-                pypath = "python3"
             fncs.dprint("Starting emergency bot...")
             for line in fncs.run_command(r"{} stopper.pyw".format(pypath)):
-                print(line.decode("utf-8"))
+                fncs.dprint(line.decode("utf-8"))
                 if line.decode("utf-8") == "BAIL|A*(&HDO#QDH" and proc2.is_alive():
                     proc2.terminate()
                     print("Stopped")
                     break
+            
             proc2.join()
     except Exception as err:
         print(

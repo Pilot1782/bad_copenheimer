@@ -7,3 +7,22 @@
 [2022 9/9 8:9:17] Startup has been called, True: testing and True: debugging
 [2022 9/9 8:10:23] Startup has been called, Testing:True, Debugging:True
 
+[2022 9/12 22:11:22] Startup has been called, Testing:True, Debugging:True
+
+[2022 9/12 22:11:22] b'/bin/sh: 1: %LOCALAPPDATA%ProgramsPythonPython310python.exe: not found\n'
+[2022 9/12 22:11:56] Startup has been called, Testing:True, Debugging:True
+
+[2022 9/12 22:11:56] b'/bin/sh: 1: python3: not found\n'
+[2022 9/12 22:12:9] Startup has been called, Testing:True, Debugging:True
+
+[2022 9/12 22:12:9] b'/bin/sh: 1: python3: not found\n'
+[2022 9/12 22:13:26] Startup has been called, Testing:True, Debugging:True
+
+[2022 9/12 22:14:14] Startup has been called, Testing:True, Debugging:True
+
+[2022 9/12 22:18:36] Startup has been called, Testing:True, Debugging:True
+
+[2022 9/14 19:36:24] Startup has been called, Testing:True, Debugging:True
+
+[2022 9/14 19:38:46] Startup has been called, Testing:True, Debugging:True
+
