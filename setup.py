@@ -62,7 +62,7 @@ def fix_files():
 
 def verify():
   print("Please verify the following information is correct\n")
-  print(printfl(inp+".env",end="\n==================================\n"))
+  print(printfl(inp+".env"),end="\n==================================\n")
   print(printfl(inp+"settings.json"))
 
 
