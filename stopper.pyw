@@ -28,7 +28,7 @@ async def stop(ctx: interactions.CommandContext):
 
 if __name__ == "__main__":
   def step():
-    time.sleep(0.1)
+    time.sleep(0.5)
     print("step")
   proc = multiprocessing.Process(target=step)
   proc.start()

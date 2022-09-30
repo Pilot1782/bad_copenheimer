@@ -6,10 +6,11 @@ import multiprocessing
 from funcs import funcs
 
 
-##############################################################
+############################################################
 # To change the main settings, edit the settings.json file.#
-##############################################################
+############################################################
 settings_path = osys.getenv("PATH")
+
 ###############################
 # Below this is preconfigured #
 ###############################
@@ -43,8 +44,10 @@ with open(
     os = int(os)
     if os == 1:
         osp = "\\"
+        pypath = data["win-py"]
     else:
         osp = "/"
+        pypath = data["lin-py"]
     path = home_dir + "qubo.jar"
     mascan = data["masscan"]
     time2 = data["time2"]
@@ -57,14 +60,14 @@ with open(
 # Check if you are root for linux
 try:
     if os == 0:
-        if subprocess.check_output("whoami", shell=True).decode("utf-8") != "root\n":
+        if subprocess.check_output("/bin/whoami".decode("utf-8")) != "root\n":
             raise PermissionError(
-                f"Please run as root, not as {subprocess.check_output('whoami', shell=True).decode('utf-8')}"
+                f"Please run as root, not as {subprocess.check_output('/bin/whoami').decode('utf-8')}"
             )
 except Exception as e:
     if e == PermissionError:
         print(
-            f"Please run as root, not as {subprocess.check_output('whoami',shell=True).decode('utf-8')}"
+            f"Please run as root, not as {subprocess.check_output('/bin/whoami',shell=True).decode('utf-8')}"
         )
         fncs.log(e)
         exit()
@@ -257,6 +260,16 @@ shows this message
 """
     )
 
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, bot.HTTPException):
+        print("You are ratelimited")
+        fncs.log("You are ratelimited")
+
+@bot.event
+async def on_ready():
+    print(f'Logged on as {bot.user}!')
+
 
 # Startup
 def startup():
@@ -268,47 +281,23 @@ if __name__ == "__main__":
     print("Testing:{0}, Debugging:{1}\n".format(testing, debug))
     fncs.log(
         "Startup has been called, "
-        + str(testing)
-        + ": testing and "
-        + str(debug)
-        + ": debugging"
+        + "Testing:{0}, Debugging:{1}\n".format(testing, debug)
     )
     try:
-        if testing:
+        if True:
             flag = True
             fncs.dprint("Starting bot...")
             proc2 = multiprocessing.Process(target=startup)
             proc2.start()
 
-            if os == 1:
-                pypath = r"%LOCALAPPDATA%\Programs\Python\Python310\python.exe"
-            else:
-                pypath = "python3"
             fncs.dprint("Starting emergency bot...")
             for line in fncs.run_command(r"{} stopper.pyw".format(pypath)):
-                print(line.decode("utf-8"))
+                fncs.dprint(line.decode("utf-8"))
                 if line.decode("utf-8") == "BAIL|A*(&HDO#QDH" and proc2.is_alive():
                     proc2.terminate()
                     print("Stopped")
                     break
-            proc2.join()
-        else:
-            flag = True
-            fncs.dprint("Starting bot...")
-            proc2 = multiprocessing.Process(target=startup, args=())
-            proc2.start()
-
-            if os == 1:
-                pypath = r"%LOCALAPPDATA%\Programs\Python\Python310\python.exe"
-            else:
-                pypath = "python3"
-            fncs.dprint("Starting emergency bot...")
-            for line in fncs.run_command(r"{} stopper.pyw".format(pypath)):
-                print(line.decode("utf-8"))
-                if line.decode("utf-8") == "BAIL|A*(&HDO#QDH" and proc2.is_alive():
-                    proc2.terminate()
-                    print("Stopped")
-                    break
+            
             proc2.join()
     except Exception as err:
         print(
