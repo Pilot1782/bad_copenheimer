@@ -56,13 +56,13 @@ def fix_files():
 
   print("Updating file paths...")
   inp = r"{}".format(inp)
-  ast.literal_eval('replace_line(f"{inp}.env",0,r\'{}PATH={}settings.json{}\'.format("\r",inp,"\n"))' if inp("Do you want to use enviroment variables? (y/n) ").lower() == "y" else 'replace_line(f"{inp}dis-bot.pyw",11,r\'{}settings_path = "{}settings.json{}"\'.format("\r",inp,"\n"))')
+  ast.literal_eval('replace_line(f"{inp}.env",0,r\'{}PATH={}settings.json{}'.format("\r",inp,"\n") if inp("Do you want to use enviroment variables? (y/n) ").lower() == "y" else 'replace_line(f"{inp}dis-bot.pyw",11,r\'{}settings_path = "{}settings.json{}"'.format("\r",inp,"\n"))
   fncs.dprint(inp)
   replace_line(f"{inp}settings.json",7,r'  "home-dir": "{}",{}'.format(inp,"\n"))
 
 def verify():
   print("Please verify the following information is correct\n")
-  print(printfl(inp+".env"),end="\n==================================\n")
+  print(printfl(inp+".env"),end="\n\n==================================\n\n")
   print(printfl(inp+"settings.json"))
 
 

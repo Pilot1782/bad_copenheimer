@@ -1,3 +1,4 @@
 mcstatus==9.0.4
 discord-py-interactions
 quarry
+requests
