@@ -77,6 +77,8 @@ except Exception as e:
 
 fncs.dprint("Checking scan")
 # Scan the large list
+
+
 @bot.command(
     name="server_scan",
     description="scan some ips",
@@ -126,6 +128,8 @@ async def server_scan(ctx: interactions.CommandContext, ip_lower_bound: str, ip_
 
 fncs.dprint("Checking status")
 # Scan the large list
+
+
 @bot.command(
     name="status",
     description="Check the status of the given ip or check all in the json file",
@@ -220,7 +224,8 @@ async def status(ctx: interactions.CommandContext, ip: str):
                     if not str(err) in er:
                         er.append(str(err))
                     print(
-                        "Failed to scan {0} due to {1} \n {2}:{3}".format(p, err, c, u)
+                        "Failed to scan {0} due to {1} \n {2}:{3}".format(
+                            p, err, c, u)
                     )
                     c += 1
                     fncs.log(err)
@@ -240,6 +245,8 @@ async def status(ctx: interactions.CommandContext, ip: str):
 
 fncs.dprint("Checking list")
 # Help command
+
+
 @bot.command(
     name="help",
     description="Show the help message",
@@ -260,11 +267,13 @@ shows this message
 """
     )
 
+
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, bot.HTTPException):
         print("You are ratelimited")
         fncs.log("You are ratelimited")
+
 
 @bot.event
 async def on_ready():
@@ -297,7 +306,7 @@ if __name__ == "__main__":
                     proc2.terminate()
                     print("Stopped")
                     break
-            
+
             proc2.join()
     except Exception as err:
         print(

@@ -1,4 +1,4 @@
-# This file will start a discord bot that only listens for the !stop command which will then kill all process that include the words python or python3
+# This file will start a discord bot that only listens for the /stop command which will then kill all process that include the words python or python3
 
 import multiprocessing
 import os as osys
@@ -6,6 +6,7 @@ from discord.ext import commands
 import json
 import interactions
 from funcs import *
+import sys
 
 settings_path = osys.getenv("PATH")
 
@@ -25,6 +26,7 @@ bot = interactions.Client(token=osys.getenv("TOKEN"))
 )
 async def stop(ctx: interactions.CommandContext):
   print("BAIL|A*(&HDO#QDH")
+  sys.exit(1)
 
 if __name__ == "__main__":
   def step():
