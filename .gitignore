@@ -57,3 +57,6 @@ bad_cope.py
 Pipfile.lock
 Pipfile
 .replit
+compose-dev.yaml
+scanCore.ipynb
+paused.conf

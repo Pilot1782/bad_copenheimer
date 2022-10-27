@@ -9,13 +9,13 @@ from funcs import funcs
 ############################################################
 # To change the main settings, edit the settings.json file.#
 ############################################################
-settings_path = osys.getenv("PATH")
+settings_path = osys.path.dirname(osys.path.abspath(__file__))+(r"\settings.json" if osys.name == "nt" else r"/settings.json")
 
 ###############################
 # Below this is preconfigured #
 ###############################
 
-fncs = funcs(settings_path)
+fncs = funcs()
 
 # Varaible getting defeined
 bot = interactions.Client(token=osys.getenv("TOKEN"))
@@ -60,7 +60,7 @@ with open(
 # Check if you are root for linux
 try:
     if os == 0:
-        if subprocess.check_output("/bin/whoami".decode("utf-8")) != "root\n":
+        if subprocess.check_output("/bin/whoami").decode("utf-8") != "root\n":  # type: ignore
             raise PermissionError(
                 f"Please run as root, not as {subprocess.check_output('/bin/whoami').decode('utf-8')}"
             )

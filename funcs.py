@@ -6,55 +6,54 @@ from mcstatus import JavaServer
 
 
 class funcs:
-    def __init__(self, path):
-        self.path = path
+    def __init__(self):
+        self.path = osys.path.dirname(osys.path.abspath(__file__))
 
-        settings_path = self.path
+        self.settings_path = self.path+(r"\settings.json" if osys.name == "nt" else "/settings.json")
 
         with open(
-            settings_path, "r"
+            self.settings_path, "r"
         ) as read_file:  # Open the settings file and start defineing variables from it
             global data
             data = json.load(read_file)
         
         # Define based on testing
-        testing = data["testing"]  # bc it easier
-        if not testing:
-            TOKEN = data["TOKEN"]
+        self.testing = data["testing"]  # bc it easier
+        if not self.testing:
+            self.TOKEN = data["TOKEN"]
             home_dir = data["home-dir"]
         else:
-            TOKEN = osys.getenv("TOKEN")
-            home_dir = osys.getenv("PATH")[:-13]
+            self.TOKEN = osys.getenv("TOKEN")
+            home_dir = self.path[:-13]
         
         self.testing = data["testing"]
         self.home_dir = home_dir
-        output_path = home_dir + "outputs.json"
-        usr_name = data["user"]
-        lower_ip_bound = data["lower_ip_bound"]
-        upper_ip_bound = data["upper_ip_bound"]
-        threads = data["threads"]
-        threads = int(threads)
-        timeout = data["timeout"]
-        timeout = int(timeout)
-        os = data["os"]
-        os = int(os)
-        if os == 1:
-            osp = "\\"
+        self.output_path = home_dir + "outputs.json"
+        self.usr_name = data["user"]
+        self.lower_ip_bound = data["lower_ip_bound"]
+        self.upper_ip_bound = data["upper_ip_bound"]
+        self.threads = data["threads"]
+        self.threads = int(self.threads)
+        self.timeout = data["timeout"]
+        self.timeout = int(self.timeout)
+        self.os = 1 if osys.name == "nt" else 0
+        if self.os == 1:
+            self.osp = "\\"
         else:
-            osp = "/"
-        path = home_dir + "qubo.jar"
-        mascan = data["masscan"]
-        time2 = data["time2"]
-        debug = data["debugging"]
+            self.osp = "/"
+        self.path = home_dir + "qubo.jar"
+        self.mascan = data["masscan"]
+        self.time2 = data["time2"]
+        self.debug = data["debugging"]
         self.debug = debug
-        passwd = data["password"]
-        server = data["server"]
-        sport = data["server-port"]
+        self.passwd = data["password"]
+        self.server = data["server"]
+        self.sport = data["server-port"]
 
     # Functions getting defeined
 
     # Write to a json file
-    def write_json(new_data, filename="data.json"):
+    def write_json(self, new_data, filename="data.json"):
         with open(filename, "r+") as file:
             file_data = json.load(file)
             file_data["emp_details"].append(new_data)
@@ -101,7 +100,7 @@ class funcs:
     # Login into a minecraft server
     flag = False
 
-    def login(host, self):
+    def login(self, host):
         for i in self.run_command(
             "python3 {4}playerlist.pyw --auth {0}:{1} -p {2} {3}".format(
                 self.usr_name, self.passwd, 25565, host, self.home_dir
@@ -155,7 +154,7 @@ class funcs:
             return "Done\n".join(outp)
 
     # Clean masscan output
-    def clean(line):
+    def clean(self, line):
         if "rate" in line:
             print("Skipped")
         else:
@@ -175,7 +174,7 @@ class funcs:
             print(text)
 
     # Scan to increase simplicity
-    def scan(ip1, ip2, self):
+    def scan(self, ip1, ip2):
         if osys == 0 and self.mascan is True:
             command = f"sudo masscan -p25565 {ip1}-{ip2} --rate={self.threads * 3} --exclude 255.255.255.255"
             for i in self.run_command(command):
@@ -198,7 +197,7 @@ class funcs:
     # Stop command
     def halt(self):
         for line in self.run_command(f"{self.home_dir}stopper.pyw"):
-            if "halt" in line:
+            if "halt" in line:  # type: ignore
                 global flag
                 flag = True
 
@@ -208,7 +207,7 @@ class funcs:
             f.write(f"[{self.ptime()}] {text}\n")
 
     # Scan a range
-    def scan_range(ip1, ip2, self):
+    def scan_range(self, ip1, ip2):
         yield f"Scanning started: {self.ptime()}"
 
         flag = False
@@ -216,6 +215,8 @@ class funcs:
         yield "Testing the Tool"
         print(f"Scanning {'172.65.238.0'}-{'172.65.240.255'}")
         arr = []
+        bol = False
+
         if osys == 0 and self.mascan is True:
             print("testing using masscan")
 
@@ -224,7 +225,7 @@ class funcs:
                     break
                 try:
                     self.dprint(line)
-                    if "D" in line:
+                    if "D" in line:  # type: ignore
                         bol = True
                         break
                 except:
@@ -243,7 +244,7 @@ class funcs:
             for line in list(self.scan("172.65.238.0", "172.65.240.255")):
                 if flag:
                     break
-                if "(" in line:
+                if "(" in line:  # type: ignore
                     bol = True
                     break
             if bol:
@@ -268,7 +269,7 @@ class funcs:
                 if flag:
                     break
                 try:
-                    if "." in line:
+                    if "." in line:  # type: ignore
                         bol = True
                         cnt += 1
                         arr.append(line)

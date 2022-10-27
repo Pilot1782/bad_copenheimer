@@ -20,7 +20,7 @@ inp = os.path.dirname(os.path.abspath(__file__))
 os.system('cls' if os.name == 'nt' else 'clear')
 inp = inp + ost
 inp = inp[0].upper() + inp[1:]
-fncs = funcs(inp+"settings.json") #setup funcs
+fncs = funcs() #setup funcs
 
 fncs.dprint(inp)
 path = inp
@@ -56,7 +56,7 @@ def fix_files():
 
   print("Updating file paths...")
   inp = r"{}".format(inp)
-  ast.literal_eval('replace_line(f"{inp}.env",0,r\'{}PATH={}settings.json{}\'.format("\r",inp,"\n"))' if inp("Do you want to use enviroment variables? (y/n) ").lower() == "y" else 'replace_line(f"{inp}dis-bot.pyw",11,r\'{}settings_path = "{}settings.json{}"\'.format("\r",inp,"\n"))')
+  ast.literal_eval('replace_line(f"{inp}.env",0,r\'{}PATH={}settings.json{}'.format("\r",inp,"\n")) if inp("Do you want to use enviroment variables? (y/n) ").lower() == "y" else 'replace_line(f"{inp}dis-bot.pyw",11,r\'{}settings_path =\' "{}settings.json{}"'.format("\r",inp,"\n")  # type: ignore
   fncs.dprint(inp)
   replace_line(f"{inp}settings.json",7,r'  "home-dir": "{}",{}'.format(inp,"\n"))
 
