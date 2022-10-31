@@ -55,7 +55,6 @@ class funcs:
         self.mascan = data["masscan"]
         self.time2 = data["time2"]
         self.debug = data["debugging"]
-        self.debug = debug
         self.passwd = data["password"]
         self.server = data["server"]
         self.sport = data["server-port"]
@@ -83,7 +82,7 @@ class funcs:
     # Start a python server
     def hserver(self):
         if self.server:
-            os.system("python -m http.server {0}".format(self.sport))
+            osys.system("python -m http.server {0}".format(self.sport))
 
     # Run a command and get line by line output
     def run_command(self, command, powershell=False):
@@ -113,7 +112,7 @@ class funcs:
     def login(self, host):
         for i in self.run_command(
             "python3 {4}playerlist.pyw --auth {0}:{1} -p {2} {3}".format(
-                usr_name, passwd, 25565, host, home_dir
+                self.usr_name, self.passwd, 25565, host, self.home_dir
             )
         ):
             self.dprint(i.decode("utf-8"))
@@ -129,9 +128,9 @@ class funcs:
 
     # Look through your files and see if the server you scan has 'player' playing on it, going to be redon soon
     # The redoo may be implemented but i have to test the file first.
-    def find(player):
+    def find(self, player):
         outp = []
-        with open(f"{home_dir}outputs.json", "r") as f:
+        with open(f"{self.home_dir}outputs.json", "r") as f:
             data = json.load(f)
             try:
                 for i in data:
@@ -185,6 +184,7 @@ class funcs:
 
     # Scan to increase simplicity
     def scan(self, ip1, ip2):
+        import os as osys
         if osys == 0 and self.mascan is True:
             command = f"sudo masscan -p25565 {ip1}-{ip2} --rate={self.threads * 3} --exclude 255.255.255.255"
             for i in self.run_command(command):
@@ -192,7 +192,7 @@ class funcs:
                 if "Discovered" in i.decode("utf-8"):
                     yield self.clean(i.decode("utf-8"))
         else:
-            command = f"java -Dfile.encoding=UTF-8 -jar {path} -range {ip1}-{ip2} -ports 25565-25577 -th {threads} -ti {timeout}"
+            command = f"java -Dfile.encoding=UTF-8 -jar {self.path} -range {ip1}-{ip2} -ports 25565-25577 -th {self.threads} -ti {self.timeout}"
             for i in self.run_command(command):
                 self.dprint(i.decode("utf-8"))
                 if "(" in i.decode("utf-8"):
@@ -203,7 +203,7 @@ class funcs:
             files = osys.listdir(osys.getcwd())
             for i in files:
                 if i.endswith(".txt"):
-                    osys.remove(f"{home_dir}outputs\\{i}")
+                    osys.remove(f"{self.home_dir}outputs\\{i}")
 
     # Stop command
     def halt(self):
@@ -249,7 +249,7 @@ class funcs:
                 self.log("Test failed.")
                 yield "Test Failed."
         else:
-            command = f"java -Dfile.encoding=UTF-8 -jar {path} -nooutput -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {threads} -ti {timeout}"
+            command = f"java -Dfile.encoding=UTF-8 -jar {self.path} -nooutput -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {self.threads} -ti {self.timeout}"
             bol = False
             self.dprint(command)
             for line in list(self.scan("172.65.238.0", "172.65.240.255")):
@@ -264,15 +264,15 @@ class funcs:
             else:
                 self.dprint("Test failed.")
                 yield "Test Failed."
-        yield f"\nStarting the scan at {self.ptime()}\nPinging {self.lower_ip_bound} through {self.upper_ip_bound}, using {threads} threads and timingout after {timeout} miliseconds."
+        yield f"\nStarting the scan at {self.ptime()}\nPinging {self.lower_ip_bound} through {self.upper_ip_bound}, using {self.threads} threads and timingout after {self.timeout} miliseconds."
 
         print(
-            f"\nScanning on {self.lower_ip_bound} through {self.upper_ip_bound}, with {threads} threads and timeout of {timeout}"
+            f"\nScanning on {self.lower_ip_bound} through {self.upper_ip_bound}, with {self.threads} threads and timeout of {self.timeout}"
         )
 
         outp = []
-        if os == 0 and mascan is True:
-            command = f"sudo masscan -p25565 {self.lower_ip_bound}-{self.upper_ip_bound} --rate={threads * 3} --exclude 255.255.255.255"
+        if osys == 0 and self.mascan is True:
+            command = f"sudo masscan -p25565 {self.lower_ip_bound}-{self.upper_ip_bound} --rate={self.threads * 3} --exclude 255.255.255.255"
             bol = False
             cnt = 0
             self.dprint(command)
@@ -291,7 +291,7 @@ class funcs:
             outp = arr
             self.dprint(outp)
         else:
-            command = f"java -Dfile.encoding=UTF-8 -jar {path} -nooutput -range {self.lower_ip_bound}-{self.upper_ip_bound} -ports 25565-25577 -th {threads} -ti {timeout}"
+            command = f"java -Dfile.encoding=UTF-8 -jar {self.path} -nooutput -range {self.lower_ip_bound}-{self.upper_ip_bound} -ports 25565-25577 -th {self.threads} -ti {self.timeout}"
             arr = []
             if self.debug:
                 print(command)

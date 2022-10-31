@@ -8,9 +8,9 @@ import interactions
 from funcs import *
 import sys
 
-settings_path = osys.getenv("PATH")
+settings_path = osys.path.dirname(osys.path.abspath(__file__))+(r"\settings.json" if osys.name == "nt" else "/settings.json")
 
-with open(settings_path) as json_file:
+with open(settings_path) as json_file:  # type: ignore
   data = json.load(json_file)
   if not data["testing"]:
     TOKEN = data["TOKEN"]
@@ -18,7 +18,7 @@ with open(settings_path) as json_file:
     TOKEN = osys.getenv("TOKEN")
   os = data["os"]
 
-bot = interactions.Client(token=osys.getenv("TOKEN"))
+bot = interactions.Client(token=osys.getenv("TOKEN"))  # type: ignore
 
 @bot.command(
     name="stop",

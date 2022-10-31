@@ -18,14 +18,17 @@ settings_path = osys.path.dirname(osys.path.abspath(__file__))+(r"\settings.json
 fncs = funcs()
 
 # Varaible getting defeined
-bot = interactions.Client(token=osys.getenv("TOKEN"))
+bot = interactions.Client(token=osys.getenv("TOKEN"))  # type: ignore
+
+lower_ip_bound = ""
+upper_ip_bound = ""
 
 with open(
     settings_path, "r"
 ) as read_file:  # Open the settings file and start defineing variables from it
     data = json.load(read_file)
     testing = data["testing"]  # bc it easier
-    home_dir = data["home-dir"]
+    home_dir = osys.path.dirname(osys.path.abspath(__file__)+("\\" if osys.name == "nt" else "/"))
     output_path = home_dir + "outputs.json"
     usr_name = data["user"]
     if not testing:
@@ -60,14 +63,14 @@ with open(
 # Check if you are root for linux
 try:
     if os == 0:
-        if subprocess.check_output("/bin/whoami").decode("utf-8") != "root\n":  # type: ignore
+        if subprocess.check_output("/usr/bin/whoami").decode("utf-8") != "root\n":  # type: ignore
             raise PermissionError(
-                f"Please run as root, not as {subprocess.check_output('/bin/whoami').decode('utf-8')}"
+                f"Please run as root, not as {subprocess.check_output('/usr/bin/whoami').decode('utf-8')}"
             )
 except Exception as e:
     if e == PermissionError:
         print(
-            f"Please run as root, not as {subprocess.check_output('/bin/whoami',shell=True).decode('utf-8')}"
+            f"Please run as root, not as {subprocess.check_output('/usr/bin/whoami',shell=True).decode('utf-8')}"
         )
         fncs.log(e)
         exit()
@@ -154,9 +157,9 @@ async def status(ctx: interactions.CommandContext, ip: str):
         fncs.log(f"Scan of {ip} requested.")
         for i in ip.split(" "):
             try:  # Try getting the status
-                from mcstatus import MinecraftServer
+                from mcstatus import JavaServer
 
-                server = MinecraftServer.lookup(i)
+                server = JavaServer.lookup(i)
                 status = server.status()
                 mesg = "The server has {0} players and replied in {1} ms\n".format(
                     status.players.online, status.latency
@@ -168,9 +171,9 @@ async def status(ctx: interactions.CommandContext, ip: str):
                 print("Failed to scan {0}.\n{1}".format(i, err))
                 fncs.log(err)
             try:  # Try quering server
-                from mcstatus import MinecraftServer
+                from mcstatus import JavaServer
 
-                server = MinecraftServer.lookup(i)
+                server = JavaServer.lookup(i)
                 query = server.query()
                 print(
                     "The server has the following players online: {0}".format(
@@ -199,9 +202,9 @@ async def status(ctx: interactions.CommandContext, ip: str):
                 p = p["ip"]
                 try:  # Try getting the status and catch the errors
                     try:  # Nested trying bc otherwise if i make a mistake then it fails but i alread fixed it but i don't want to remove the nested trying bc im too lazy but I'll do it next commit, I promise
-                        from mcstatus import MinecraftServer
+                        from mcstatus import JavaServer
 
-                        server = MinecraftServer.lookup(p)
+                        server = JavaServer.lookup(p)
                         status = server.status()
                         mesg = "{0} has {1} players and replied in {2} ms\n".format(
                             p, status.players.online, status.latency
@@ -266,18 +269,6 @@ shows this message
 ########################################################
 """
     )
-
-
-@bot.event
-async def on_command_error(ctx, error):
-    if isinstance(error, bot.HTTPException):
-        print("You are ratelimited")
-        fncs.log("You are ratelimited")
-
-
-@bot.event
-async def on_ready():
-    print(f'Logged on as {bot.user}!')
 
 
 # Startup
