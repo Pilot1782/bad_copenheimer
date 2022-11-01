@@ -11,10 +11,13 @@ import json
 import time
 import os as osys
 from mcstatus import JavaServer
-import multiprocessing
 
 
 class funcs:
+    """_summary_:
+    This is a library class that contains all the functions used in the dif0bot.pyw file
+    """
+
     def __init__(self):
         self.path = osys.path.dirname(osys.path.abspath(__file__))
 
@@ -30,14 +33,13 @@ class funcs:
         self.testing = data["testing"]  # bc it easier
         if not self.testing:
             self.TOKEN = data["TOKEN"]
-            home_dir = data["home-dir"]
+            self.home_dir = data["home-dir"]
         else:
             self.TOKEN = osys.getenv("TOKEN")
-            home_dir = self.path[:-13]
+            self.home_dir = self.path[:-13]
         
         self.testing = data["testing"]
-        home_dir = data["home-dir"]
-        self.home_dir = home_dir
+        self.home_dir = data["home-dir"]
         self.output_path = home_dir + "outputs.json"
         self.usr_name = data["user"]
         self.lower_ip_bound = data["lower_ip_bound"]
@@ -184,7 +186,6 @@ class funcs:
 
     # Scan to increase simplicity
     def scan(self, ip1, ip2):
-        import os as osys
         if osys == 0 and self.mascan is True:
             command = f"sudo masscan -p25565 {ip1}-{ip2} --rate={self.threads * 3} --exclude 255.255.255.255"
             for i in self.run_command(command):
@@ -197,7 +198,6 @@ class funcs:
                 self.dprint(i.decode("utf-8"))
                 if "(" in i.decode("utf-8"):
                     yield self.clean(i.decode("utf-8"))
-            import os as osys
 
             osys.chdir("outputs")
             files = osys.listdir(osys.getcwd())
