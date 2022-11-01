@@ -58,5 +58,6 @@ Pipfile.lock
 Pipfile
 .replit
 compose-dev.yaml
-scanCore.ipynb
 paused.conf
+index.html
+index.js
