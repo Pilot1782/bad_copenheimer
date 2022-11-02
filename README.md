@@ -1,4 +1,4 @@
-=======
+-----
 # Bad Copenheimer
 A Python impelentation of a discord bot that acts as a server scanner.
 
