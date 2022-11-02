@@ -36,11 +36,11 @@ class funcs:
             self.home_dir = data["home-dir"]
         else:
             self.TOKEN = osys.getenv("TOKEN")
-            self.home_dir = self.path[:-13]
+            self.home_dir = osys.path.dirname(osys.path.abspath(__file__))
         
         self.testing = data["testing"]
         self.home_dir = data["home-dir"]
-        self.output_path = home_dir + "outputs.json"
+        self.output_path = self.home_dir + "outputs.json"
         self.usr_name = data["user"]
         self.lower_ip_bound = data["lower_ip_bound"]
         self.upper_ip_bound = data["upper_ip_bound"]
@@ -53,7 +53,7 @@ class funcs:
             self.osp = "\\"
         else:
             self.osp = "/"
-        self.path = home_dir + "qubo.jar"
+        self.path = self.home_dir + "qubo.jar"
         self.mascan = data["masscan"]
         self.time2 = data["time2"]
         self.debug = data["debugging"]
