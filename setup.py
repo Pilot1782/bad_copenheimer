@@ -6,14 +6,12 @@ path = ""
 # Get system path
 ost = ''
 while ost != "\\"or ost != "/":
-  ost = input("\nIs this being run on windows, or linux? ")
-  if ost.lower() == "windows":
+  if os.name == "nt":
     ost = "\\"
     break
-  if ost.lower() == "linux":
+  else:
     ost = "/"
     break
-  print("Input failed.")
 
 inp = os.path.dirname(os.path.abspath(__file__))
 
@@ -56,7 +54,8 @@ def fix_files():
 
   print("Updating file paths...")
   inp = r"{}".format(inp)
-  ast.literal_eval('replace_line(f"{inp}.env",0,r\'{}PATH={}settings.json{}'.format("\r",inp,"\n")) if inp("Do you want to use enviroment variables? (y/n) ").lower() == "y" else 'replace_line(f"{inp}dis-bot.pyw",11,r\'{}settings_path =\' "{}settings.json{}"'.format("\r",inp,"\n")  # type: ignore
+  fileName = ".env" if input("Do you want to use enviroment variables? (y/n) ").lower() == "y" else "settings.json"
+  replace_line(f"{inp}{fileName}",(0 if fileName.startswith(".") else 9),r'{}PATH=\rsettings.json{}'.format(inp,ost))
   fncs.dprint(inp)
   replace_line(f"{inp}settings.json",7,r'  "home-dir": "{}",{}'.format(inp,"\n"))
 
