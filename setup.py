@@ -5,9 +5,9 @@ path = ""
 # Get system path
 ost = ''
 if os.name == "nt":
-  ost = "\\"
+    ost = "\\"
 else:
-  ost = "/"
+    ost = "/"
 
 inp = os.path.dirname(os.path.abspath(__file__))
 
@@ -20,10 +20,10 @@ fncs.dprint(inp)
 path = inp
 
 def imports():
-  os.system("python -m pip install -r requirements.txt")
+    os.system("python -m pip install -r requirements.txt")
 
-  with open(f"{path}log.txt","w") as fp:
-    fp.write(f"[{fncs.ptime()}] Finished Install Packages and created setup_done.yay file.\n")
+    with open(f"{path}log.txt","w") as fp:
+        fp.write(f"[{fncs.ptime()}] Finished Install Packages and created setup_done.yay file.\n")
 
 def replace_line(file_name, line_num, text): # Yes i know this is a dumb way to solve it but it works
     lines = open(file_name, 'r').readlines()
@@ -33,38 +33,38 @@ def replace_line(file_name, line_num, text): # Yes i know this is a dumb way to 
     out.close()
 
 def printfl(path):
-  with open(path) as fp:
-    return path+"\n"+fp.read()
+    with open(path) as fp:
+        return path+"\n"+fp.read()
 
 def fix_files():
-  os.system("clear")
+    os.system("clear")
 
-  global inp
-  my_file = os.path.exists(f"{inp}setup_done.yay")
-  if my_file:
-    print("Packages Already Imported, Exiting!")
-  else:
-    imports()
-    with open("setup_done.yay","w") as file:
-      pass
+    global inp
+    my_file = os.path.exists(f"{inp}setup_done.yay")
+    if my_file:
+        print("Packages Already Imported, Exiting!")
+    else:
+        imports()
+        with open("setup_done.yay","w") as file:
+            pass
 
-  print("Updating file paths...")
-  inp = r"{}".format(inp)
-  fileName = ".env" if input("Do you want to use enviroment variables? (y/n) ").lower() == "y" else "settings.json"
-  replace_line(f"{inp}{fileName}",(0 if fileName.startswith(".") else 9),r'{}PATH=\rsettings.json{}'.format(inp,ost))
-  fncs.dprint(inp)
-  replace_line(f"{inp}settings.json",7,r'  "home-dir": "{}",{}'.format(inp,"\n"))
+    print("Updating file paths...")
+    inp = r"{}".format(inp)
+    fileName = ".env" if input("Do you want to use enviroment variables? (y/n) ").lower() == "y" else "settings.json"
+    replace_line(f"{inp}{fileName}",(0 if fileName.startswith(".") else 9),r'{}PATH=\rsettings.json{}'.format(inp,ost))
+    fncs.dprint(inp)
+    replace_line(f"{inp}settings.json",7,r'    "home-dir": "{}",{}'.format(inp,"\n"))
 
 def verify():
-  print("Please verify the following information is correct\n")
-  print(printfl(inp+".env"),end="\n\n==================================\n\n")
-  print(printfl(inp+"settings.json"))
+    print("Please verify the following information is correct\n")
+    print(printfl(inp+".env"),end="\n\n==================================\n\n")
+    print(printfl(inp+"settings.json"))
 
 
 if __name__ == "__main__":
-  os.system('cls' if os.name == 'nt' else 'clear')
-  fix_files()
-  verify()
+    os.system('cls' if os.name == 'nt' else 'clear')
+    fix_files()
+    verify()
 
-  with open(f"{path}log.txt","w") as fp:
-    fp.write(f"[{fncs.ptime()}] Finished Setup with no errors.\n")
+    with open(f"{path}log.txt","w") as fp:
+        fp.write(f"[{fncs.ptime()}] Finished Setup with no errors.\n")
