@@ -1,11 +1,3 @@
-"""
-STOP HERE
-
-Beyond this point is code unmaintained and at risk of mabye being important.
-Once this file was made, no proper docs on the methods have been made except those that I sometimes remember.
-The code is half formatted and not very readable, variable names are not always true to their value
-"""
-
 import subprocess
 import json
 import time
@@ -14,9 +6,13 @@ from mcstatus import JavaServer
 
 
 class funcs:
-    """_summary_:
-    This is a library class that contains all the functions used in the dif0bot.pyw file
-    """
+    """_summary_
+            # STOP HERE
+
+            Beyond this point is code unmaintained and at risk of mabye being important.
+            Once this file was made, no proper docs on the methods have been made except those that I sometimes remember.
+
+    """    
 
     def __init__(self):
         self.path = osys.path.dirname(osys.path.abspath(__file__))
@@ -88,6 +84,19 @@ class funcs:
 
     # Run a command and get line by line output
     def run_command(self, command, powershell=False):
+        """_summary_
+
+        Args:
+            command (raw string): desired command
+            powershell (bool, optional): use powershell for windows. Defaults to False.
+
+        Returns:
+            string: error message
+
+        Yields:
+            string: console output of command
+        """
+
         if powershell:
             command = rf"C:\Windows\system32\WindowsPowerShell\\v1.0\powershell.exe -command {command}"
         p = subprocess.Popen(
@@ -131,6 +140,15 @@ class funcs:
     # Look through your files and see if the server you scan has 'player' playing on it, going to be redon soon
     # The redoo may be implemented but i have to test the file first.
     def find(self, player):
+        """_summary_
+
+        Args:
+            player (string): ip addr
+
+        Returns:
+            string: ip addr
+        """
+
         outp = []
         with open(f"{self.home_dir}outputs.json", "r") as f:
             data = json.load(f)
@@ -185,15 +203,25 @@ class funcs:
             print(text)
 
     # Scan to increase simplicity
-    def scan(self, ip1, ip2):
+    def scan(self, ipL, ipU): # dont use scan_range
+        """_summary_
+
+        Args:
+            ipL (ip String): lower bound
+            ipU (ip String): upper bound
+
+        Yields:
+            ip String: active servers
+        """
+
         if osys == 0 and self.mascan is True:
-            command = f"sudo masscan -p25565 {ip1}-{ip2} --rate={self.threads * 3} --exclude 255.255.255.255"
+            command = f"sudo masscan -p25565 {ipL}-{ipU} --rate={self.threads * 3} --exclude 255.255.255.255"
             for i in self.run_command(command):
                 self.dprint(i.decode("utf-8"))
                 if "Discovered" in i.decode("utf-8"):
                     yield self.clean(i.decode("utf-8"))
         else:
-            command = f"java -Dfile.encoding=UTF-8 -jar {self.path} -range {ip1}-{ip2} -ports 25565-25577 -th {self.threads} -ti {self.timeout}"
+            command = f"java -Dfile.encoding=UTF-8 -jar {self.path} -range {ipL}-{ipU} -ports 25565-25577 -th {self.threads} -ti {self.timeout}"
             for i in self.run_command(command):
                 self.dprint(i.decode("utf-8"))
                 if "(" in i.decode("utf-8"):
@@ -218,7 +246,20 @@ class funcs:
             f.write(f"[{self.ptime()}] {text}\n")
 
     # Scan a range
-    def scan_range(self, ip1, ip2):
+    def scan_range(self, ip1, ip2): #legacy verson of scan
+        """_summary_
+
+        Args:
+            ip1 (ip String): lower bound
+            ip2 (ip String): upper bound
+
+        Yields:
+            ip String: active servers
+            string: output for discord
+        """
+
+        print("This is a legacy version of scan, use scan instead")
+
         yield f"Scanning started: {self.ptime()}"
 
         flag = False
