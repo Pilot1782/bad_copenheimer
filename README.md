@@ -11,6 +11,11 @@ This is a discord bot that will scan ip adresses to see if they are minecraft se
 
 ## Usage
 
+### Experimental
+This branch contains a new file, `scanCore.ipynb` this requires that you have masscan installed and a mongodb database setup and must be run in linux or with a docker container, but will run much faster than the current method and store your servers into an easy to sort database.
+
+### Normal
+
 `/help`
 This shows all of the commands you can use and their usage. Then to create your server list, run:
 
