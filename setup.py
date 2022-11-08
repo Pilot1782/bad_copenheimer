@@ -1,17 +1,13 @@
-import ast
 import os
 from funcs import funcs
 path = ""
 
 # Get system path
 ost = ''
-while ost != "\\"or ost != "/":
-  if os.name == "nt":
-    ost = "\\"
-    break
-  else:
-    ost = "/"
-    break
+if os.name == "nt":
+  ost = "\\"
+else:
+  ost = "/"
 
 inp = os.path.dirname(os.path.abspath(__file__))
 

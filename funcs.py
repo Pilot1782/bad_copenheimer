@@ -24,7 +24,7 @@ class funcs:
         ) as read_file:  # Open the settings file and start defineing variables from it
             global data
             data = json.load(read_file)
-        
+
         # Define based on testing
         self.testing = data["testing"]  # bc it easier
         if not self.testing:
@@ -33,7 +33,7 @@ class funcs:
         else:
             self.TOKEN = osys.getenv("TOKEN")
             self.home_dir = osys.path.dirname(osys.path.abspath(__file__))
-        
+
         self.testing = data["testing"]
         self.home_dir = data["home-dir"]
         self.output_path = self.home_dir + "outputs.json"
@@ -127,8 +127,9 @@ class funcs:
             )
         ):
             self.dprint(i.decode("utf-8"))
-            return i.decode("utf-8")
             flag = True
+
+            return i.decode("utf-8")
 
     # Get the file output depending on the os
     def file_out(self):
