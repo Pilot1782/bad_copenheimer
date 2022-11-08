@@ -108,24 +108,10 @@ async def server_scan(ctx: interactions.CommandContext, ip_lower_bound: str, ip_
         ip_lower_bound (str)
         ip_upper_bound (str)
     """
+    
+    fncs.log("Command: mc " + ip_lower_bound + "|" + ip_upper_bound)
 
-    iplower = ip_lower_bound
-    ipupper = ip_upper_bound
-    fncs.log("Command: mc " + iplower + "|" + ipupper)
-
-    if ipupper != None:
-        lower_ip_bound = iplower
-        upper_ip_bound = ipupper
-
-        testar = iplower.split(".")
-        if len(testar) != 4:
-            await ctx.send("Invalid IP")
-            exit()
-        testar = ipupper.split(".")
-        if len(testar) != 4:
-            await ctx.send("Invalid IP")
-            exit()
-    for line in fncs.scan(lower_ip_bound, upper_ip_bound):
+    for line in fncs.scan(ip_lower_bound, ip_upper_bound):
         await ctx.send(line)
 
 
