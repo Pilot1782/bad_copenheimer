@@ -24,7 +24,7 @@ lower_ip_bound = ""
 upper_ip_bound = ""
 
 with open(
-    settings_path, "r"
+    settings_path, "r"  # type: ignore
 ) as read_file:  # Open the settings file and start defineing variables from it
     data = json.load(read_file)
     testing = data["testing"]  # bc it easier
@@ -108,7 +108,7 @@ async def server_scan(ctx: interactions.CommandContext, ip_lower_bound: str, ip_
         ip_lower_bound (str)
         ip_upper_bound (str)
     """
-    
+
     fncs.log("Command: mc " + ip_lower_bound + "|" + ip_upper_bound)
 
     for line in fncs.scan(ip_lower_bound, ip_upper_bound):

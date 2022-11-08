@@ -61,3 +61,4 @@ compose-dev.yaml
 paused.conf
 index.html
 index.js
+privVars.py
