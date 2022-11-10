@@ -62,3 +62,4 @@ paused.conf
 index.html
 index.js
 privVars.py
+__pycache__/funcs.cpython-39.pyc
