@@ -1,9 +1,1 @@
-[2022 11/7 21:59:49] Finished Setup with no errors.
-[2022 11/10 17:56:26] Startup has been called, Testing:True, Debugging:True
-
-[2022 11/10 17:59:40] Startup has been called, Testing:True, Debugging:True
-
-[2022 11/10 18:9:47] Scan of mc.hypixel.net requested.
-[2022 11/10 18:9:57] timed out
-[2022 11/10 18:10:4] Scan of mc.hypixel.net requested.
-[2022 11/10 18:10:14] timed out
+[2022 12/4 22:6:33] Finished Install Packages and created setup_done.yay file.

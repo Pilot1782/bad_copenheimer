@@ -14,8 +14,8 @@ class funcs:
 
     """    
 
-    def __init__(self):
-        self.path = osys.path.dirname(osys.path.abspath(__file__))
+    def __init__(self, path=osys.path.dirname(osys.path.abspath(__file__))):
+        self.path = path
 
         self.settings_path = self.path+(r"\settings.json" if osys.name == "nt" else "/settings.json")
 
@@ -98,7 +98,7 @@ class funcs:
         """
 
         if powershell:
-            command = rf"C:\Windows\system32\WindowsPowerShell\\v1.0\powershell.exe -command {command}"
+            command = rf"C:\Windows\system32\WindowsPowerShell\v1.0\powershell.exe -command {command}"
         p = subprocess.Popen(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
         )
