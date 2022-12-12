@@ -6,7 +6,7 @@ from mcstatus import JavaServer
 
 
 class funcs:
-    """_summary_
+    """Cursed code that I don't want to touch. It works, but it's not pretty.
             # STOP HERE
 
             Beyond this point is code unmaintained and at risk of mabye being important.
@@ -15,6 +15,12 @@ class funcs:
     """    
 
     def __init__(self, path=osys.path.dirname(osys.path.abspath(__file__))):
+        """Init the class
+
+        Args:
+            path (str, optional): Path to the directory of the folder. Defaults to os.path.dirname(os.path.abspath(__file__)).
+        """
+
         self.path = path
 
         self.settings_path = self.path+(r"\settings.json" if osys.name == "nt" else "/settings.json")
@@ -84,7 +90,7 @@ class funcs:
 
     # Run a command and get line by line output
     def run_command(self, command, powershell=False):
-        """_summary_
+        """Just a better os.system
 
         Args:
             command (raw string): desired command
@@ -141,7 +147,7 @@ class funcs:
     # Look through your files and see if the server you scan has 'player' playing on it, going to be redon soon
     # The redoo may be implemented but i have to test the file first.
     def find(self, player):
-        """_summary_
+        """Legacy find player function, now obsolete
 
         Args:
             player (string): ip addr
@@ -205,7 +211,7 @@ class funcs:
 
     # Scan to increase simplicity
     def scan(self, ipL, ipU): # dont use scan_range
-        """_summary_
+        """Scan function that uses ipv4 addrs
 
         Args:
             ipL (ip String): lower bound
@@ -243,12 +249,17 @@ class funcs:
 
     # If error then log it
     def log(self, text):
+        """Logging function
+
+        Args:
+            text (String): text to log
+        """
         with open(f"{self.home_dir}log.txt", "a") as f:
             f.write(f"[{self.ptime()}] {text}\n")
 
     # Scan a range
     def scan_range(self, ip1, ip2): #legacy verson of scan
-        """_summary_
+        """Legacy Scan function
 
         Args:
             ip1 (ip String): lower bound
