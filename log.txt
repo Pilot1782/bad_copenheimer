@@ -1,1 +1,8 @@
 [2022 12/4 22:6:33] Finished Install Packages and created setup_done.yay file.
+[2022 12/12 21:41:37] status(play.hypixel.net)
+[2022 12/12 21:44:19] status(play.hypixel.net)
+[2022 12/12 21:45:53] restart()
+[2022 12/12 21:46:28] find(None, mc.hypixel.net)
+[2022 12/12 21:48:42] find(None, mc.hypixel.net)
+[2022 12/12 21:49:18] add(mc.hypixel.net)
+[2022 12/12 21:50:16] status(mc.hypixel.net)
