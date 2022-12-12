@@ -5,7 +5,6 @@ import pymongo
 import mcstatus
 from funcs import funcs
 import time
-import json
 
 try:
     from privVars import *

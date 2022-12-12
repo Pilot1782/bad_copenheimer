@@ -1,4 +1,5 @@
-mcstatus==9.0.4
+mcstatus
 discord-py-interactions
-quarry
+pymongo
 requests
+python-masscan
