@@ -141,16 +141,21 @@ async def find(ctx: interactions.CommandContext, _id: str = None, host: str = No
         Player (str, optional): The player to search for. Defaults to None.
     """
     fncs.log(f"find({_id}, {host or Player})")
+    info = ""
     if _id:
-        await ctx.send(col.find_one({'_id': _id}) if col.find_one({'_id':_id}) else "Server not found")
+        info = (col.find_one({'_id': _id}) if col.find_one({'_id':_id}) else "Server not found")
     elif host:
-        await ctx.send(col.find_one({"host": host}) if col.find_one({"host": host}) else "Server not found")
+        info = (col.find_one({"host": host}) if col.find_one({"host": host}) else "Server not found")
     elif Player:
         serverList = col.find()
         
         for server in serverList:
             if Player in server["lastOnlinePlayersList"]:
-                await ctx.send(server)
+                info = (server)
+                break
+    if info:
+        text = f'Host: `{info["host"]}`\nPlayers Online: `{info["lastOnlinePlayers"]}`\nVersion: {info["lastOnlineVersion"]}\nDescription: {info["lastOnlineDescription"]}\nPing: `{info["lastOnlinePing"]}ms`' # type: ignore
+        await ctx.send(f"{text}")
 
 @bot.command(
     name="status",
@@ -169,7 +174,9 @@ async def status(ctx: interactions.CommandContext, host: str): # type: ignore
     fncs.log(f"status({host})")
     info = check(host)
     if info:
-        await ctx.send(f"```{info}```")
+        if info:
+            text = f'Host: `{info["host"]}`\nPlayers Online: `{info["lastOnlinePlayers"]}`\nVersion: {info["lastOnlineVersion"]}\nDescription: {info["lastOnlineDescription"]}\nPing: `{info["lastOnlinePing"]}ms`' # type: ignore
+            await ctx.send(f"{text}")
     else:
         await ctx.send("Server is offline")
 
@@ -188,7 +195,10 @@ async def status(ctx: interactions.CommandContext, host: str): # type: ignore
 async def add(ctx: interactions.CommandContext, host: str): # type: ignore
     """Add a server"""
     fncs.log(f"add({host})")
-    await ctx.send(f"```{check(host)}```")
+    info = check(host)
+    if info:
+        text = f'Host: `{info["host"]}`\nPlayers Online: `{info["lastOnlinePlayers"]}`\nVersion: {info["lastOnlineVersion"]}\nDescription: {info["lastOnlineDescription"]}\nPing: `{info["lastOnlinePing"]}ms`' # type: ignore
+        await ctx.send(f"{text}")
 
 @bot.command(
     name="restart"
@@ -205,7 +215,13 @@ async def restart(ctx: interactions.CommandContext): # type: ignore
 async def help(ctx: interactions.CommandContext): # type: ignore
     """Get help"""
     fncs.log(f"help()")
-    await ctx.send("```Commands: find, status, add, restart, help```")
+    await ctx.send("""Commands:
+find - Find a server
+status - Get the status of a server
+add - Add a server
+restart - Restart the bot
+help - Get help
+""")
 
 if __name__ == "__main__":
     while True:

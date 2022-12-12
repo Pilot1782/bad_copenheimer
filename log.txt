@@ -6,3 +6,6 @@
 [2022 12/12 21:48:42] find(None, mc.hypixel.net)
 [2022 12/12 21:49:18] add(mc.hypixel.net)
 [2022 12/12 21:50:16] status(mc.hypixel.net)
+[2022 12/12 22:22:44] status(mc.hypixel.net)
+[2022 12/12 22:23:8] find(None, mc.hypixel.net)
+[2022 12/12 22:25:40] status(play.hypixel.net)
