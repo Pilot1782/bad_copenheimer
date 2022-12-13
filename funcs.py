@@ -109,14 +109,14 @@ class funcs:
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
         )
         # Read stdout from subprocess until the buffer is empty !
-        for line in iter(p.stdout.readline, b""):
+        for line in iter(p.stdout.readline, b""): # type: ignore
             if line:  # Don't print blank lines
                 yield line
         # This ensures the process has completed, AND sets the 'returncode' attr
         while p.poll() is None:
             time.sleep(0.1)  # Don't waste CPU-cycles
         # Empty STDERR buffer
-        err = p.stderr.read()
+        err = p.stderr.read() # type: ignore
         if p.returncode != 0:
             # The run_command() function is responsible for logging STDERR
             print(str(err))

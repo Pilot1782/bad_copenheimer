@@ -230,10 +230,20 @@ help - Get help
 
 # Run the bot
 # ---------------------------------------------
+                
+def rest():
+    import time
+    # sleep for 2 hours then restart
+    print("Restarting in 2 hours")
+    time.sleep(7200)
+    os.execl(sys.executable, sys.executable, *sys.argv)
 
 if __name__ == "__main__":
     while True:
         try:
+            import threading
+            threading.Thread(target=rest).start()
+
             bot.start()
         except Exception as e:
             if e == KeyboardInterrupt:
