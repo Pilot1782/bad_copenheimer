@@ -1,3 +1,5 @@
+import base64
+from io import BytesIO
 import interactions
 import os
 import sys
@@ -5,6 +7,8 @@ import pymongo
 import mcstatus
 from funcs import funcs
 import time
+import discord
+from PIL import Image
 
 try:
     from privVars import *
@@ -70,6 +74,7 @@ def check(host):
             "lastOnlinePlayersList": players,
             "lastOnlinePlayersMax": server.status().players.max,
             "lastOnlineVersionProtocol": str(server.status().version.protocol),
+            "favicon": server.status().favicon if server.status().favicon else None,
         }
 
         if not col.find_one({"host": host}):
@@ -79,17 +84,13 @@ def check(host):
         return data
     except Exception as e:
         print("\r", e, " | ", host, end="\r")
+        return None
         pass
-    finally:        
-        import threading
-        # remove dulpicate hosts in pymongo
-        def remove_duplicates():
-            for i in col.find():
-                if col.count_documents({"host": i["host"]}) > 1:
-                    col.delete_one({"_id": i["_id"]})
 
-        threading.Thread(target=remove_duplicates).start()
-        print("Done")
+def remove_duplicates():
+    for i in col.find():
+        if col.count_documents({"host": i["host"]}) > 1:
+            col.delete_one({"_id": i["_id"]})
 
 # Commands
 # ---------------------------------------------
@@ -141,7 +142,6 @@ async def find(ctx: interactions.CommandContext, _id: str = None, host: str = No
         host (str, optional): The host of the server. Defaults to None.
         Player (str, optional): The player to search for. Defaults to None.
     """
-    fncs.log(f"find({_id}, {host or Player})")
     info = ""
     if _id:
         info = (col.find_one({'_id': _id}) if col.find_one({'_id':_id}) else "Server not found")
@@ -154,54 +154,25 @@ async def find(ctx: interactions.CommandContext, _id: str = None, host: str = No
             if Player in server["lastOnlinePlayersList"]:
                 info = (server)
                 break
-    if info:
-        text = f'Host: `{info["host"]}`\nPlayers Online: `{info["lastOnlinePlayers"]}`\nVersion: {info["lastOnlineVersion"]}\nDescription: {info["lastOnlineDescription"]}\nPing: `{info["lastOnlinePing"]}ms`' # type: ignore
-        await ctx.send(f"{text}")
-
-
-@bot.command(
-    name="status",
-    description="Get the status of a server",
-    options=[
-        interactions.Option(
-            name="host",
-            type=interactions.OptionType.STRING,
-            description="The host of the server",
-            required=True,
-        ),
-    ],
-)
-async def status(ctx: interactions.CommandContext, host: str): # type: ignore
-    """Get the status of a server"""
-    fncs.log(f"status({host})")
-    info = check(host)
-    if info:
-        if info:
+    if info or info != "Server not found":
+        try:
             text = f'Host: `{info["host"]}`\nPlayers Online: `{info["lastOnlinePlayers"]}`\nVersion: {info["lastOnlineVersion"]}\nDescription: {info["lastOnlineDescription"]}\nPing: `{info["lastOnlinePing"]}ms`' # type: ignore
             await ctx.send(f"{text}")
+            img = base64.b64decode((mcstatus.JavaServer.lookup(host).status().favicon).split(",")[1]) # type: ignore
+            with open(r"{}images{}.png".format(("/" if os.name != "nt" else "\\"),host), "wb") as fp:
+                fp.write(img)
+            with open(r"{}images{}.png".format(("/" if os.name != "nt" else "\\"),host), "rb") as fh:
+                f = discord.File(fh, filename=f"{host}.png")
+            # await ctx.send(file=f)
+        except Exception as e:
+            print(e)
+            print(info)
+            await ctx.send("Server not found")
+            fncs.log(f"Error: {e}")
     else:
-        await ctx.send("Server is offline")
+        await ctx.send("Server not found")
 
-
-@bot.command(
-    name="add",
-    description="Add a server",
-    options=[
-        interactions.Option(
-            name="host",
-            type=interactions.OptionType.STRING,
-            description="The host of the server",
-            required=True,
-        ),
-    ],
-)
-async def add(ctx: interactions.CommandContext, host: str): # type: ignore
-    """Add a server"""
-    fncs.log(f"add({host})")
-    info = check(host)
-    if info:
-        text = f'Host: `{info["host"]}`\nPlayers Online: `{info["lastOnlinePlayers"]}`\nVersion: {info["lastOnlineVersion"]}\nDescription: {info["lastOnlineDescription"]}\nPing: `{info["lastOnlinePing"]}ms`' # type: ignore
-        await ctx.send(f"{text}")
+    import threading;threading.Thread(target=remove_duplicates).start();print("Done")
 
 
 @bot.command(
