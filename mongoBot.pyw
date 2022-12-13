@@ -108,6 +108,7 @@ def check(host):
 }
 """
 
+
 @bot.command(
     name="find",
     description="Find a server",
@@ -157,6 +158,7 @@ async def find(ctx: interactions.CommandContext, _id: str = None, host: str = No
         text = f'Host: `{info["host"]}`\nPlayers Online: `{info["lastOnlinePlayers"]}`\nVersion: {info["lastOnlineVersion"]}\nDescription: {info["lastOnlineDescription"]}\nPing: `{info["lastOnlinePing"]}ms`' # type: ignore
         await ctx.send(f"{text}")
 
+
 @bot.command(
     name="status",
     description="Get the status of a server",
@@ -180,6 +182,7 @@ async def status(ctx: interactions.CommandContext, host: str): # type: ignore
     else:
         await ctx.send("Server is offline")
 
+
 @bot.command(
     name="add",
     description="Add a server",
@@ -200,6 +203,7 @@ async def add(ctx: interactions.CommandContext, host: str): # type: ignore
         text = f'Host: `{info["host"]}`\nPlayers Online: `{info["lastOnlinePlayers"]}`\nVersion: {info["lastOnlineVersion"]}\nDescription: {info["lastOnlineDescription"]}\nPing: `{info["lastOnlinePing"]}ms`' # type: ignore
         await ctx.send(f"{text}")
 
+
 @bot.command(
     name="restart"
 )
@@ -208,6 +212,7 @@ async def restart(ctx: interactions.CommandContext): # type: ignore
     fncs.log(f"restart()")
     await ctx.send("Restarting...")
     os.execl(sys.executable, sys.executable, *sys.argv)
+
 
 @bot.command(
     name="help"
@@ -222,6 +227,9 @@ add - Add a server
 restart - Restart the bot
 help - Get help
 """)
+
+# Run the bot
+# ---------------------------------------------
 
 if __name__ == "__main__":
     while True:
