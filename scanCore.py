@@ -13,13 +13,13 @@ try:
 except ImportError:
     MONGO_URL = "mongodb+srv://..."
     TOKEN = "..."
-    DSICORD_WEBHOOK = "..."
+    DSICORD_WEBHOOK = "discord.api.com/..."
 
 # Setup
 # ---------------------------------------------
 
 pingsPerSec = 2400
-maxActive = 12
+maxActive = 5
 DEBUG = True
 time_start = time.time()
 upHosts = []
@@ -86,8 +86,8 @@ def Eprint(text):
     Args:
         text (String): Error text
     """
-    fncs.log("Error: "+str(text))
-    dprint("\n"+str(text)+"\n")
+    fncs.log("Error: "+"".join(str(i) for i in text))
+    dprint("\n"+"".join(str(i) for i in text)+"\n")
 
 
 def disLog(text, end="\r"):
@@ -97,8 +97,8 @@ def disLog(text, end="\r"):
         url = DSICORD_WEBHOOK
         data = {"content": text + end}
         requests.post(url, data=data)
-    except Exception as e:
-        Eprint(e)
+    except Exception:
+        Eprint(text)
         pass
 
 def add(host):
@@ -129,7 +129,7 @@ def add(host):
             }
 
             col.insert_one(data)
-            print(f"added {host}")
+            print(f"\nadded {host}\n")
             disLog(f"added {host}")
         except Exception as e:
             Eprint(("\r"+e+" | "+host)) # type: ignore
@@ -158,21 +158,26 @@ for i in range(255):
         ip_lists.append(f"{i}.{j}.0.0/16")
 random.shuffle(ip_lists)
 
-# ip_lists = ip_lists[:200]  # remove for final version
+ip_lists = ip_lists[:50]  # remove for final version
 time.sleep(0.5)
 
 normal = threading.active_count()
 async def makeThreads():
     # create threads
+    threads = []
+    # Create a thread for each list of IPs
     for ip_list in ip_lists:
+        # Create the thread
         t = threading.Thread(target=crank, args=(ip_list,),name=f"Scan func thread: {ip_list}")
+        # Add the thread to the list of threads
         threads.append(t)
+        # If the number of active threads is greater than the max, sleep for 0.1 seconds
         while threading.active_count()-normal >= maxActive:
             await asyncio.sleep(0.1)
         t.start()
 
         print(f"\rstarted proc for {ip_list} | {threading.active_count()-normal}/{maxActive} active threads, #{ip_lists.index(ip_list)+1} {' '*10}", end="\r")
-        # disLog(f"\rstarted proc for {ip_list} | {threading.active_count()-normal}/{maxActive} active threads")
+
 
 asyncio.run(makeThreads())
 
