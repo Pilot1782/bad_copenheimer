@@ -3,14 +3,10 @@
 import os
 from funcs import funcs
 
-
-
 path = os.path.dirname(os.path.abspath(__file__))[0].upper() + os.path.dirname(os.path.abspath(__file__))[1:] + "\\" if os.name == "nt" else "/"
 os.system('cls' if os.name == 'nt' else 'clear')
 fncs = funcs(path) #setup funcs
-
 fncs.dprint(path)
-
 
 def imports():
     os.system("python -m pip install -r requirements.txt")
