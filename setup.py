@@ -45,6 +45,7 @@ def fix_files():
     replace_line(f"{path}.env",0,"SET_PATH="+path) if input("Do you want to use enviroment variables? (y/n): ").lower() == "y" else None
     replace_line(f"{path}settings.json",7,r'    "home-dir": "{}",{}'.format(r'{}'.format(path),"\n"))
 
+
 def verify():
     print("Please verify the following information is correct\n")
     print(printfl(path+".env"),end="\n\n==================================\n\n")
