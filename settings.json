@@ -5,7 +5,7 @@
   "threads":1020,
   "timeout":6000,
   "os":0,
-  "home-dir": "C:\\Users\\Pilto1782\\Downloads\\bad_copenheimer\\",
+  "home-dir": "/com.docker.devenvironments.code/",
   "user":"Pilot1782",
   "password":"Password123",
   "guild-id": 1234,
@@ -13,7 +13,7 @@
   "server-port":"8080",
   "masscan":false,
   "time2":1000,
-  "lin-py":"/bin/python3",
+  "lin-py":"/usr/bin/python3",
   "win-py":"%LOCALAPPDATA%\\Programs\\Python\\Python310\\python.exe",
   "debugging":true,
   "testing":true

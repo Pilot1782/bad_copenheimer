@@ -1,10 +1,6 @@
 .env
 setupdone.yay
 commit.py
-__pycache__/commit.cpython-310.pyc
-__pycache__/dis-bot.cpython-310.pyc
-__pycache__/funcs.cpython-310.pyc
-__pycache__/setup.cpython-310.pyc
 bc but in c/main.c
 bc but in c/main.cp310-win_amd64.pyd
 bc but in c/main.cpp
@@ -15,37 +11,6 @@ bc but in c/build/lib.win-amd64-3.10/main.cp310-win_amd64.pyd
 bc but in c/build/temp.win-amd64-3.10/Release/main.cp310-win_amd64.exp
 bc but in c/build/temp.win-amd64-3.10/Release/main.cp310-win_amd64.lib
 bc but in c/build/temp.win-amd64-3.10/Release/main.obj
-node_modules/.package-lock.json
-node_modules/enquire/.gitattributes
-node_modules/enquire/.npmignore
-node_modules/enquire/index.js
-node_modules/enquire/node.exe
-node_modules/enquire/npm
-node_modules/enquire/npm.cmd
-node_modules/enquire/package.json
-node_modules/enquire/README.md
-node_modules/enquire/.idea/.name
-node_modules/enquire/.idea/encodings.xml
-node_modules/enquire/.idea/enquire.iml
-node_modules/enquire/.idea/misc.xml
-node_modules/enquire/.idea/modules.xml
-node_modules/enquire/.idea/vcs.xml
-node_modules/enquire/.idea/workspace.xml
-node_modules/enquire/.idea/scopes/scope_settings.xml
-node_modules/enquire/examples/executor.js
-node_modules/enquire/examples/query.js
-node_modules/enquire/examples/data-integration/index.js
-node_modules/enquire/examples/data-unit/index.js
-node_modules/enquire/lib/index.js
-node_modules/enquire/test/load.js
-node_modules/enquire/test/register.js
-node_modules/enquire/test/double-lib/doubles-uat/index.js
-node_modules/enquire/test/doubles/index.js
-node_modules/enquire/test/doubles-development/index.js
-.vscode/.prettierrc
-.vscode/bad_copenheimer.code-workspace
-.vscode/launch.json
-.vscode/settings.json
 bc remastered.py
 p.env
 package-lock.json
@@ -57,3 +22,10 @@ bad_cope.py
 Pipfile.lock
 Pipfile
 .replit
+compose-dev.yaml
+paused.conf
+index.html
+index.js
+privVars.py
+__pycache__
+.vscode

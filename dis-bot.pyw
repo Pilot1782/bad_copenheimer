@@ -9,23 +9,26 @@ from funcs import funcs
 ############################################################
 # To change the main settings, edit the settings.json file.#
 ############################################################
-settings_path = osys.getenv("PATH")
+settings_path = osys.path.dirname(osys.path.abspath(__file__))+(r"\settings.json" if osys.name == "nt" else r"/settings.json")
 
 ###############################
 # Below this is preconfigured #
 ###############################
 
-fncs = funcs(settings_path)
+fncs = funcs()
 
 # Varaible getting defeined
-bot = interactions.Client(token=osys.getenv("TOKEN"))
+bot = interactions.Client(token=osys.getenv("TOKEN"))  # type: ignore
+
+lower_ip_bound = ""
+upper_ip_bound = ""
 
 with open(
-    settings_path, "r"
+    settings_path, "r"  # type: ignore
 ) as read_file:  # Open the settings file and start defineing variables from it
     data = json.load(read_file)
     testing = data["testing"]  # bc it easier
-    home_dir = data["home-dir"]
+    home_dir = osys.path.dirname(osys.path.abspath(__file__)+("\\" if osys.name == "nt" else "/"))
     output_path = home_dir + "outputs.json"
     usr_name = data["user"]
     if not testing:
@@ -60,14 +63,14 @@ with open(
 # Check if you are root for linux
 try:
     if os == 0:
-        if subprocess.check_output("/bin/whoami".decode("utf-8")) != "root\n":
+        if subprocess.check_output("/usr/bin/whoami").decode("utf-8") != "root\n":  # type: ignore
             raise PermissionError(
-                f"Please run as root, not as {subprocess.check_output('/bin/whoami').decode('utf-8')}"
+                f"Please run as root, not as {subprocess.check_output('/usr/bin/whoami').decode('utf-8')}"
             )
 except Exception as e:
     if e == PermissionError:
         print(
-            f"Please run as root, not as {subprocess.check_output('/bin/whoami',shell=True).decode('utf-8')}"
+            f"Please run as root, not as {subprocess.check_output('/usr/bin/whoami',shell=True).decode('utf-8')}"
         )
         fncs.log(e)
         exit()
@@ -77,6 +80,8 @@ except Exception as e:
 
 fncs.dprint("Checking scan")
 # Scan the large list
+
+
 @bot.command(
     name="server_scan",
     description="scan some ips",
@@ -104,28 +109,16 @@ async def server_scan(ctx: interactions.CommandContext, ip_lower_bound: str, ip_
         ip_upper_bound (str)
     """
 
-    iplower = ip_lower_bound
-    ipupper = ip_upper_bound
-    fncs.log("Command: mc " + iplower + "|" + ipupper)
+    fncs.log("Command: mc " + ip_lower_bound + "|" + ip_upper_bound)
 
-    if ipupper != None:
-        lower_ip_bound = iplower
-        upper_ip_bound = ipupper
-
-        testar = iplower.split(".")
-        if len(testar) != 4:
-            await ctx.send("Invalid IP")
-            exit()
-        testar = ipupper.split(".")
-        if len(testar) != 4:
-            await ctx.send("Invalid IP")
-            exit()
-    for line in fncs.scan(lower_ip_bound, upper_ip_bound):
+    for line in fncs.scan(ip_lower_bound, ip_upper_bound):
         await ctx.send(line)
 
 
 fncs.dprint("Checking status")
 # Scan the large list
+
+
 @bot.command(
     name="status",
     description="Check the status of the given ip or check all in the json file",
@@ -150,9 +143,9 @@ async def status(ctx: interactions.CommandContext, ip: str):
         fncs.log(f"Scan of {ip} requested.")
         for i in ip.split(" "):
             try:  # Try getting the status
-                from mcstatus import MinecraftServer
+                from mcstatus import JavaServer
 
-                server = MinecraftServer.lookup(i)
+                server = JavaServer.lookup(i)
                 status = server.status()
                 mesg = "The server has {0} players and replied in {1} ms\n".format(
                     status.players.online, status.latency
@@ -164,9 +157,9 @@ async def status(ctx: interactions.CommandContext, ip: str):
                 print("Failed to scan {0}.\n{1}".format(i, err))
                 fncs.log(err)
             try:  # Try quering server
-                from mcstatus import MinecraftServer
+                from mcstatus import JavaServer
 
-                server = MinecraftServer.lookup(i)
+                server = JavaServer.lookup(i)
                 query = server.query()
                 print(
                     "The server has the following players online: {0}".format(
@@ -195,9 +188,9 @@ async def status(ctx: interactions.CommandContext, ip: str):
                 p = p["ip"]
                 try:  # Try getting the status and catch the errors
                     try:  # Nested trying bc otherwise if i make a mistake then it fails but i alread fixed it but i don't want to remove the nested trying bc im too lazy but I'll do it next commit, I promise
-                        from mcstatus import MinecraftServer
+                        from mcstatus import JavaServer
 
-                        server = MinecraftServer.lookup(p)
+                        server = JavaServer.lookup(p)
                         status = server.status()
                         mesg = "{0} has {1} players and replied in {2} ms\n".format(
                             p, status.players.online, status.latency
@@ -220,7 +213,8 @@ async def status(ctx: interactions.CommandContext, ip: str):
                     if not str(err) in er:
                         er.append(str(err))
                     print(
-                        "Failed to scan {0} due to {1} \n {2}:{3}".format(p, err, c, u)
+                        "Failed to scan {0} due to {1} \n {2}:{3}".format(
+                            p, err, c, u)
                     )
                     c += 1
                     fncs.log(err)
@@ -240,6 +234,8 @@ async def status(ctx: interactions.CommandContext, ip: str):
 
 fncs.dprint("Checking list")
 # Help command
+
+
 @bot.command(
     name="help",
     description="Show the help message",
@@ -259,16 +255,6 @@ shows this message
 ########################################################
 """
     )
-
-@bot.event
-async def on_command_error(ctx, error):
-    if isinstance(error, bot.HTTPException):
-        print("You are ratelimited")
-        fncs.log("You are ratelimited")
-
-@bot.event
-async def on_ready():
-    print(f'Logged on as {bot.user}!')
 
 
 # Startup
@@ -297,7 +283,7 @@ if __name__ == "__main__":
                     proc2.terminate()
                     print("Stopped")
                     break
-            
+
             proc2.join()
     except Exception as err:
         print(
