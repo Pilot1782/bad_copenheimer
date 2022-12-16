@@ -1,5 +1,0 @@
-mcstatus
-discord-py-interactions
-pymongo
-requests
-python-masscan
