@@ -21,7 +21,7 @@ class funcs:
             path (str, optional): Path to the directory of the folder. Defaults to os.path.dirname(os.path.abspath(__file__)).
         """
 
-        self.path = path
+        self.path = path + ("\\" if osys.name == "nt" else "/")
 
         self.settings_path = self.path+(r"\settings.json" if osys.name == "nt" else "/settings.json")
 
@@ -41,7 +41,6 @@ class funcs:
             self.home_dir = osys.path.dirname(osys.path.abspath(__file__))
 
         self.testing = data["testing"]
-        self.home_dir = data["home-dir"]
         self.output_path = self.home_dir + "outputs.json"
         self.usr_name = data["user"]
         self.lower_ip_bound = data["lower_ip_bound"]
@@ -55,7 +54,6 @@ class funcs:
             self.osp = "\\"
         else:
             self.osp = "/"
-        self.path = self.home_dir + "qubo.jar"
         self.mascan = data["masscan"]
         self.time2 = data["time2"]
         self.debug = data["debugging"]
