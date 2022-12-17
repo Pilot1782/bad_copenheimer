@@ -26,13 +26,13 @@ client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi(
 db = client["mc"]
 col = db["servers"]
 
-fncs = funcs()
+fncs = funcs(os.path.dirname(os.path.abspath(__file__)))
 
 # Funcs
 # ---------------------------------------------
 
 def check(host):
-    """_summary_
+    """Checks out a host and adds it to the database if it's not there
 
     Args:
         host (String): ip of the server
@@ -85,7 +85,6 @@ def check(host):
     except Exception as e:
         print("\r", e, " | ", host, end="\r")
         return None
-        pass
 
 def remove_duplicates():
     for i in col.find():
@@ -132,9 +131,15 @@ def remove_duplicates():
             type=interactions.OptionType.STRING,
             required=False,
         ),
+        interactions.Option(
+            name="version",
+            description="The version of the server",
+            type=interactions.OptionType.STRING,
+            required=False,
+        ),
     ],
 )
-async def find(ctx: interactions.CommandContext, _id: str = None, host: str = None, Player: str = None): # type: ignore
+async def find(ctx: interactions.CommandContext, _id: str = None, host: str = None, Player: str = None, version: str = None): # type: ignore
     """Find a server
 
     Args:
@@ -146,7 +151,8 @@ async def find(ctx: interactions.CommandContext, _id: str = None, host: str = No
     if _id:
         info = (col.find_one({'_id': _id}) if col.find_one({'_id':_id}) else "Server not found")
     elif host:
-        info = (col.find_one({"host": host}) if col.find_one({"host": host}) else "Server not found")
+        info = (col.find_one({"host": host}) if col.find_one({"host": host}) else "Trying to add server")
+        info = (check(host) if host else None)
     elif Player:
         serverList = col.find()
         
@@ -154,6 +160,23 @@ async def find(ctx: interactions.CommandContext, _id: str = None, host: str = No
             if Player in server["lastOnlinePlayersList"]:
                 info = (server)
                 break
+    elif version:
+        serverList = col.find()
+        
+        for server in serverList:
+            if version in server["lastOnlineVersion"]:
+                info = (server)
+                break
+    elif Player:
+        serverList = col.find()
+        
+        for server in serverList:
+            if Player in server["lastOnlinePlayersList"]:
+                info = (server)
+                break
+    else:
+        info = "Server not found"
+
     if info or info != "Server not found":
         try:
             text = f'Host: `{info["host"]}`\nPlayers Online: `{info["lastOnlinePlayers"]}`\nVersion: {info["lastOnlineVersion"]}\nDescription: {info["lastOnlineDescription"]}\nPing: `{info["lastOnlinePing"]}ms`' # type: ignore
@@ -171,6 +194,7 @@ async def find(ctx: interactions.CommandContext, _id: str = None, host: str = No
             fncs.log(f"Error: {e}")
     else:
         await ctx.send("Server not found")
+
 
     import threading;threading.Thread(target=remove_duplicates).start();print("Done")
 
@@ -193,8 +217,6 @@ async def help(ctx: interactions.CommandContext): # type: ignore
     fncs.log(f"help()")
     await ctx.send("""Commands:
 find - Find a server
-status - Get the status of a server
-add - Add a server
 restart - Restart the bot
 help - Get help
 """)
