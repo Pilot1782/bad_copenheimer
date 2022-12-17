@@ -26,13 +26,13 @@ client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi(
 db = client["mc"]
 col = db["servers"]
 
-fncs = funcs()
+fncs = funcs(os.path.dirname(os.path.abspath(__file__)))
 
 # Funcs
 # ---------------------------------------------
 
 def check(host):
-    """_summary_
+    """Checks out a host and adds it to the database if it's not there
 
     Args:
         host (String): ip of the server
@@ -85,7 +85,6 @@ def check(host):
     except Exception as e:
         print("\r", e, " | ", host, end="\r")
         return None
-        pass
 
 def remove_duplicates():
     for i in col.find():
@@ -138,6 +137,12 @@ def remove_duplicates():
             type=interactions.OptionType.STRING,
             required=False,
         ),
+        interactions.Option(
+            name="version",
+            description="The version of the server",
+            type=interactions.OptionType.STRING,
+            required=False,
+        ),
     ],
 )
 async def find(ctx: interactions.CommandContext, _id: str = None, host: str = None, Player: str = None, version: str = None): # type: ignore
@@ -176,6 +181,23 @@ async def find(ctx: interactions.CommandContext, _id: str = None, host: str = No
             if Player in server["lastOnlinePlayersList"]:
                 info = (server)
                 break
+    elif version:
+        serverList = col.find()
+        
+        for server in serverList:
+            if version in server["lastOnlineVersion"]:
+                info = (server)
+                break
+    elif Player:
+        serverList = col.find()
+        
+        for server in serverList:
+            if Player in server["lastOnlinePlayersList"]:
+                info = (server)
+                break
+    else:
+        info = "Server not found"
+
     if info or info != "Server not found":
         try:
             text = f'Host: `{info["host"]}`\nPlayers Online: `{info["lastOnlinePlayers"]}`\nVersion: {info["lastOnlineVersion"]}\nDescription: {info["lastOnlineDescription"]}\nPing: `{info["lastOnlinePing"]}ms`' # type: ignore
