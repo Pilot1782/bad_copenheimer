@@ -132,21 +132,43 @@ def remove_duplicates():
             type=interactions.OptionType.STRING,
             required=False,
         ),
+        interactions.Option(
+            name="version",
+            description="The version of the server",
+            type=interactions.OptionType.STRING,
+            required=False,
+        ),
     ],
 )
-async def find(ctx: interactions.CommandContext, _id: str = None, host: str = None, Player: str = None): # type: ignore
+async def find(ctx: interactions.CommandContext, _id: str = None, host: str = None, Player: str = None, version: str = None): # type: ignore
     """Find a server
 
     Args:
         _id (str, optional): The ID of the server. Defaults to None.
         host (str, optional): The host of the server. Defaults to None.
         Player (str, optional): The player to search for. Defaults to None.
+        version (str, optional): The version of the server. Defaults to None.
     """
     info = ""
     if _id:
         info = (col.find_one({'_id': _id}) if col.find_one({'_id':_id}) else "Server not found")
     elif host:
-        info = (col.find_one({"host": host}) if col.find_one({"host": host}) else "Server not found")
+        info = (col.find_one({"host": host}) if col.find_one({"host": host}) else None)
+        info = (check(host) if info else None)
+    elif Player:
+        serverList = col.find()
+        
+        for server in serverList:
+            if Player in server["lastOnlinePlayersList"]:
+                info = (server)
+                break
+    elif version:
+        serverList = col.find()
+        
+        for server in serverList:
+            if version in server["lastOnlineVersion"]:
+                info = (server)
+                break
     elif Player:
         serverList = col.find()
         
@@ -172,6 +194,7 @@ async def find(ctx: interactions.CommandContext, _id: str = None, host: str = No
     else:
         await ctx.send("Server not found")
 
+
     import threading;threading.Thread(target=remove_duplicates).start();print("Done")
 
 
@@ -193,8 +216,6 @@ async def help(ctx: interactions.CommandContext): # type: ignore
     fncs.log(f"help()")
     await ctx.send("""Commands:
 find - Find a server
-status - Get the status of a server
-add - Add a server
 restart - Restart the bot
 help - Get help
 """)

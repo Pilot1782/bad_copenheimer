@@ -158,7 +158,7 @@ for i in range(255):
         ip_lists.append(f"{i}.{j}.0.0/16")
 random.shuffle(ip_lists)
 
-ip_lists = ip_lists[:50]  # remove for final version
+ip_lists = ip_lists[:500]  # remove for final version
 time.sleep(0.5)
 
 normal = threading.active_count()
