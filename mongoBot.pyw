@@ -137,12 +137,6 @@ def remove_duplicates():
             type=interactions.OptionType.STRING,
             required=False,
         ),
-        interactions.Option(
-            name="version",
-            description="The version of the server",
-            type=interactions.OptionType.STRING,
-            required=False,
-        ),
     ],
 )
 async def find(ctx: interactions.CommandContext, _id: str = None, host: str = None, Player: str = None, version: str = None): # type: ignore
@@ -159,7 +153,7 @@ async def find(ctx: interactions.CommandContext, _id: str = None, host: str = No
         info = (col.find_one({'_id': _id}) if col.find_one({'_id':_id}) else "Server not found")
     elif host:
         info = (col.find_one({"host": host}) if col.find_one({"host": host}) else None)
-        info = (check(host) if info else None)
+        info = (check(host) if info is None else "Server not found")
     elif Player:
         serverList = col.find()
         
@@ -266,3 +260,4 @@ if __name__ == "__main__":
                 print(e)
                 fncs.log(e)
                 time.sleep(5)
+                break
