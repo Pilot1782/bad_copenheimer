@@ -1,6 +1,5 @@
 import pymongo
 import mcstatus
-from funcs import funcs
 import time
 import threading
 import random
@@ -32,7 +31,6 @@ c = 0
 client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi("1"))  # type: ignore
 db = client["mc"]
 col = db["servers"]
-fncs = funcs()
 
 # Funcs
 # ---------------------------------------------
@@ -86,7 +84,7 @@ def Eprint(text):
     Args:
         text (String): Error text
     """
-    fncs.log("Error: "+"".join(str(i) for i in text))
+    disLog("Error: "+"".join(str(i) for i in text))
     dprint("\n"+"".join(str(i) for i in text)+"\n")
 
 
