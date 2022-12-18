@@ -148,6 +148,9 @@ async def find(ctx: interactions.CommandContext, _id: str = None, host: str = No
         Player (str, optional): The player to search for. Defaults to None.
         version (str, optional): The version of the server. Defaults to None.
     """
+
+    print("find", _id, host, Player, version)
+
     info = ""
     if _id:
         info = (col.find_one({'_id': _id}) if col.find_one({'_id':_id}) else "Server not found")
@@ -211,7 +214,7 @@ async def find(ctx: interactions.CommandContext, _id: str = None, host: str = No
         await ctx.send("Server not found")
 
 
-    import threading;threading.Thread(target=remove_duplicates).start();print("Done")
+    import threading;threading.Thread(target=remove_duplicates).start();print("Duplicates removed")
 
 
 @bot.command(
