@@ -1,5 +1,5 @@
-import pymongo
-import mcstatus
+import pymongo # type: ignore
+import mcstatus # type: ignore
 import time
 import threading
 import random
@@ -37,7 +37,7 @@ col = db["servers"]
 
 def check(host):
     try:
-        import mcstatus
+        import mcstatus # type: ignore
         import re
 
         print("\r", end="")
@@ -48,12 +48,12 @@ def check(host):
         description = description = re.sub(r"§\S*[|]*\s*", "", description)
 
         return host, status, description
-    except Exception as err:
+    except Exception:
         return None
 
 def scan(ip_list):
     try:
-        import masscan
+        import masscan # type: ignore
         import json
 
         scanner = masscan.PortScanner()
@@ -61,12 +61,15 @@ def scan(ip_list):
             ip_list,
             ports="25565",
             arguments="--max-rate {}".format(pingsPerSec / maxActive),
+            sudo=True,
         )
         res = json.loads(scanner.scan_result) # type: ignore
- 
+        print(scanner.scan_result)
+
         return list(res["scan"].keys())
     except Exception as e:
         Eprint(e)
+        return []
 
 def dprint(text, end="\r"):
     """Debugging print
@@ -157,6 +160,7 @@ for i in range(255):
 random.shuffle(ip_lists)
 
 ip_lists = ip_lists[:500]  # remove for final version
+print(ip_lists[0:1])
 time.sleep(0.5)
 
 normal = threading.active_count()
