@@ -208,7 +208,7 @@ async def find(ctx: interactions.CommandContext, _id: str = None, host: str = No
         except Exception as e:
             print(e)
             print(info)
-            await ctx.send("Server not found")
+            await ctx.send("Error sending image.")
             fncs.log(f"Error: {e}")
     else:
         await ctx.send("Server not found")
