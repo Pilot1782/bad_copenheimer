@@ -26,7 +26,7 @@ client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi(
 db = client["mc"]
 col = db["servers"]
 
-fncs = funcs(os.path.dirname(os.path.abspath(__file__)))
+fncs = funcs()
 
 # Funcs
 # ---------------------------------------------
@@ -155,8 +155,10 @@ async def find(ctx: interactions.CommandContext, _id: str = None, host: str = No
     if _id:
         info = (col.find_one({'_id': _id}) if col.find_one({'_id':_id}) else "Server not found")
     elif host:
-        info = (col.find_one({"host": host}) if col.find_one({"host": host}) else None)
-        info = (check(host) if info is None else "Server not found")
+        if col.find_one({'host': host}):
+            info = (col.find_one({'host': host}))
+        else:
+            info = check(host)
     elif Player:
         serverList = col.find()
         
@@ -193,23 +195,15 @@ async def find(ctx: interactions.CommandContext, _id: str = None, host: str = No
                 info = (server)
                 break
     else:
-        info = "Server not found"
+        info = {"host": "No search parameters given.", "lastOnlinePlayers": -1, "lastOnlineVersion": -1, "lastOnlineDescription": "No search parameters given.", "lastOnlinePing": -1}
 
-    if info or info != "Server not found":
+    if info or str(type(info)) == 'str':
         try:
-            text = f'Host: `{info["host"]}`\nPlayers Online: `{info["lastOnlinePlayers"]}`\nVersion: {info["lastOnlineVersion"]}\nDescription: {info["lastOnlineDescription"]}\nPing: `{info["lastOnlinePing"]}ms`' # type: ignore
-            await ctx.send(f"{text}")
-            img = base64.b64decode((mcstatus.JavaServer.lookup(host).status().favicon).split(",")[1]) # type: ignore
-            with open(r"{}images{}.png".format(("/" if os.name != "nt" else "\\"),host), "wb") as fp:
-                fp.write(img)
-            with open(r"{}images{}.png".format(("/" if os.name != "nt" else "\\"),host), "rb") as fh:
-                f = discord.File(fh, filename=f"{host}.png")
-            # await ctx.send(file=f)
+            await ctx.send(f'Host: `{info["host"]}`\nPlayers Online: `{info["lastOnlinePlayers"]}`\nVersion: {info["lastOnlineVersion"]}\nDescription: {info["lastOnlineDescription"]}\nPing: `{str(info["lastOnlinePing"])}ms`') # type: ignore
         except Exception as e:
-            print(e)
-            print(info)
-            await ctx.send("Error sending image.")
+            print(f"====\nError: {e}\n----\n{type(info)}\n----\n{info}\n====")
             fncs.log(f"Error: {e}")
+            await ctx.send("Error finding server, check the console and log for more info.")
     else:
         await ctx.send("Server not found")
 

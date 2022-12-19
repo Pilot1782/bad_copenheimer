@@ -252,7 +252,8 @@ class funcs:
         Args:
             text (String): text to log
         """
-        with open(f"{self.home_dir}log.txt", "a") as f:
+        path_ = f"{self.path}log.txt"
+        with open(f"{path_}log.txt", "a") as f:
             f.write(f"[{self.ptime()}] {text}\n")
 
     # Scan a range
