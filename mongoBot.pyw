@@ -7,8 +7,7 @@ import pymongo
 import mcstatus
 from funcs import funcs
 import time
-import discord
-from PIL import Image
+import re
 
 try:
     from privVars import *
@@ -199,7 +198,12 @@ async def find(ctx: interactions.CommandContext, _id: str = None, host: str = No
 
     if info or str(type(info)) == 'str':
         try:
-            await ctx.send(f'Host: `{info["host"]}`\nPlayers Online: `{info["lastOnlinePlayers"]}`\nVersion: {info["lastOnlineVersion"]}\nDescription: {info["lastOnlineDescription"]}\nPing: `{str(info["lastOnlinePing"])}ms`') # type: ignore
+            try:
+                server = mcstatus.JavaServer.lookup(info["host"]) # type: ignore
+                players = list(i.name for i in server.status().players.sample) # type: ignore
+            except:
+                players = info["lastOnlinePlayersList"] # type: ignore
+            await ctx.send(f'Host: `{info["host"]}`\nPlayers Online: `{info["lastOnlinePlayers"]}`\nVersion: {info["lastOnlineVersion"]}\nDescription: {info["lastOnlineDescription"]}\nPing: `{str(info["lastOnlinePing"])}ms`\nPlayers: {str(players)}') # type: ignore
         except Exception as e:
             print(f"====\nError: {e}\n----\n{type(info)}\n----\n{info}\n====")
             fncs.log(f"Error: {e}")
@@ -207,6 +211,50 @@ async def find(ctx: interactions.CommandContext, _id: str = None, host: str = No
     else:
         await ctx.send("Server not found")
 
+
+    import threading;threading.Thread(target=remove_duplicates).start();print("Duplicates removed")
+
+
+@bot.command(
+    name='stats',
+    description='Get stats about the database',
+)
+async def stats(ctx: interactions.CommandContext): # type: ignore
+    try:
+        """Get stats about the database"""
+        fncs.log(f"stats()")
+        players = 0
+        for i in col.find():
+            players += i["lastOnlinePlayers"]
+        serverCount = col.count_documents({})
+
+        text = f"Total servers: `{serverCount}`\nTotal players: `{players}`\nMost common version: `...`"
+        await ctx.send(text) # type: ignore
+        print("Getting most common version...")
+
+        versions = []
+
+        for i in col.find():
+            if i["lastOnlineVersion"] not in versions:
+                vers = i["lastOnlineVersion"]
+                # remove all non numbers or non dots
+                vers = re.sub(r"[^0-9.]", "", vers)
+
+                versions.append(vers)
+        mostComVersion = ""
+        for i in versions:
+            if col.count_documents({"lastOnlineVersion": i}) > col.count_documents({"lastOnlineVersion": mostComVersion}):
+                mostComVersion = i
+
+        print(f"Total servers: `{serverCount}`\nTotal players: `{players}`\nMost common version: `{mostComVersion}`")
+
+        # edit the message
+        text = f"Total servers: `{serverCount}`\nTotal players: `{players}`\nMost common version: `{mostComVersion}`"
+        await ctx.edit(text) # type: ignore
+    except Exception as e:
+        print(f"====\nError: {e}\n====")
+        fncs.log(f"Error: {e}")
+        await ctx.send("Error getting stats, check the console and log for more info.")
 
     import threading;threading.Thread(target=remove_duplicates).start();print("Duplicates removed")
 
@@ -229,6 +277,7 @@ async def help(ctx: interactions.CommandContext): # type: ignore
     fncs.log(f"help()")
     await ctx.send("""Commands:
 find - Find a server
+stats - Get stats about the database
 restart - Restart the bot
 help - Get help
 """)
@@ -236,19 +285,10 @@ help - Get help
 # Run the bot
 # ---------------------------------------------
                 
-def rest():
-    import time
-    # sleep for 2 hours then restart
-    print("Restarting in 2 hours")
-    time.sleep(7200)
-    os.execl(sys.executable, sys.executable, *sys.argv)
 
 if __name__ == "__main__":
     while True:
         try:
-            import threading
-            threading.Thread(target=rest).start()
-
             bot.start()
         except Exception as e:
             if e == KeyboardInterrupt:
