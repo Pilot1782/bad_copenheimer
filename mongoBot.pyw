@@ -83,7 +83,7 @@ def check(host):
 
         return data
     except Exception as e:
-        print("\r", e, " | ", host, end="\r")
+        print("\n", e, " | ", host, end="\r")
         return None
 
 def remove_duplicates():
@@ -165,7 +165,7 @@ async def find(ctx: interactions.CommandContext, _id: str = None, Player: str = 
     if _id:
         info = (col.find_one({'_id': _id}) if col.find_one({'_id':_id}) else "Server not found")
     elif host:
-        if col.find_one({'host': host}):
+        if col.find_one({'host': host}) is not None:
             info = (col.find_one({'host': host}))
         else:
             info = check(host+":"+str(port))
@@ -223,7 +223,8 @@ async def find(ctx: interactions.CommandContext, _id: str = None, Player: str = 
             await ctx.send("Error finding server, check the console and log for more info.")
             
     else:
-        await ctx.send("Server not found")
+        await ctx.edit(embeds=[interactions.Embed(title="Server Info", description="Server not found")]) # type: ignore
+        print(f"\n{info}\nServer not found")
 
 
     import threading;threading.Thread(target=remove_duplicates).start();print("Duplicates removed")
@@ -293,7 +294,7 @@ async def restart(ctx: interactions.CommandContext): # type: ignore
 async def help(ctx: interactions.CommandContext): # type: ignore
     """Get help"""
     fncs.log(f"help()")
-    await ctx.send(embeds=[interactions.Embed(title="Help", description="""Commands: \nfind - Find a server\nstats - Get stats about the database\nrestart - Restart the bot\nhelp - Get help\n""")])
+    await ctx.send(embeds=[interactions.Embed(title="Help", description="""Commands: \n`/find` - Find a server\n`/stats` - Get stats about the database\n`/restart` - Restart the bot\n`/help` - Get help\n""")])
 
 # Run the bot
 # ---------------------------------------------
