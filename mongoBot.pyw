@@ -120,17 +120,15 @@ def remove_duplicates():
         ),
         interactions.Option(
             name="host",
-            type=interactions.OptionType.STRING,
             description="The host of the server",
+            type=interactions.OptionType.STRING,
             required=False,
-            options=[
-                interactions.Option(
-                    name="port",
-                    type=interactions.OptionType.INTEGER,
-                    description="The port of the server",
-                    required=False,
-                )
-            ],
+        ),
+        interactions.Option(
+            name="port",
+            description="The port of the server",
+            type=interactions.OptionType.INTEGER,
+            required=False,
         ),
         interactions.Option(
             name="player",
@@ -146,7 +144,7 @@ def remove_duplicates():
         ),
     ],
 )
-async def find(ctx: interactions.CommandContext, _id: str = None, host: str = None, Player: str = None, version: str = None, port: int= None): # type: ignore
+async def find(ctx: interactions.CommandContext, _id: str = None, Player: str = None, version: str = None, host: str = None, port: int = 25565): # type: ignore
     """Find a server
 
     Args:
@@ -165,7 +163,7 @@ async def find(ctx: interactions.CommandContext, _id: str = None, host: str = No
         if col.find_one({'host': host}):
             info = (col.find_one({'host': host}))
         else:
-            info = check((host+":"+str(port)) if port else host)
+            info = check(host+":"+str(port))
     elif Player:
         serverList = col.find()
         
