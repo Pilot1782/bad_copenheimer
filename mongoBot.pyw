@@ -228,6 +228,7 @@ async def find(ctx: interactions.CommandContext, _id: str = None, Player: str = 
     description='Get stats about the database',
 )
 async def stats(ctx: interactions.CommandContext): # type: ignore
+    await ctx.defer()
     try:
         """Get stats about the database"""
         fncs.log(f"stats()")
