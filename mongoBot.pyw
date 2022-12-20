@@ -155,6 +155,8 @@ async def find(ctx: interactions.CommandContext, _id: str = None, Player: str = 
     """
 
     print("find", _id, host, port, Player, version)
+    await ctx.defer()
+    await ctx.send("Searching...")
 
     info = ""
     if _id:
@@ -209,7 +211,7 @@ async def find(ctx: interactions.CommandContext, _id: str = None, Player: str = 
                 players = list(i.name for i in server.status().players.sample) # type: ignore
             except:
                 players = info["lastOnlinePlayersList"] # type: ignore
-            await ctx.send(f'Host: `{info["host"]}`\nPlayers Online: `{info["lastOnlinePlayers"]}`\nVersion: {info["lastOnlineVersion"]}\nDescription: {info["lastOnlineDescription"]}\nPing: `{str(info["lastOnlinePing"])}ms`\nPlayers: {str(players)}') # type: ignore
+            await ctx.edit(f'Host: `{info["host"]}`\nPlayers Online: `{info["lastOnlinePlayers"]}`\nVersion: {info["lastOnlineVersion"]}\nDescription: {info["lastOnlineDescription"]}\nPing: `{str(info["lastOnlinePing"])}ms`\nPlayers: {str(players)}') # type: ignore
         except Exception as e:
             print(f"====\nError: {e}\n----\n{type(info)}\n----\n{info}\n====")
             fncs.log(f"Error: {e}")
