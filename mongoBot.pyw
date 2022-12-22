@@ -143,9 +143,15 @@ def remove_duplicates():
             type=interactions.OptionType.STRING,
             required=False,
         ),
+        interactions.Option(
+            name="motd",
+            description="The motd of the server",
+            type=interactions.OptionType.STRING,
+            required=False,
+        ),
     ],
 )
-async def find(ctx: interactions.CommandContext, _id: str = None, Player: str = None, version: str = None, host: str = None, port: int = 25565): # type: ignore
+async def find(ctx: interactions.CommandContext, _id: str = None, Player: str = None, version: str = None, host: str = None, port: int = 25565, motd: str = None): # type: ignore
     """Find a server
 
     Args:
@@ -204,16 +210,20 @@ async def find(ctx: interactions.CommandContext, _id: str = None, Player: str = 
             if Player in server["lastOnlinePlayersList"]:
                 info = (server)
                 break
+    elif motd:
+        # TODO: Add motd search
+        pass
     else:
-        info = {"host": "No search parameters given.", "lastOnlinePlayers": -1, "lastOnlineVersion": -1, "lastOnlineDescription": "No search parameters given.", "lastOnlinePing": -1}
+        info = {"host": "No search parameters given.", "lastOnlinePlayers": -1, "lastOnlineVersion": -1, "lastOnlineDescription": "No search parameters given.", "lastOnlinePing": -1, "lastOnlinePlayersList": ["no", "search", "parameters", "given"], "lastOnlinePlayersMax": -1, "lastOnlineVersionProtocol": -1, "favicon": None}
 
     if info or str(type(info)) == 'str':
         try:
-            try:
-                server = mcstatus.JavaServer.lookup(info["host"]) # type: ignore
-                players = list(i.name for i in server.status().players.sample) # type: ignore
-            except:
-                players = info["lastOnlinePlayersList"] # type: ignore
+            if info["host"] == "No search parameters given.": # type: ignore
+                try:
+                    server = mcstatus.JavaServer.lookup(info["host"]) # type: ignore
+                    players = list(i.name for i in server.status().players.sample) # type: ignore
+                except:
+                    players = info["lastOnlinePlayersList"] # type: ignore
                 
             # await ctx.edit(f'Host: `{info["host"]}`\nPlayers Online: `{info["lastOnlinePlayers"]}`\nVersion: {info["lastOnlineVersion"]}\nDescription: {info["lastOnlineDescription"]}\nPing: `{str(info["lastOnlinePing"])}ms`\nPlayers: {str(players)}') # type: ignore
             await ctx.edit(embeds=[interactions.Embed(title="Server Info", description=f'Host: `{info["host"]}`\nPlayers Online: `{info["lastOnlinePlayers"]}`\nVersion: {info["lastOnlineVersion"]}\nDescription: {info["lastOnlineDescription"]}\nPing: `{str(info["lastOnlinePing"])}ms`\nPlayers: {str(players)}')]) # type: ignore
@@ -225,7 +235,6 @@ async def find(ctx: interactions.CommandContext, _id: str = None, Player: str = 
     else:
         await ctx.edit(embeds=[interactions.Embed(title="Server Info", description="Server not found")]) # type: ignore
         print(f"\n{info}\nServer not found")
-
 
     import threading;threading.Thread(target=remove_duplicates).start();print("Duplicates removed")
 
