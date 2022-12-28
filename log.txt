@@ -13,3 +13,30 @@
 [2022 12/19 20:22:29] Error: 'str' object has no attribute 'name'
 [2022 12/19 20:23:19] Error: timed out
 [2022 12/19 20:35:23] stats()
+[2022 12/19 22:24:29] Error: 
+  Error 10062 | Unknown Interaction.:
+  Unknown interaction.
+  Severity 40.
+[2022 12/19 22:56:46] stats()
+[2022 12/20 12:38:12] stats()
+[2022 12/20 12:43:30] help()
+[2022 12/20 12:44:35] help()
+[2022 12/20 12:46:49] help()
+[2022 12/20 13:7:8] stats()
+[2022 12/20 13:9:23] help()
+[2022 12/20 13:10:23] help()
+[2022 12/20 13:36:53] stats()
+[2022 12/20 16:58:22] Error: 'lastOnlinePlayersList'
+[2022 12/27 17:6:5] stats()
+[2022 12/27 17:10:53] Error: cannot access local variable 'players' where it is not associated with a value
+[2022 12/27 17:14:10] Error: cannot access local variable 'players' where it is not associated with a value
+[2022 12/27 17:26:34] Error: cannot access local variable 'players' where it is not associated with a value
+[2022 12/27 17:30:59] Error: cannot access local variable 'players' where it is not associated with a value
+[2022 12/27 17:34:41] Error: 'lastOnlinePlayerList'
+[2022 12/27 17:37:21] Error: list indices must be integers or slices, not str
+[2022 12/27 17:39:56] Error: list indices must be integers or slices, not str
+[2022 12/27 17:46:3] Error: list indices must be integers or slices, not str
+[2022 12/27 17:47:36] Error: list indices must be integers or slices, not str
+[2022 12/27 17:49:30] Error: list indices must be integers or slices, not str
+[2022 12/27 17:50:46] Error: list indices must be integers or slices, not str
+[2022 12/27 17:55:40] stats()

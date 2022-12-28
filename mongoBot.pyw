@@ -9,6 +9,7 @@ from funcs import funcs
 import time
 import re
 import discord
+import traceback
 
 try:
     from privVars import *
@@ -31,6 +32,7 @@ fncs = funcs()
 # Funcs
 # ---------------------------------------------
 
+
 def check(host):
     """Checks out a host and adds it to the database if it's not there
 
@@ -50,17 +52,17 @@ def check(host):
                     "lastOnlineFavicon":"base64 encoded image"
                 }
     """
-    
+
     try:
         import re
 
         server = mcstatus.JavaServer.lookup(host)
-            
+
         description = server.status().description
         description = re.sub(r"§\S*[|]*\s*", "", description)
 
         if server.status().players.sample is not None:
-            players = list(i.name for i in server.status().players.sample) # type: ignore
+            players = list(i.name for i in server.status().players.sample)  # type: ignore
         else:
             players = []
 
@@ -86,10 +88,12 @@ def check(host):
         print("\n", e, " | ", host, end="\r")
         return None
 
+
 def remove_duplicates():
     for i in col.find():
         if col.count_documents({"host": i["host"]}) > 1:
             col.delete_one({"_id": i["_id"]})
+
 
 # Commands
 # ---------------------------------------------
@@ -151,7 +155,7 @@ def remove_duplicates():
         ),
     ],
 )
-async def find(ctx: interactions.CommandContext, _id: str = None, Player: str = None, version: str = None, host: str = None, port: int = 25565, motd: str = None): # type: ignore
+async def find(ctx: interactions.CommandContext, _id: str = None, Player: str = None, version: str = None, host: str = None, port: int = 25565, motd: str = None):  # type: ignore
     """Find a server
 
     Args:
@@ -159,91 +163,155 @@ async def find(ctx: interactions.CommandContext, _id: str = None, Player: str = 
         host (str, optional): The host of the server. Defaults to None.
         Player (str, optional): The player to search for. Defaults to None.
         version (str, optional): The version of the server. Defaults to None.
+        motd (str, optional): The motd of the server. Defaults to None.
+        port (int, optional): The port of the server. Defaults to 25565.
     """
 
     print("find", _id, host, port, Player, version)
     await ctx.defer()
-    # await ctx.send("Searching...")
     # send as embed
-    await ctx.send(embeds=[interactions.Embed(title="Searching...", description="Searching...")])
+    await ctx.send(
+        embeds=[interactions.Embed(title="Searching...", description="Searching...")]
+    )
 
     info = ""
     if _id:
-        info = (col.find_one({'_id': _id}) if col.find_one({'_id':_id}) else "Server not found")
+        info = (
+            col.find_one({"_id": _id})
+            if col.find_one({"_id": _id})
+            else "Server not found"
+        )
     elif host:
-        if col.find_one({'host': host}) is not None:
-            info = (col.find_one({'host': host}))
+        if col.find_one({"host": host}) is not None and check(host) == None:
+            info = col.find_one({"host": host})
         else:
-            info = check(host+":"+str(port))
+            info = check(host + ":" + str(port))
     elif Player:
         serverList = col.find()
-        
+
         for server in serverList:
             if Player in server["lastOnlinePlayersList"]:
-                info = (server)
+                info = server
                 break
     elif version:
         serverList = col.find()
-        
+        lst = []
         for server in serverList:
             if version in server["lastOnlineVersion"]:
-                info = (server)
+                info = server
+                lst.append(info)
+                if len(lst) == 10:
+                    break
+
+        info = lst
+    elif Player:
+        serverList = col.find()
+
+        for server in serverList:
+            if Player in server["lastOnlinePlayersList"]:
+                info = server
                 break
     elif Player:
         serverList = col.find()
-        
+
         for server in serverList:
             if Player in server["lastOnlinePlayersList"]:
-                info = (server)
-                break
-    elif version:
-        serverList = col.find()
-        
-        for server in serverList:
-            if version in server["lastOnlineVersion"]:
-                info = (server)
-                break
-    elif Player:
-        serverList = col.find()
-        
-        for server in serverList:
-            if Player in server["lastOnlinePlayersList"]:
-                info = (server)
+                info = server
                 break
     elif motd:
         # TODO: Add motd search
-        pass
-    else:
-        info = {"host": "No search parameters given.", "lastOnlinePlayers": -1, "lastOnlineVersion": -1, "lastOnlineDescription": "No search parameters given.", "lastOnlinePing": -1, "lastOnlinePlayersList": ["no", "search", "parameters", "given"], "lastOnlinePlayersMax": -1, "lastOnlineVersionProtocol": -1, "favicon": None}
+        servers = col.find()
+        for server in servers:
+            if motd.lower() in server["lastOnlineDescription"].lower():
+                info = server
+                break
 
-    if info or str(type(info)) == 'str':
+    else:
+        info = {
+            "host": "No search parameters given.",
+            "lastOnlinePlayers": -1,
+            "lastOnlineVersion": -1,
+            "lastOnlineDescription": "No search parameters given.",
+            "lastOnlinePing": -1,
+            "lastOnlinePlayersList": ["no", "search", "parameters", "given"],
+            "lastOnlinePlayersMax": -1,
+            "lastOnlineVersionProtocol": -1,
+            "favicon": None,
+        }
+
+    if info or str(type(info)) == "str" or info is not None:
         try:
-            if info["host"] == "No search parameters given.": # type: ignore
+            if (info["host"] == "No search parameters given.") if str(type(info)) == "<class 'dict'>" else (False):  # type: ignore
+                print("No search parameters given.")
+                players = info["lastOnlinePlayersList"]  # type: ignore
                 try:
-                    server = mcstatus.JavaServer.lookup(info["host"]) # type: ignore
-                    players = list(i.name for i in server.status().players.sample) # type: ignore
+                    server = mcstatus.JavaServer.lookup(info["host"])  # type: ignore
+                    players = list(i.name for i in server.status().players.sample)  # type: ignore
                 except:
-                    players = info["lastOnlinePlayersList"] # type: ignore
-                
-            # await ctx.edit(f'Host: `{info["host"]}`\nPlayers Online: `{info["lastOnlinePlayers"]}`\nVersion: {info["lastOnlineVersion"]}\nDescription: {info["lastOnlineDescription"]}\nPing: `{str(info["lastOnlinePing"])}ms`\nPlayers: {str(players)}') # type: ignore
-            await ctx.edit(embeds=[interactions.Embed(title="Server Info", description=f'Host: `{info["host"]}`\nPlayers Online: `{info["lastOnlinePlayers"]}`\nVersion: {info["lastOnlineVersion"]}\nDescription: {info["lastOnlineDescription"]}\nPing: `{str(info["lastOnlinePing"])}ms`\nPlayers: {str(players)}')]) # type: ignore
+                    pass
+
+                await ctx.edit(
+                    embeds=[
+                        interactions.Embed(
+                            title="Server Info",
+                            description=f'Host: `{info["host"]}`\nPlayers Online: `{info["lastOnlinePlayers"]}`\nVersion: {info["lastOnlineVersion"]}\nDescription: {info["lastOnlineDescription"]}\nPing: `{str(info["lastOnlinePing"])}ms`\nPlayers: {str(players)}\n\n',  # type: ignore
+                        )
+                    ]
+                )
+
+            # check if info is a list of dicts
+            elif str(type(info)) == "<class 'list'>":
+                text = ""
+                for serv in info:  # type: ignore
+                    text += f'\n----\nHost: `{serv["host"]}`\nPlayers Online: `{serv["lastOnlinePlayers"]}`\nVersion: {serv["lastOnlineVersion"]}\nDescription: {serv["lastOnlineDescription"]}\nPing: `{str(serv["lastOnlinePing"])}ms`\nPlayers: {str(serv["lastOnlinePlayersList"])}' # type: ignore
+
+                await ctx.edit(
+                    embeds=[interactions.Embed(title="Server Info", description=text)]
+                )
+
+            elif str(type(info)) == "<class 'dict'>":  # type: ignore
+                await ctx.edit(
+                    embeds=[interactions.Embed(
+                        title="Server Info", 
+                        description=f'Host: `{info["host"]}`\nPlayers Online: `{info["lastOnlinePlayers"]}`\nVersion: {info["lastOnlineVersion"]}\nDescription: {info["lastOnlineDescription"]}\nPing: `{str(info["lastOnlinePing"])}ms`\nPlayers: {str(info["lastOnlinePlayersList"])}' # type: ignore
+                    )]
+                )  # type: ignore
         except Exception as e:
             print(f"====\nError: {e}\n----\n{type(info)}\n----\n{info}\n====")
+            traceback.print_exc()
+
             fncs.log(f"Error: {e}")
-            await ctx.send("Error finding server, check the console and log for more info.")
-            
+            await ctx.edit(
+                embeds=[
+                    interactions.Embed(
+                        title="Bot Error",
+                        description="Error finding server, check the console and log for more info.",
+                    )
+                ]
+            )  # type: ignore
+
     else:
-        await ctx.edit(embeds=[interactions.Embed(title="Server Info", description="Server not found")]) # type: ignore
+        await ctx.edit(
+            embeds=[
+                interactions.Embed(
+                    title="General Error",
+                    description="Error finding server, check the console and log for more info.",
+                )
+            ]
+        )  # type: ignore
         print(f"\n{info}\nServer not found")
 
-    import threading;threading.Thread(target=remove_duplicates).start();print("Duplicates removed")
+    import threading
+
+    threading.Thread(target=remove_duplicates).start()
+    print("Duplicates removed")
 
 
 @bot.command(
-    name='stats',
-    description='Get stats about the database',
+    name="stats",
+    description="Get stats about the database",
 )
-async def stats(ctx: interactions.CommandContext): # type: ignore
+async def stats(ctx: interactions.CommandContext):  # type: ignore
     await ctx.defer()
     try:
         """Get stats about the database"""
@@ -254,8 +322,8 @@ async def stats(ctx: interactions.CommandContext): # type: ignore
         serverCount = col.count_documents({})
 
         text = f"Total servers: `{serverCount}`\nTotal players: `{players}`\nMost common version: `...`"
-        
-        await ctx.send(embeds=[interactions.Embed(title="Stats", description=text)]) # type: ignore
+
+        await ctx.send(embeds=[interactions.Embed(title="Stats", description=text)])  # type: ignore
         print("Getting most common version...")
 
         versions = []
@@ -269,45 +337,56 @@ async def stats(ctx: interactions.CommandContext): # type: ignore
                 versions.append(vers)
         mostComVersion = ""
         for i in versions:
-            if col.count_documents({"lastOnlineVersion": i}) > col.count_documents({"lastOnlineVersion": mostComVersion}):
+            if col.count_documents({"lastOnlineVersion": i}) > col.count_documents(
+                {"lastOnlineVersion": mostComVersion}
+            ):
                 mostComVersion = i
 
-        print(f"Total servers: `{serverCount}`\nTotal players: `{players}`\nMost common version: `{mostComVersion}`")
+        print(
+            f"Total servers: `{serverCount}`\nTotal players: `{players}`\nMost common version: `{mostComVersion}`"
+        )
 
         # edit the message
         text = f"Total servers: `{serverCount}`\nTotal players: `{players}`\nMost common version: `{mostComVersion}`"
-        
-        await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)]) # type: ignore
+
+        await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])  # type: ignore
     except Exception as e:
         print(f"====\nError: {e}\n====")
         fncs.log(f"Error: {e}")
-        
-        await ctx.send(embeds=[interactions.Embed(title="Error", description="Error getting stats, check the console and log for more info.")]) # type: ignore
 
-    import threading;threading.Thread(target=remove_duplicates).start();print("Duplicates removed")
+        await ctx.send(embeds=[interactions.Embed(title="Error", description="Error getting stats, check the console and log for more info.")])  # type: ignore
+
+    import threading
+
+    threading.Thread(target=remove_duplicates).start()
+    print("Duplicates removed")
 
 
-@bot.command(
-    name="restart"
-)
-async def restart(ctx: interactions.CommandContext): # type: ignore
+@bot.command(name="restart")
+async def restart(ctx: interactions.CommandContext):  # type: ignore
     """Restart the bot"""
     fncs.log(f"restart()")
     await ctx.send("Restarting...")
     os.execl(sys.executable, sys.executable, *sys.argv)
 
 
-@bot.command(
-    name="help"
-)
-async def help(ctx: interactions.CommandContext): # type: ignore
+@bot.command(name="help")
+async def help(ctx: interactions.CommandContext):  # type: ignore
     """Get help"""
     fncs.log(f"help()")
-    await ctx.send(embeds=[interactions.Embed(title="Help", description="""Commands: \n`/find` - Find a server\n`/stats` - Get stats about the database\n`/restart` - Restart the bot\n`/help` - Get help\n""")])
+    await ctx.send(
+        embeds=[
+            interactions.Embed(
+                title="Help",
+                description="""Commands: \n`/find` - Find a server\n`/stats` - Get stats about the database\n`/restart` - Restart the bot\n`/help` - Get help\n""",
+            )
+        ]
+    )
+
 
 # Run the bot
 # ---------------------------------------------
-                
+
 
 if __name__ == "__main__":
     while True:
