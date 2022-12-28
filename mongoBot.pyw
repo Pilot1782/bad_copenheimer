@@ -329,25 +329,17 @@ async def stats(ctx: interactions.CommandContext):  # type: ignore
         versions = []
 
         for i in col.find():
-            if i["lastOnlineVersion"] not in versions:
-                vers = i["lastOnlineVersion"]
-                # remove all non numbers or non dots
-                vers = re.sub(r"[^0-9.]", "", vers)
+            versions.append(i["lastOnlineVersion"])
 
-                versions.append(vers)
-        mostComVersion = ""
-        for i in versions:
-            if col.count_documents({"lastOnlineVersion": i}) > col.count_documents(
-                {"lastOnlineVersion": mostComVersion}
-            ):
-                mostComVersion = i
+        versions.sort(key=versions.count, reverse=True)
+
 
         print(
-            f"Total servers: `{serverCount}`\nTotal players: `{players}`\nMost common version: `{mostComVersion}`"
+            f"Total servers: {serverCount}\nTotal players: {players}\nMost common version: {str(versions[0:10])[1:-1]}"
         )
 
         # edit the message
-        text = f"Total servers: `{serverCount}`\nTotal players: `{players}`\nMost common version: `{mostComVersion}`"
+        text = "Total servers: `{}`\nTotal players: `{}`\nMost common version:\n```{}```".format(serverCount,players,('\n'.join(versions[0:5])))
 
         await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])  # type: ignore
     except Exception as e:
