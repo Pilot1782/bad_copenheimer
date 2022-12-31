@@ -10,6 +10,7 @@ import threading
 import pymongo
 import mcstatus
 import interactions
+from interactions.ext.files import command_edit
 
 from funcs import funcs
 
@@ -278,6 +279,17 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
             type="rich",
         )
 
+        try:
+            bits = info["favicon"].split(",")[1] # type: ignore
+
+            with open("server-icon.png", "wb") as f:
+                f.write(base64.b64decode(bits))
+            _file = interactions.File(filename="server-icon.png")
+            embed.set_thumbnail(url="attachment://server-icon.png")
+        except Exception:
+            print(traceback.format_exc())
+            _file = None
+
         embed.add_field(name="Players", value=f"{info['lastOnlinePlayers']}/{info['lastOnlinePlayersMax']}", inline=True)  # type: ignore
         embed.add_field(name="Version", value=info["lastOnlineVersion"], inline=True)  # type: ignore
         embed.add_field(name="Ping", value=str(info["lastOnlinePing"]), inline=True)  # type: ignore
@@ -286,7 +298,10 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
             playerInfo = ", ".join(info["lastOnlinePlayersList"])  if info["lastOnlinePlayersList"] != "None" else "No players online" # type: ignore
             embed.add_field(name="Players", value=playerInfo, inline=False)
         
-        await ctx.edit(embeds=[embed])
+        if _file:
+            await command_edit(ctx, embeds=[embed], files=[_file])
+        else:
+            await command_edit(ctx, embeds=[embed])
     except Exception as e:
         fncs.log(e)
         await ctx.edit(embeds=[interactions.Embed(title="Error", description="An error occured while searching. Please try again later and check the logs for more details.")])
