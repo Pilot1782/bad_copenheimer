@@ -31,7 +31,7 @@ You can now use the new bot, it is still in beta, but it is much more stable and
 ### Requirements
 
 * Python 3.6 or higher
-* Linux (for the scanner, the bot will run on windows)
+* Linux/Docker (for the scanner, the bot will run on windows)
 * Masscan (for the scanner)
 * requirements.txt (needs to be run with pip3)
 

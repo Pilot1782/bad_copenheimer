@@ -11,7 +11,6 @@ try:
     from privVars import *
 except ImportError:
     MONGO_URL = "mongodb+srv://..."
-    TOKEN = "..."
     DSICORD_WEBHOOK = "discord.api.com/..."
 
 # Setup
