@@ -2,7 +2,6 @@ import os
 import sys
 import time
 import traceback
-import datetime
 import base64
 import re
 import threading
@@ -72,7 +71,7 @@ def check(host, port=25565):
         description = re.sub(r"§\S*[|]*\s*", "", description)
 
         if server.status().players.sample is not None:
-            players = list(i.name for i in server.status().players.sample)  # type: ignore
+            players = list(i.name for i in server.status().players.sample) # type: ignore
         else:
             players = []
 
@@ -120,7 +119,7 @@ def remove_duplicates():
   "lastOnlinePing":"unicode time",
   "lastOnlinePlayersList":["Notch","Jeb"],
   "lastOnlinePlayersMax": int,
-  "lastOnlineFavicon":"base64 encoded image"
+  "favicon":"base64 encoded image"
 }
 """
 
