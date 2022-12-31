@@ -31,7 +31,7 @@ if TOKEN == "...":
 # Setup
 # ---------------------------------------------
 
-bot = interactions.Client(token=TOKEN)  # type: ignore
+bot = interactions.Client(token=TOKEN)
 
 client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi("1"))  # type: ignore
 
@@ -232,11 +232,6 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
             for server in servers:
                 _items = list(search.items())
                 try:
-                    if len(_items) == 1:
-                        if _items[0][0] in server:
-                            if str(_items[0][1]) in str(server[_items[0][0]]):
-                                info = server
-                                break
                     for _item in _items:
                         if _item[0] in server:
                             if str(_item[1]) in str(server[_item[0]]):

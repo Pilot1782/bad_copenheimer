@@ -1,3 +1,0 @@
-[2022 12/30 20:41:37] string indices must be integers, not 'str'
-[2022 12/30 20:56:30] argument of type 'int' is not iterable
-[2022 12/30 21:3:38] ('lastOnlinePlayersMax', 50)
