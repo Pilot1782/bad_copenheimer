@@ -217,11 +217,11 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
     if _id:
         search["_id"] = _id
     if host:
-        search["host"] = host
+        search["host"] = host.lower()
     if player:
         search["lastOnlinepsList"] = [player]
     if version:
-        search["lastOnlineVersion"] = version
+        search["lastOnlineVersion"] = version.lower()
     if motd:
         search["lastOnlineDescription"] = motd.lower()
     if maxplayers:
@@ -250,13 +250,14 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
             servers = list(col.find())
             online = False
             _info = []
+            print(search)
 
             for server in servers:
                 _items = list(search.items())
                 try:
                     for _item in _items:
                         if _item[0] in server:
-                            if str(_item[1]) in str(server[_item[0]]):
+                            if str(_item[1]).lower() in str(server[_item[0]]).lower():
                                 _info.append(server)
                                 break
                 except Exception as e:
@@ -266,7 +267,11 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
 
 
             server = col.find_one(search) # legacy backup
-            info = verify(search, _info)[0]
+            _info = verify(search, _info)
+            if len(_info) > 0:
+                info = random.choice(_info)
+            else:
+                info = None
 
             if info is not None and info: # new method
                 stats = check(info["host"])
@@ -323,7 +328,7 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
             print(traceback.format_exc(),info)
             _file = None
 
-
+        embed.set_footer(text="Server ID: `"+(str(col.find_one({"host":info["host"]})["_id"])[9:-1] if info["host"] != "Server not found." else "-1")+'`')  # type: ignore
         embed.add_field(name="Players", value=f"{info['lastOnlinePlayers']}/{info['lastOnlinePlayersMax']}", inline=True)  # type: ignore
         embed.add_field(name="Version", value=info["lastOnlineVersion"], inline=True)  # type: ignore
         embed.add_field(name="Ping", value=str(info["lastOnlinePing"]), inline=True)  # type: ignore
@@ -338,7 +343,7 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
             await command_edit(ctx, embeds=[embed])
     except Exception as e:
         fncs.log(e)
-        await ctx.edit(embeds=[interactions.Embed(title="Error", description="An error occured while searching. Please try again later and check the logs for more details.")])
+        await ctx.edit(embeds=[interactions.Embed(title="Error", description="An error occured while searching. Please try again later and check the logs for more details.", color=0xFF0000)])
         print(f"----\n{e}\n====\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n====\n{online if online else ''}\n----") # type: ignore
         
 
