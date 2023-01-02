@@ -5,6 +5,7 @@ import traceback
 import base64
 import re
 import threading
+import random
 
 import pymongo
 import mcstatus
@@ -85,7 +86,7 @@ def check(host, port=25565):
             "lastOnlinePlayersList": players,
             "lastOnlinePlayersMax": server.status().players.max,
             "lastOnlineVersionProtocol": str(server.status().version.protocol),
-            "favicon": server.status().favicon if server.status().favicon else None,
+            "favicon": server.status().favicon,
         }
 
         if not col.find_one({"host": host}):
@@ -105,6 +106,25 @@ def remove_duplicates():
         if col.count_documents({"host": i["host"]}) > 1:
             col.delete_one({"_id": i["_id"]})
 
+
+def verify(search, info):
+    out = []
+    _items = list(search.items())
+    for server in info:
+        flag = True
+        for _item in _items:
+            key = str(_item[0])
+            value = str(_item[1])
+            if key in server:
+                if str(value).lower() not in str(server[key]).lower():
+                    flag = False
+                    break
+        if flag:
+            out.append(server)
+            
+    print(str(len(out)) + " servers match")
+
+    random.shuffle(out);return out
 
 # Commands
 # ---------------------------------------------
@@ -220,6 +240,7 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
             "lastOnlineVersionProtocol": -1,
             "favicon": None,
         }
+        online = False
 
     
     try:
@@ -228,6 +249,7 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
         if search != {}:
             servers = list(col.find())
             online = False
+            _info = []
 
             for server in servers:
                 _items = list(search.items())
@@ -235,14 +257,16 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
                     for _item in _items:
                         if _item[0] in server:
                             if str(_item[1]) in str(server[_item[0]]):
-                                info = server
+                                _info.append(server)
                                 break
                 except Exception as e:
                     print(traceback.format_exc())
                     print(server, _items, type(server), type(_items))
                     break
 
+
             server = col.find_one(search) # legacy backup
+            info = verify(search, _info)[0]
 
             if info is not None and info: # new method
                 stats = check(info["host"])
@@ -268,6 +292,7 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
                     "lastOnlineVersionProtocol": -1,
                     "favicon": None,
                 }
+                online = False
 
 
         # create/send the embed
@@ -277,17 +302,27 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
             color=(0x00FF00 if online else 0xFF0000), # type: ignore
             type="rich",
         )
-
+    
         try:
-            bits = info["favicon"].split(",")[1] # type: ignore
+            if online: # type: ignore
+                stats = check(info["host"]) # type: ignore
 
-            with open("server-icon.png", "wb") as f:
-                f.write(base64.b64decode(bits))
-            _file = interactions.File(filename="server-icon.png")
-            embed.set_thumbnail(url="attachment://server-icon.png")
+                fav = stats["favicon"] # type: ignore
+                if fav is not None:
+                    bits = fav.split(",")[1]
+
+                    with open("server-icon.png", "wb") as f:
+                        f.write(base64.b64decode(bits))
+                    _file = interactions.File(filename="server-icon.png")
+                    embed.set_thumbnail(url="attachment://server-icon.png")
+                else:
+                    _file = None
+            else:
+                _file = None
         except Exception:
-            print(traceback.format_exc())
+            print(traceback.format_exc(),info)
             _file = None
+
 
         embed.add_field(name="Players", value=f"{info['lastOnlinePlayers']}/{info['lastOnlinePlayersMax']}", inline=True)  # type: ignore
         embed.add_field(name="Version", value=info["lastOnlineVersion"], inline=True)  # type: ignore
@@ -297,14 +332,14 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
             playerInfo = ", ".join(info["lastOnlinePlayersList"])  if info["lastOnlinePlayersList"] != "None" else "No players online" # type: ignore
             embed.add_field(name="Players", value=playerInfo, inline=False)
         
-        if _file:
+        if _file: # type: ignore
             await command_edit(ctx, embeds=[embed], files=[_file])
         else:
             await command_edit(ctx, embeds=[embed])
     except Exception as e:
         fncs.log(e)
         await ctx.edit(embeds=[interactions.Embed(title="Error", description="An error occured while searching. Please try again later and check the logs for more details.")])
-        print(f"----\n{e}\n====\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n----")
+        print(f"----\n{e}\n====\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n====\n{online if online else ''}\n----") # type: ignore
         
 
     
