@@ -45,7 +45,7 @@ fncs = funcs()
 # ---------------------------------------------
 
 
-def check(host, port=25565):
+def check(host, port="25565"):
     """Checks out a host and adds it to the database if it's not there
 
     Args:
@@ -102,12 +102,56 @@ def check(host, port=25565):
 
 
 def remove_duplicates():
+    """Removes duplicate entries in the database
+
+    Returns:
+        None
+    """
     for i in col.find():
         if col.count_documents({"host": i["host"]}) > 1:
             col.delete_one({"_id": i["_id"]})
 
 
 def verify(search, info):
+    """Verifies a search
+
+    Args:
+        search [dict], len > 0: {
+            "host":"ipv4 addr",
+            "lastOnline":"unicode time",
+            "lastOnlinePlayers": int,
+            "lastOnlineVersion":"Name Version",
+            "lastOnlineDescription":"Very Good Server",
+            "lastOnlinePing":"unicode time",
+            "lastOnlinePlayersList":["Notch","Jeb"],
+            "lastOnlinePlayersMax": int,
+            "favicon":"base64 encoded image"
+        }
+        info [list], len > 0: {
+            "host":"ipv4 addr", # optional
+            "lastOnline":"unicode time", # optional
+            "lastOnlinePlayers": int, # optional
+            "lastOnlineVersion":"Name Version", # optional
+            "lastOnlineDescription":"Very Good Server", # optional
+            "lastOnlinePing":"unicode time", # optional
+            "lastOnlinePlayersList":["Notch","Jeb"], # optional
+            "lastOnlinePlayersMax": int, # optional
+            "favicon":"base64 encoded image" # optional
+        }
+
+    Returns:
+        [list]: {
+            "host":"ipv4 addr",
+            "lastOnline":"unicode time",
+            "lastOnlinePlayers": int,
+            "lastOnlineVersion":"Name Version",
+            "lastOnlineDescription":"Very Good Server",
+            "lastOnlinePing":"unicode time",
+            "lastOnlinePlayersList":["Notch","Jeb"],
+            "lastOnlinePlayersMax": int,
+            "favicon":"base64 encoded image"
+        }
+    """
     out = []
     _items = list(search.items())
     for server in info:
@@ -128,20 +172,6 @@ def verify(search, info):
 
 # Commands
 # ---------------------------------------------
-"""
-{
-  "_id":"hex value",
-  "host":"ipv4 addr",
-  "lastOnline":"unicode time",
-  "lastOnlinePlayers": int,
-  "lastOnlineVersion":"Name Version",
-  "lastOnlineDescription":"Very Good Server",
-  "lastOnlinePing":"unicode time",
-  "lastOnlinePlayersList":["Notch","Jeb"],
-  "lastOnlinePlayersMax": int,
-  "favicon":"base64 encoded image"
-}
-"""
 
 
 @bot.command(
@@ -212,7 +242,7 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
     )
     search = {}
     info = ""
-    # use switch case to find the server with the given parameters
+    # if parameters are given, add them to the search
 
     if _id:
         search["_id"] = _id
@@ -228,6 +258,7 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
         search["lastOnlinePlayersMax"] = maxplayers
 
 
+    # if no parameters are given, return a message
     if search == {}:
         info = {
             "host": "No search parameters given.",
@@ -250,7 +281,8 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
             servers = list(col.find())
             online = False
             _info = []
-            print(search)
+            numServers = 0
+            
 
             for server in servers:
                 _items = list(search.items())
@@ -268,18 +300,20 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
 
             server = col.find_one(search) # legacy backup
             _info = verify(search, _info)
+            numServers = len(_info)
+
             if len(_info) > 0:
                 info = random.choice(_info)
             else:
                 info = None
 
             if info is not None and info: # new method
-                stats = check(info["host"])
+                stats = check(info["host"],str(port))
                 if stats is not None:
                     info = stats
                     online = True
             elif server: # legacy
-                stats = check(server["host"])
+                stats = check(server["host"],str(port))
                 if stats is not None:
                     info = stats
                     online = True
@@ -300,7 +334,9 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
                 online = False
 
 
-        # create/send the embed
+
+
+        # setup the embed
         embed = interactions.Embed(
             title=("🟢 " if online else "🔴 ")+info["host"],  # type: ignore
             description='`'+info["lastOnlineDescription"]+'`',  # type: ignore
@@ -308,9 +344,9 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
             type="rich",
         )
     
-        try:
+        try: # this adds the favicon in the most overcomplicated way possible
             if online: # type: ignore
-                stats = check(info["host"]) # type: ignore
+                stats = check(info["host"],str(port)) # type: ignore
 
                 fav = stats["favicon"] # type: ignore
                 if fav is not None:
@@ -328,15 +364,19 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
             print(traceback.format_exc(),info)
             _file = None
 
-        embed.set_footer(text="Server ID: `"+(str(col.find_one({"host":info["host"]})["_id"])[9:-1] if info["host"] != "Server not found." else "-1")+'`')  # type: ignore
+        # add basic info about the server
+        embed.set_footer(text="Server ID: "+(str(col.find_one({"host":info["host"]})["_id"])[9:-1] if info["host"] != "Server not found." else "-1")+'\n Out of {} servers'.format(numServers))  # type: ignore
         embed.add_field(name="Players", value=f"{info['lastOnlinePlayers']}/{info['lastOnlinePlayersMax']}", inline=True)  # type: ignore
         embed.add_field(name="Version", value=info["lastOnlineVersion"], inline=True)  # type: ignore
         embed.add_field(name="Ping", value=str(info["lastOnlinePing"]), inline=True)  # type: ignore
+        embed.add_field(name="Last Online", value=f"{time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(info['lastOnline']))}", inline=False)  # type: ignore
         if info["lastOnlinePlayersList"] != None and len(info["lastOnlinePlayersList"]) > 0:  # type: ignore
             playerInfo = ""
             playerInfo = ", ".join(info["lastOnlinePlayersList"])  if info["lastOnlinePlayersList"] != "None" else "No players online" # type: ignore
             embed.add_field(name="Players", value=playerInfo, inline=False)
         
+        
+        # send the embed sometimes with the favicon
         if _file: # type: ignore
             await command_edit(ctx, embeds=[embed], files=[_file])
         else:
@@ -347,10 +387,10 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
         print(f"----\n{e}\n====\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n====\n{online if online else ''}\n----") # type: ignore
         
 
-    
 
     threading.Thread(target=remove_duplicates).start()
     print("Duplicates removed")
+
 
 
 @bot.command(
@@ -361,7 +401,6 @@ async def stats(ctx: interactions.CommandContext):  # type: ignore
     await ctx.defer()
     try:
         """Get stats about the database"""
-        fncs.log(f"stats()")
         players = 0
         for i in col.find():
             players += i["lastOnlinePlayers"]
@@ -399,23 +438,25 @@ async def stats(ctx: interactions.CommandContext):  # type: ignore
     print("Duplicates removed")
 
 
+
 @bot.command(name="restart")
 async def restart(ctx: interactions.CommandContext):  # type: ignore
     """Restart the bot"""
-    fncs.log(f"restart()")
+    
+    fncs.log("Restarting...")
     await ctx.send("Restarting...")
     os.execl(sys.executable, sys.executable, *sys.argv)
+
 
 
 @bot.command(name="help")
 async def help(ctx: interactions.CommandContext):  # type: ignore
     """Get help"""
-    fncs.log(f"help()")
     await ctx.send(
         embeds=[
             interactions.Embed(
                 title="Help",
-                description="""Commands: \n`/find` - Find a server\n`/stats` - Get stats about the database\n`/restart` - Restart the bot\n`/help` - Get help\n""",
+                description="""Commands: \n`/find` - Find a server\n*Returns:*\n`    (desc, db _id, players, version, ping, players online, last online (y/m/d h:m:s))`\n`/stats` - Get stats about the database\n`/restart` - Restart the bot\n`/help` - Get help\n""",
             )
         ]
     )
@@ -435,5 +476,5 @@ if __name__ == "__main__":
             else:
                 print(e)
                 fncs.log(e)
-                time.sleep(5)
+                time.sleep(30)
                 break
