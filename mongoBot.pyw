@@ -10,7 +10,7 @@ import random
 import pymongo
 import mcstatus
 import interactions
-from interactions.ext.files import command_edit
+from interactions.ext.files import command_edit, component_edit, command_send
 
 from funcs import funcs
 
@@ -38,9 +38,18 @@ client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi(
 
 db = client["mc"]
 col = db["servers"]
+_info = []
+_port = "25565"
 
 fncs = funcs()
 
+buttons = [
+    interactions.Button(
+        label="Random Server",
+        custom_id="rand_select",
+        style=interactions.ButtonStyle.PRIMARY,
+    )
+]
 # Funcs
 # ---------------------------------------------
 
@@ -68,8 +77,6 @@ def check(host, port="25565"):
     try:
         server = mcstatus.JavaServer.lookup(host+":"+str(port))
 
-        description = server.status().description
-        description = re.sub(r"§\S*[|]*\s*", "", description)
 
         if server.status().players.sample is not None:
             players = list(i.name for i in server.status().players.sample) # type: ignore
@@ -80,8 +87,8 @@ def check(host, port="25565"):
             "host": host,
             "lastOnline": time.time(),
             "lastOnlinePlayers": server.status().players.online,
-            "lastOnlineVersion": str(server.status().version.name),
-            "lastOnlineDescription": str(description),
+            "lastOnlineVersion": str(re.sub(r"§\S*[|]*\s*", "", server.status().version.name)),
+            "lastOnlineDescription": str(re.sub(r"§\S*[|]*\s*", "", re.sub(r"§\S*[|]*\s*", "", str(server.status().description)))),
             "lastOnlinePing": int(server.status().latency * 10),
             "lastOnlinePlayersList": players,
             "lastOnlinePlayersMax": server.status().players.max,
@@ -170,6 +177,53 @@ def verify(search, info):
 
     random.shuffle(out);return out
 
+def _find(search, port="25565"):
+    # find the server given the parameters
+    if search != {}:
+        servers = list(col.find())
+    else:
+        return {
+            "host": "Server not found",
+            "lastOnline": 0,
+            "lastOnlinePlayers": -1,
+            "lastOnlineVersion": "Server not found",
+            "lastOnlineDescription": "Server not found",
+            "lastOnlinePing": -1,
+            "lastOnlinePlayersList": [],
+            "lastOnlinePlayersMax": -1,
+            "favicon": "Server not found"
+        }
+
+
+    for server in servers:
+        _items = list(search.items())
+        try:
+            for _item in _items:
+                if _item[0] in server:
+                    if str(_item[1]).lower() in str(server[_item[0]]).lower():
+                        global _info
+                        _info.append(server)
+                        break
+        except Exception:
+            print(traceback.format_exc())
+            print(server, _items, type(server), type(_items))
+            break
+
+
+    server = col.find_one(search) # legacy backup
+    _info = verify(search, _info)
+
+    if len(_info) > 0:
+        info = random.choice(_info)
+    else:
+        info = server
+
+    # for server in _info:
+    #     # update the servers
+    #     check(server["host"], port)
+
+    return _info, info
+
 # Commands
 # ---------------------------------------------
 
@@ -235,11 +289,10 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
     """
 
     print("find", _id, host, port, player, version, motd, maxplayers)
-    await ctx.defer()
+    
     # send as embed
-    await ctx.send(
-        embeds=[interactions.Embed(title="Searching...", description="Searching...")]
-    )
+    await ctx.defer()
+
     search = {}
     info = ""
     # if parameters are given, add them to the search
@@ -248,6 +301,7 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
         search["_id"] = _id
     if host:
         search["host"] = host.lower()
+        check(host, str(port))
     if player:
         search["lastOnlinepsList"] = [player]
     if version:
@@ -257,84 +311,21 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
     if maxplayers:
         search["lastOnlinePlayersMax"] = maxplayers
 
-
-    # if no parameters are given, return a message
-    if search == {}:
-        info = {
-            "host": "No search parameters given.",
-            "lastOnlinePlayers": -1,
-            "lastOnlineVersion": -1,
-            "lastOnlineDescription": "No search parameters given.",
-            "lastOnlinePing": -1,
-            "lastOnlinePlayersList": ["no", "search", "parameters", "given"],
-            "lastOnlinePlayersMax": -1,
-            "lastOnlineVersionProtocol": -1,
-            "favicon": None,
-        }
-        online = False
-
     
     try:
+        global _info
+        _info = []
+        _info_ = _find(search, str(port))
+        _info = list(_info_[0]) # type: ignore
+        info = _info_[1] # type: ignore
+        numServers = len(_info) # type: ignore
 
-        # find the server given the parameters
-        if search != {}:
-            servers = list(col.find())
-            online = False
-            _info = []
-            numServers = 0
-            
+        online = True if check(info["host"], str(port)) else False # type: ignore
 
-            for server in servers:
-                _items = list(search.items())
-                try:
-                    for _item in _items:
-                        if _item[0] in server:
-                            if str(_item[1]).lower() in str(server[_item[0]]).lower():
-                                _info.append(server)
-                                break
-                except Exception as e:
-                    print(traceback.format_exc())
-                    print(server, _items, type(server), type(_items))
-                    break
+        global _port
+        _port = port
 
-
-            server = col.find_one(search) # legacy backup
-            _info = verify(search, _info)
-            numServers = len(_info)
-
-            if len(_info) > 0:
-                info = random.choice(_info)
-            else:
-                info = None
-
-            if info is not None and info: # new method
-                stats = check(info["host"],str(port))
-                if stats is not None:
-                    info = stats
-                    online = True
-            elif server: # legacy
-                stats = check(server["host"],str(port))
-                if stats is not None:
-                    info = stats
-                    online = True
-                else:
-                    info = server
-            else:
-                info = {
-                    "host": "Server not found.",
-                    "lastOnlinePlayers": -1,
-                    "lastOnlineVersion": -1,
-                    "lastOnlineDescription": "Server not found.",
-                    "lastOnlinePing": -1,
-                    "lastOnlinePlayersList": ["server", "not", "found"],
-                    "lastOnlinePlayersMax": -1,
-                    "lastOnlineVersionProtocol": -1,
-                    "favicon": None,
-                }
-                online = False
-
-
-
+        await command_send(ctx, embeds=[interactions.Embed(title="Searching...",description="Sorting through "+str(numServers)+" servers...")])
 
         # setup the embed
         embed = interactions.Embed(
@@ -369,28 +360,85 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
         embed.add_field(name="Players", value=f"{info['lastOnlinePlayers']}/{info['lastOnlinePlayersMax']}", inline=True)  # type: ignore
         embed.add_field(name="Version", value=info["lastOnlineVersion"], inline=True)  # type: ignore
         embed.add_field(name="Ping", value=str(info["lastOnlinePing"]), inline=True)  # type: ignore
-        embed.add_field(name="Last Online", value=f"{time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(info['lastOnline']))}", inline=False)  # type: ignore
+        embed.add_field(name="Last Online", value=f"{(time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(info['lastOnline']))) if info['host'] != 'Server not found.' else '0/0/0 0:0:0'}", inline=False)  # type: ignore
         if info["lastOnlinePlayersList"] != None and len(info["lastOnlinePlayersList"]) > 0:  # type: ignore
             playerInfo = ""
             playerInfo = ", ".join(info["lastOnlinePlayersList"])  if info["lastOnlinePlayersList"] != "None" else "No players online" # type: ignore
             embed.add_field(name="Players", value=playerInfo, inline=False)
+
         
         
         # send the embed sometimes with the favicon
         if _file: # type: ignore
-            await command_edit(ctx, embeds=[embed], files=[_file])
+            await command_edit(ctx, embeds=[embed], files=[_file])#, components=buttons) # type: ignore
         else:
-            await command_edit(ctx, embeds=[embed])
+            await command_edit(ctx, embeds=[embed])#, components=buttons) # type: ignore
     except Exception as e:
         fncs.log(e)
-        await ctx.edit(embeds=[interactions.Embed(title="Error", description="An error occured while searching. Please try again later and check the logs for more details.", color=0xFF0000)])
-        print(f"----\n{e}\n====\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n====\n{online if online else ''}\n----") # type: ignore
+        await command_send(ctx, embeds=[interactions.Embed(title="Error", description="An error occured while searching. Please try again later and check the logs for more details.", color=0xFF0000)])
+        print(f"----\n{e}\n====\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n====\n====\n{_info}\n====\n----") # type: ignore
         
 
 
     threading.Thread(target=remove_duplicates).start()
     print("Duplicates removed")
 
+
+@bot.component("rand_select")
+async def rand_select(ctx: interactions.ComponentContext):  # type: ignore
+    print("Updating random server...")
+
+    info = _info[(random.randint(0, len(_info)-1))] # type: ignore
+    numServers = len(_info) # type: ignore
+    online = True if check(info["host"], str(_port)) else False # type: ignore
+
+    # setup the embed
+    embed = interactions.Embed(
+        title=("🟢 " if online else "🔴 ")+info["host"],  # type: ignore
+        description='`'+info["lastOnlineDescription"]+'`',  # type: ignore
+        color=(0x00FF00 if online else 0xFF0000), # type: ignore
+        type="rich",
+        fields=[
+            interactions.EmbedField(name="Players", value=f"{info['lastOnlinePlayers']}/{info['lastOnlinePlayersMax']}", inline=True),  # type: ignore
+            interactions.EmbedField(name="Version", value=info["lastOnlineVersion"], inline=True),  # type: ignore
+            interactions.EmbedField(name="Ping", value=str(info["lastOnlinePing"]), inline=True),  # type: ignore
+            interactions.EmbedField(name="Last Online", value=f"{(time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(info['lastOnline']))) if info['host'] != 'Server not found.' else '0/0/0 0:0:0'}", inline=False),  # type: ignore
+            interactions.EmbedField(name="Players", value=", ".join(info["lastOnlinePlayersList"]) if info["lastOnlinePlayersList"] != "None" else "No players online", inline=False)  # type: ignore
+        ],
+        footer=interactions.EmbedFooter(text="Server ID: "+(str(col.find_one({"host":info["host"]})["_id"])[9:-1] if info["host"] != "Server not found." else "-1")+'\n Out of {} servers'.format(numServers))  # type: ignore
+    )
+    
+    flag = False
+    try: # this adds the favicon in the most overcomplicated way possible
+        if online: # type: ignore
+            stats = check(info["host"],str(_port)) # type: ignore
+
+            fav = stats["favicon"] # type: ignore
+            if fav is not None:
+                bits = fav.split(",")[1]
+
+                with open("server-icon.png", "wb") as f:
+                    f.write(base64.b64decode(bits))
+                _file = interactions.File(filename="server-icon.png")
+                embed.set_thumbnail(url="attachment://server-icon.png")
+
+                print("Favicon added")
+                await component_edit(ctx, embeds=[embed], files=[_file])
+                flag = True
+            else:
+                _file = None
+        else:
+            _file = None
+    except Exception:
+        print(traceback.format_exc(),info)
+        _file = None
+
+    try:
+        if not flag:
+            await ctx.edit(embeds=[embed])
+    except Exception:
+        print(traceback.format_exc(),info,flag,embed)
+        await component_edit(ctx, embeds=[embed])
 
 
 @bot.command(
@@ -445,7 +493,7 @@ async def restart(ctx: interactions.CommandContext):  # type: ignore
     
     fncs.log("Restarting...")
     await ctx.send("Restarting...")
-    os.execl(sys.executable, sys.executable, *sys.argv)
+    sys.exit(0)
 
 
 
