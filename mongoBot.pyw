@@ -5,11 +5,13 @@ import base64
 import re
 import threading
 import random
+import requests
+import json
 
 import pymongo
 import mcstatus
 import interactions
-from interactions.ext.files import command_edit, component_edit, command_send
+from interactions.ext.files import command_edit, component_edit, command_send, component_send
 
 from funcs import funcs
 
@@ -37,15 +39,16 @@ client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi(
 
 db = client["mc"]
 col = db["servers"]
-_info = []
+serverList = []
+ServerInfo = {}
 _port = "25565"
 
 fncs = funcs()
 
 buttons = [
     interactions.Button(
-        label="Random Server",
-        custom_id="rand_select",
+        label="Show Players",
+        custom_id="player_show",
         style=interactions.ButtonStyle.PRIMARY,
     )
 ]
@@ -76,11 +79,21 @@ def check(host, port="25565"):
     try:
         server = mcstatus.JavaServer.lookup(host+":"+str(port))
 
-
+        players = []
         if server.status().players.sample is not None:
-            players = list(i.name for i in server.status().players.sample) # type: ignore
-        else:
-            players = []
+            for player in server.status().players.sample: # type: ignore
+                url = f"https://api.mojang.com/users/profiles/minecraft/{player.name}"
+                jsonResp = requests.get(url)
+                if len(jsonResp.text) > 2:
+                    jsonResp = jsonResp.json()
+
+                    if jsonResp:
+                        players.append(
+                            {
+                                "name": jsonResp["name"],
+                                "uuid": jsonResp["id"],
+                            }
+                        )
 
         data = {
             "host": host,
@@ -101,7 +114,21 @@ def check(host, port="25565"):
 
         for i in list(col.find_one({"host": host})["lastOnlinePlayersList"]): # type: ignore
             if i not in data["lastOnlinePlayersList"]:
-                data["lastOnlinePlayersList"].append(i)
+                if type(i) == str:
+                    url = f"https://api.mojang.com/users/profiles/minecraft/{i}"
+                    jsonResp = requests.get(url)
+                    if len(jsonResp.text) > 2:
+                        jsonResp = jsonResp.json()
+
+                        if jsonResp:
+                            data["lastOnlinePlayersList"].append(
+                                {
+                                    "name": jsonResp["name"],
+                                    "uuid": jsonResp["id"],
+                                }
+                            )
+                else:
+                    data["lastOnlinePlayersList"].append(i)
 
         col.update_one({"host": host}, {"$set": data})
 
@@ -205,7 +232,7 @@ def _find(search, port="25565"):
                 if _item[0] in server:
                     if str(_item[1]).lower() in str(server[_item[0]]).lower():
                         global _info
-                        _info.append(server)
+                        serverList.append(server)
                         break
         except Exception:
             print(traceback.format_exc())
@@ -214,7 +241,7 @@ def _find(search, port="25565"):
 
 
     server = col.find_one(search) # legacy backup
-    _info = verify(search, _info)
+    _info = verify(search, serverList)
 
     if len(_info) > 0:
         info = random.choice(_info)
@@ -227,7 +254,7 @@ def _find(search, port="25565"):
 
     return _info, info
 
-def genEmbed(serverList):
+def genEmbed(_serverList):
     """Generates an embed for the server list
 
     Args:
@@ -247,11 +274,19 @@ def genEmbed(serverList):
         [
             [interactions.Embed]: The embed,
             _file: favicon file,
+            button: interaction button,
         ]
     """
-    info = random.choice(serverList)
-    numServers = len(_info)
+    random.shuffle(_serverList)
+    info = _serverList[0]
+    
+    numServers = len(_serverList)
     online = True if check(info["host"], str(_port)) else False
+
+    try:
+        _serverList.pop(0)
+    except IndexError:
+        pass
 
     # setup the embed
     embed = interactions.Embed(
@@ -264,12 +299,11 @@ def genEmbed(serverList):
             interactions.EmbedField(name="Version", value=info["lastOnlineVersion"], inline=True),
             interactions.EmbedField(name="Ping", value=str(info["lastOnlinePing"]), inline=True),
             interactions.EmbedField(name="Last Online", value=f"{(time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(info['lastOnline']))) if info['host'] != 'Server not found.' else '0/0/0 0:0:0'}", inline=False),
-            interactions.EmbedField(name="Players", value=", ".join(info["lastOnlinePlayersList"]) if info["lastOnlinePlayersList"] != "None" else "No players online", inline=False)
         ],
         footer=interactions.EmbedFooter(text="Server ID: "+(str(col.find_one({"host":info["host"]})["_id"])[9:-1] if info["host"] != "Server not found." else "-1")+'\n Out of {} servers'.format(numServers)) # type: ignore
     )
     
-    flag = False
+
     try: # this adds the favicon in the most overcomplicated way possible
         if online: # type: ignore
             stats = check(info["host"],str(_port)) # type: ignore
@@ -284,7 +318,6 @@ def genEmbed(serverList):
                 embed.set_thumbnail(url="attachment://server-icon.png")
 
                 print("Favicon added")
-                flag = True
             else:
                 _file = None
         else:
@@ -293,7 +326,26 @@ def genEmbed(serverList):
         print(traceback.format_exc(),info)
         _file = None
 
-    return embed, _file
+    players = check(info['host'])['lastOnlinePlayersList'] # type: ignore
+
+    buttons = [
+        interactions.Button(
+            label='Show Players',
+            custom_id='show_players',
+            style=interactions.ButtonStyle.PRIMARY,
+            disabled=(len(players) == 0),
+        ),
+        interactions.Button(
+            label='Next Server',
+            custom_id='rand_select',
+            style=interactions.ButtonStyle.PRIMARY,
+            disabled=(len(_serverList) == 0),
+        ),
+    ]
+
+    row = interactions.ActionRow(components=buttons) # type: ignore
+
+    return embed, _file, row
     
 
 # Commands
@@ -385,39 +437,38 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
 
     
     try:
-        global _info
-        _info = []
-        _info_ = _find(search, str(port))
-        _info = list(_info_[0]) # type: ignore
-        info = _info_[1] # type: ignore
-        numServers = len(_info) # type: ignore
-
-        online = True if check(info["host"], str(port)) else False # type: ignore
-
+        global _serverList
+        global ServerInfo
         global _port
+
+        info = {}
+        _serverList = []
+        _info_ = _find(search, str(port))
+
+        _serverList = list(_info_[0]) # type: ignore
+        info = _info_[1] # type: ignore
+        ServerInfo = info
+        numServers = len(serverList) # type: ignore
+
+
         _port = port
 
         await command_send(ctx, embeds=[interactions.Embed(title="Searching...",description="Sorting through "+str(numServers)+" servers...")])
 
         # setup the embed
-        embed = interactions.Embed(
-            title=("🟢 " if online else "🔴 ")+info["host"],  # type: ignore
-            description='`'+info["lastOnlineDescription"]+'`',  # type: ignore
-            color=(0x00FF00 if online else 0xFF0000), # type: ignore
-            type="rich",
-        )
     
         embed = genEmbed(_info)
         _file = embed[1]
+        comps = embed[2]
         embed = embed[0]
 
         
         
         # send the embed sometimes with the favicon
         if _file: # type: ignore
-            await command_edit(ctx, embeds=[embed], files=[_file])#, components=buttons) # type: ignore
+            await command_edit(ctx, embeds=[embed], files=[_file], components=comps) # type: ignore
         else:
-            await command_edit(ctx, embeds=[embed])#, components=buttons) # type: ignore
+            await command_edit(ctx, embeds=[embed], components=comps) # type: ignore
     except Exception as e:
         fncs.log(e)
         await command_send(ctx, embeds=[interactions.Embed(title="Error", description="An error occured while searching. Please try again later and check the logs for more details.", color=0xFF0000)])
@@ -429,24 +480,54 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
     print("Duplicates removed")
 
 
+@bot.component("show_players")
+async def show_players(ctx: interactions.ComponentContext):  # type: ignore
+    await ctx.defer()
+
+    # get current message
+
+    global ServerInfo
+    info = ServerInfo
+
+    players = list(info["lastOnlinePlayersList"])
+
+    embed = interactions.Embed(
+        title="Players", 
+        description="{} players online".format(len(players)),
+    )
+
+    for player in players:
+        try:
+            if str(player).startswith("{"):
+                # player is dict type
+                player = json.loads(str(player).replace("'", '"'))
+                embed.add_field(name=player["name"], value="`{}`".format(player["uuid"]), inline=True)
+            else:
+                # player is str type
+                embed.add_field(name=player, value="`{}`".format(player), inline=True)
+        except Exception:
+            print(traceback.format_exc())
+            print(player)
+            break
+
+    await component_send(ctx, embeds=[embed], ephemeral=True)
+
 @bot.component("rand_select")
-async def rand_select(ctx: interactions.ComponentContext):  # type: ignore
-    print("Updating random server...")
+async def rand_select(ctx: interactions.ComponentContext):
+    await ctx.defer(edit_origin=True)
+    
+    global _serverList
 
-    # setup the embed
-    embed = genEmbed(_info)
+    embed = genEmbed(_serverList)
     _file = embed[1]
+    button = embed[2]
     embed = embed[0]
-    flag = _file != None
 
-    try:
-        if not flag:
-            await component_edit(ctx, embeds=[embed])
-        else:
-            await component_edit(ctx, embeds=[embed], files=[_file])
-    except Exception:
-        print(traceback.format_exc(),embed,flag,embed)
-        await ctx.edit(embeds=[embed])
+    if _file:
+        await component_edit(ctx, embeds=[embed], files=[_file], components=button)
+    else:
+        await component_edit(ctx, embeds=[embed], components=button)
+
 
 
 @bot.command(
