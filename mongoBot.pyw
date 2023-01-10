@@ -1,4 +1,3 @@
-import os
 import sys
 import time
 import traceback
@@ -99,12 +98,16 @@ def check(host, port="25565"):
         if not col.find_one({"host": host}):
             print("Server not in database, adding...")
             col.insert_one(data)
-        
+
+        for i in list(col.find_one({"host": host})["lastOnlinePlayersList"]): # type: ignore
+            if i not in data["lastOnlinePlayersList"]:
+                data["lastOnlinePlayersList"].append(i)
+
         col.update_one({"host": host}, {"$set": data})
 
         return data
     except Exception as e:
-        print(e, " | ", host)
+        print(traceback.format_exc(), " | ", host)
         return None
 
 
@@ -224,6 +227,75 @@ def _find(search, port="25565"):
 
     return _info, info
 
+def genEmbed(serverList):
+    """Generates an embed for the server list
+
+    Args:
+        serverList [list]: {
+            "host":"ipv4 addr",
+            "lastOnline":"unicode time",
+            "lastOnlinePlayers": int,
+            "lastOnlineVersion":"Name Version",
+            "lastOnlineDescription":"Very Good Server",
+            "lastOnlinePing":"unicode time",
+            "lastOnlinePlayersList":["Notch","Jeb"],
+            "lastOnlinePlayersMax": int,
+            "favicon":"base64 encoded image"
+        }
+
+    Returns:
+        [
+            [interactions.Embed]: The embed,
+            _file: favicon file,
+        ]
+    """
+    info = random.choice(serverList)
+    numServers = len(_info)
+    online = True if check(info["host"], str(_port)) else False
+
+    # setup the embed
+    embed = interactions.Embed(
+        title=("🟢 " if online else "🔴 ")+info["host"],
+        description='`'+info["lastOnlineDescription"]+'`',
+        color=(0x00FF00 if online else 0xFF0000),
+        type="rich",
+        fields=[
+            interactions.EmbedField(name="Players", value=f"{info['lastOnlinePlayers']}/{info['lastOnlinePlayersMax']}", inline=True),
+            interactions.EmbedField(name="Version", value=info["lastOnlineVersion"], inline=True),
+            interactions.EmbedField(name="Ping", value=str(info["lastOnlinePing"]), inline=True),
+            interactions.EmbedField(name="Last Online", value=f"{(time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(info['lastOnline']))) if info['host'] != 'Server not found.' else '0/0/0 0:0:0'}", inline=False),
+            interactions.EmbedField(name="Players", value=", ".join(info["lastOnlinePlayersList"]) if info["lastOnlinePlayersList"] != "None" else "No players online", inline=False)
+        ],
+        footer=interactions.EmbedFooter(text="Server ID: "+(str(col.find_one({"host":info["host"]})["_id"])[9:-1] if info["host"] != "Server not found." else "-1")+'\n Out of {} servers'.format(numServers)) # type: ignore
+    )
+    
+    flag = False
+    try: # this adds the favicon in the most overcomplicated way possible
+        if online: # type: ignore
+            stats = check(info["host"],str(_port)) # type: ignore
+
+            fav = stats["favicon"] # type: ignore
+            if fav is not None:
+                bits = fav.split(",")[1]
+
+                with open("server-icon.png", "wb") as f:
+                    f.write(base64.b64decode(bits))
+                _file = interactions.File(filename="server-icon.png")
+                embed.set_thumbnail(url="attachment://server-icon.png")
+
+                print("Favicon added")
+                flag = True
+            else:
+                _file = None
+        else:
+            _file = None
+    except Exception:
+        print(traceback.format_exc(),info)
+        _file = None
+
+    return embed, _file
+    
+
 # Commands
 # ---------------------------------------------
 
@@ -252,7 +324,7 @@ def _find(search, port="25565"):
         ),
         interactions.Option(
             name="player",
-            description="The player to search for",
+            description="The player to search for **WIP**",
             type=interactions.OptionType.STRING,
             required=False,
         ),
@@ -335,36 +407,9 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
             type="rich",
         )
     
-        try: # this adds the favicon in the most overcomplicated way possible
-            if online: # type: ignore
-                stats = check(info["host"],str(port)) # type: ignore
-
-                fav = stats["favicon"] # type: ignore
-                if fav is not None:
-                    bits = fav.split(",")[1]
-
-                    with open("server-icon.png", "wb") as f:
-                        f.write(base64.b64decode(bits))
-                    _file = interactions.File(filename="server-icon.png")
-                    embed.set_thumbnail(url="attachment://server-icon.png")
-                else:
-                    _file = None
-            else:
-                _file = None
-        except Exception:
-            print(traceback.format_exc(),info)
-            _file = None
-
-        # add basic info about the server
-        embed.set_footer(text="Server ID: "+(str(col.find_one({"host":info["host"]})["_id"])[9:-1] if info["host"] != "Server not found." else "-1")+'\n Out of {} servers'.format(numServers))  # type: ignore
-        embed.add_field(name="Players", value=f"{info['lastOnlinePlayers']}/{info['lastOnlinePlayersMax']}", inline=True)  # type: ignore
-        embed.add_field(name="Version", value=info["lastOnlineVersion"], inline=True)  # type: ignore
-        embed.add_field(name="Ping", value=str(info["lastOnlinePing"]), inline=True)  # type: ignore
-        embed.add_field(name="Last Online", value=f"{(time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(info['lastOnline']))) if info['host'] != 'Server not found.' else '0/0/0 0:0:0'}", inline=False)  # type: ignore
-        if info["lastOnlinePlayersList"] != None and len(info["lastOnlinePlayersList"]) > 0:  # type: ignore
-            playerInfo = ""
-            playerInfo = ", ".join(info["lastOnlinePlayersList"])  if info["lastOnlinePlayersList"] != "None" else "No players online" # type: ignore
-            embed.add_field(name="Players", value=playerInfo, inline=False)
+        embed = genEmbed(_info)
+        _file = embed[1]
+        embed = embed[0]
 
         
         
@@ -388,57 +433,20 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
 async def rand_select(ctx: interactions.ComponentContext):  # type: ignore
     print("Updating random server...")
 
-    info = _info[(random.randint(0, len(_info)-1))] # type: ignore
-    numServers = len(_info) # type: ignore
-    online = True if check(info["host"], str(_port)) else False # type: ignore
-
     # setup the embed
-    embed = interactions.Embed(
-        title=("🟢 " if online else "🔴 ")+info["host"],  # type: ignore
-        description='`'+info["lastOnlineDescription"]+'`',  # type: ignore
-        color=(0x00FF00 if online else 0xFF0000), # type: ignore
-        type="rich",
-        fields=[
-            interactions.EmbedField(name="Players", value=f"{info['lastOnlinePlayers']}/{info['lastOnlinePlayersMax']}", inline=True),  # type: ignore
-            interactions.EmbedField(name="Version", value=info["lastOnlineVersion"], inline=True),  # type: ignore
-            interactions.EmbedField(name="Ping", value=str(info["lastOnlinePing"]), inline=True),  # type: ignore
-            interactions.EmbedField(name="Last Online", value=f"{(time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(info['lastOnline']))) if info['host'] != 'Server not found.' else '0/0/0 0:0:0'}", inline=False),  # type: ignore
-            interactions.EmbedField(name="Players", value=", ".join(info["lastOnlinePlayersList"]) if info["lastOnlinePlayersList"] != "None" else "No players online", inline=False)  # type: ignore
-        ],
-        footer=interactions.EmbedFooter(text="Server ID: "+(str(col.find_one({"host":info["host"]})["_id"])[9:-1] if info["host"] != "Server not found." else "-1")+'\n Out of {} servers'.format(numServers))  # type: ignore
-    )
-    
-    flag = False
-    try: # this adds the favicon in the most overcomplicated way possible
-        if online: # type: ignore
-            stats = check(info["host"],str(_port)) # type: ignore
-
-            fav = stats["favicon"] # type: ignore
-            if fav is not None:
-                bits = fav.split(",")[1]
-
-                with open("server-icon.png", "wb") as f:
-                    f.write(base64.b64decode(bits))
-                _file = interactions.File(filename="server-icon.png")
-                embed.set_thumbnail(url="attachment://server-icon.png")
-
-                print("Favicon added")
-                await component_edit(ctx, embeds=[embed], files=[_file])
-                flag = True
-            else:
-                _file = None
-        else:
-            _file = None
-    except Exception:
-        print(traceback.format_exc(),info)
-        _file = None
+    embed = genEmbed(_info)
+    _file = embed[1]
+    embed = embed[0]
+    flag = _file != None
 
     try:
         if not flag:
-            await ctx.edit(embeds=[embed])
+            await component_edit(ctx, embeds=[embed])
+        else:
+            await component_edit(ctx, embeds=[embed], files=[_file])
     except Exception:
-        print(traceback.format_exc(),info,flag,embed)
-        await component_edit(ctx, embeds=[embed])
+        print(traceback.format_exc(),embed,flag,embed)
+        await ctx.edit(embeds=[embed])
 
 
 @bot.command(

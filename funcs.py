@@ -7,10 +7,10 @@ from mcstatus import JavaServer
 
 class funcs:
     """Cursed code that I don't want to touch. It works, but it's not pretty.
-            # STOP HERE
+        # STOP HERE
 
-            Beyond this point is code unmaintained and at risk of mabye being important.
-            Once this file was made, no proper docs on the methods have been made except those that I sometimes remember.
+        Beyond this point is code unmaintained and at risk of mabye being important.
+        Once this file was made, no proper docs on the methods have been made except those that I sometimes remember.
 
     """    
 
