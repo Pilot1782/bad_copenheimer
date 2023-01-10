@@ -576,16 +576,6 @@ async def stats(ctx: interactions.CommandContext):  # type: ignore
 
 
 
-@bot.command(name="restart")
-async def restart(ctx: interactions.CommandContext):  # type: ignore
-    """Restart the bot"""
-    
-    fncs.log("Restarting...")
-    await ctx.send("Restarting...")
-    sys.exit(0)
-
-
-
 @bot.command(name="help")
 async def help(ctx: interactions.CommandContext):  # type: ignore
     """Get help"""
