@@ -251,10 +251,13 @@ class funcs:
 
         Args:
             text (String): text to log
+        
+        Returns:
+            None
         """
         path_ = f"{self.path}log.txt"
         with open(f"{path_}", "a") as f:
-            f.write(f"[{self.ptime()}] {text}\n")
+            f.write(f"[{self.ptime()}]{'{V2.0.0}'} {text}\n")
 
     # Scan a range
     def scan_range(self, ip1, ip2): #legacy verson of scan
