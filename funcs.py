@@ -255,7 +255,7 @@ class funcs:
         Returns:
             None
         """
-        path_ = f"{self.path}log.txt"
+        path_ = f"{self.path}log.log"
         with open(f"{path_}", "a") as f:
             text = ' '.join((str(i) for i in text))
             f.write(f"[{self.ptime()}]{'{V2.0.0}'} {text}\n")
