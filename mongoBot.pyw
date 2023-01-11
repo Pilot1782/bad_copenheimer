@@ -1,3 +1,4 @@
+# pyright: basic
 import sys
 import time
 import traceback
@@ -35,7 +36,7 @@ if TOKEN == "...":
 
 bot = interactions.Client(token=TOKEN)
 
-client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi("1"))  # type: ignore
+client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi("1")) # pyright: ignore [reportGeneralTypeIssues=false]
 
 db = client["mc"]
 col = db["servers"]
@@ -81,7 +82,7 @@ def check(host, port="25565"):
 
         players = []
         if server.status().players.sample is not None:
-            for player in server.status().players.sample: # type: ignore
+            for player in server.status().players.sample: # pyright: ignore [reportOptionalIterable]
                 url = f"https://api.mojang.com/users/profiles/minecraft/{player.name}"
                 jsonResp = requests.get(url)
                 if len(jsonResp.text) > 2:
@@ -90,7 +91,7 @@ def check(host, port="25565"):
                     if jsonResp:
                         players.append(
                             {
-                                "name": jsonResp["name"],
+                                "name": cFilter(jsonResp["name"]),
                                 "uuid": jsonResp["id"],
                             }
                         )
@@ -99,12 +100,12 @@ def check(host, port="25565"):
             "host": host,
             "lastOnline": time.time(),
             "lastOnlinePlayers": server.status().players.online,
-            "lastOnlineVersion": str(re.sub(r"§\S*[|]*\s*", "", server.status().version.name)),
-            "lastOnlineDescription": str(re.sub(r"§\S*[|]*\s*", "", re.sub(r"§\S*[|]*\s*", "", str(server.status().description)))),
+            "lastOnlineVersion": cFilter(str(re.sub(r"§\S*[|]*\s*", "", server.status().version.name))),
+            "lastOnlineDescription": cFilter(str(server.status().description)),
             "lastOnlinePing": int(server.status().latency * 10),
             "lastOnlinePlayersList": players,
             "lastOnlinePlayersMax": server.status().players.max,
-            "lastOnlineVersionProtocol": str(server.status().version.protocol),
+            "lastOnlineVersionProtocol": cFilter(str(server.status().version.protocol)),
             "favicon": server.status().favicon,
         }
 
@@ -112,28 +113,34 @@ def check(host, port="25565"):
             print("Server not in database, adding...")
             col.insert_one(data)
 
-        for i in list(col.find_one({"host": host})["lastOnlinePlayersList"]): # type: ignore
-            if i not in data["lastOnlinePlayersList"]:
-                if type(i) == str:
-                    url = f"https://api.mojang.com/users/profiles/minecraft/{i}"
-                    jsonResp = requests.get(url)
-                    if len(jsonResp.text) > 2:
-                        jsonResp = jsonResp.json()
+        for i in list(col.find_one({"host": host})["lastOnlinePlayersList"]): # pyright: ignore [reportOptionalSubscript]
+            try:
+                if i not in data["lastOnlinePlayersList"]:
+                    if type(i) == str:
+                        url = f"https://api.mojang.com/users/profiles/minecraft/{i}"
+                        jsonResp = requests.get(url)
+                        if len(jsonResp.text) > 2:
+                            jsonResp = jsonResp.json()
 
-                        if jsonResp:
-                            data["lastOnlinePlayersList"].append(
-                                {
-                                    "name": jsonResp["name"],
-                                    "uuid": jsonResp["id"],
-                                }
-                            )
-                else:
-                    data["lastOnlinePlayersList"].append(i)
+                            if jsonResp is not None:
+                                data["lastOnlinePlayersList"].append(
+                                    {
+                                        "name": cFilter(jsonResp["name"]),
+                                        "uuid": jsonResp["id"],
+                                    }
+                                )
+                    else:
+                        data["lastOnlinePlayersList"].append(i)
+            except Exception:
+                print(traceback.format_exc(), " \/ ", host) #pyright: ignore [reportInvalidStringEscapeSequence] 
+                break
 
         col.update_one({"host": host}, {"$set": data})
 
         return data
-    except Exception as e:
+    except TimeoutError:
+        return None
+    except Exception:
         print(traceback.format_exc(), " | ", host)
         return None
 
@@ -300,15 +307,15 @@ def genEmbed(_serverList):
             interactions.EmbedField(name="Ping", value=str(info["lastOnlinePing"]), inline=True),
             interactions.EmbedField(name="Last Online", value=f"{(time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(info['lastOnline']))) if info['host'] != 'Server not found.' else '0/0/0 0:0:0'}", inline=False),
         ],
-        footer=interactions.EmbedFooter(text="Server ID: "+(str(col.find_one({"host":info["host"]})["_id"])[9:-1] if info["host"] != "Server not found." else "-1")+'\n Out of {} servers'.format(numServers)) # type: ignore
+        footer=interactions.EmbedFooter(text="Server ID: "+(str(col.find_one({"host":info["host"]})["_id"])[9:-1] if info["host"] != "Server not found." else "-1")+'\n Out of {} servers'.format(numServers)) # pyright: ignore [reportOptionalSubscript]
     )
     
 
     try: # this adds the favicon in the most overcomplicated way possible
-        if online: # type: ignore
-            stats = check(info["host"],str(_port)) # type: ignore
+        if online: 
+            stats = check(info["host"],str(_port)) 
 
-            fav = stats["favicon"] # type: ignore
+            fav = stats["favicon"] 
             if fav is not None:
                 bits = fav.split(",")[1]
 
@@ -326,7 +333,7 @@ def genEmbed(_serverList):
         print(traceback.format_exc(),info)
         _file = None
 
-    players = check(info['host'])['lastOnlinePlayersList'] # type: ignore
+    players = check(info['host'])['lastOnlinePlayersList'] 
 
     buttons = [
         interactions.Button(
@@ -343,9 +350,23 @@ def genEmbed(_serverList):
         ),
     ]
 
-    row = interactions.ActionRow(components=buttons) # type: ignore
+    row = interactions.ActionRow(components=buttons) # pyright: ignore [reportGeneralTypeIssues]
 
     return embed, _file, row
+
+
+def cFilter(text):
+    """Removes all color bits from a string
+
+    Args:
+        text [str]: The string to remove color bits from
+
+    Returns:
+        [str]: The string without color bits
+    """
+    # remove all color bits
+    text = re.sub(r'§[0-9a-fk-or]', '', text)
+    return text
     
 
 # Commands
@@ -400,7 +421,7 @@ def genEmbed(_serverList):
         ),
     ],
 )
-async def find(ctx: interactions.CommandContext, _id: str = None, player: str = None, version: str = None, host: str = None, port: int = 25565, motd: str = None, maxplayers: int = None):  # type: ignore
+async def find(ctx: interactions.CommandContext, _id: str = NotImplemented, player: str = NotImplemented, version: str = NotImplemented, host: str = NotImplemented, port: int = 25565, motd: str = NotImplemented, maxplayers: int = NotImplemented):  
     """Find a server
 
     Args:
@@ -435,44 +456,46 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
     if maxplayers:
         search["lastOnlinePlayersMax"] = maxplayers
 
-    
-    try:
-        global _serverList
-        global ServerInfo
-        global _port
+    if search == {}:
+        await command_send(ctx, embeds=[interactions.Embed(title="Error",description="No search parameters given")])
+    else:
+        try:
+            global _serverList
+            global ServerInfo
+            global _port
 
-        info = {}
-        _serverList = []
-        _info_ = _find(search, str(port))
+            info = {}
+            _serverList = []
+            _info_ = _find(search, str(port))
 
-        _serverList = list(_info_[0]) # type: ignore
-        info = _info_[1] # type: ignore
-        ServerInfo = info
-        numServers = len(serverList) # type: ignore
+            _serverList = list(_info_[0]) # pyright: ignore [reportGeneralTypeIssues]
+            info = _info_[1] # pyright: ignore [reportGeneralTypeIssues]
+            ServerInfo = info
+            numServers = len(serverList) 
 
 
-        _port = port
+            _port = port
 
-        await command_send(ctx, embeds=[interactions.Embed(title="Searching...",description="Sorting through "+str(numServers)+" servers...")])
+            await command_send(ctx, embeds=[interactions.Embed(title="Searching...",description="Sorting through "+str(numServers)+" servers...")])
 
-        # setup the embed
-    
-        embed = genEmbed(_info)
-        _file = embed[1]
-        comps = embed[2]
-        embed = embed[0]
-
+            # setup the embed
         
-        
-        # send the embed sometimes with the favicon
-        if _file: # type: ignore
-            await command_edit(ctx, embeds=[embed], files=[_file], components=comps) # type: ignore
-        else:
-            await command_edit(ctx, embeds=[embed], components=comps) # type: ignore
-    except Exception as e:
-        fncs.log(e)
-        await command_send(ctx, embeds=[interactions.Embed(title="Error", description="An error occured while searching. Please try again later and check the logs for more details.", color=0xFF0000)])
-        print(f"----\n{e}\n====\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n====\n====\n{_info}\n====\n----") # type: ignore
+            embed = genEmbed(_info)
+            _file = embed[1]
+            comps = embed[2]
+            embed = embed[0]
+
+            
+            
+            # send the embed sometimes with the favicon
+            if _file: 
+                await command_edit(ctx, embeds=[embed], files=[_file], components=comps) 
+            else:
+                await command_edit(ctx, embeds=[embed], components=comps) 
+        except Exception:
+            fncs.log(traceback.format_exc())
+            await command_send(ctx, embeds=[interactions.Embed(title="Error", description="An error occured while searching. Please try again later and check the logs for more details.", color=0xFF0000)])
+            print(f"----\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n====\n====\n{_info}\n====\n----") 
         
 
 
@@ -481,7 +504,7 @@ async def find(ctx: interactions.CommandContext, _id: str = None, player: str = 
 
 
 @bot.component("show_players")
-async def show_players(ctx: interactions.ComponentContext):  # type: ignore
+async def show_players(ctx: interactions.ComponentContext):  
     await ctx.defer()
 
     # get current message
@@ -534,7 +557,7 @@ async def rand_select(ctx: interactions.ComponentContext):
     name="stats",
     description="Get stats about the database",
 )
-async def stats(ctx: interactions.CommandContext):  # type: ignore
+async def stats(ctx: interactions.CommandContext):  
     await ctx.defer()
     try:
         """Get stats about the database"""
@@ -545,7 +568,7 @@ async def stats(ctx: interactions.CommandContext):  # type: ignore
 
         text = f"Total servers: `{serverCount}`\nTotal players: `{players}`\nMost common version: `...`"
 
-        await ctx.send(embeds=[interactions.Embed(title="Stats", description=text)])  # type: ignore
+        await ctx.send(embeds=[interactions.Embed(title="Stats", description=text)])  
         print("Getting most common version...")
 
         versions = []
@@ -563,12 +586,12 @@ async def stats(ctx: interactions.CommandContext):  # type: ignore
         # edit the message
         text = "Total servers: `{}`\nTotal players: `{}`\nMost common version:\n```{}```".format(serverCount,players,('\n'.join(versions[0:5])))
 
-        await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])  # type: ignore
-    except Exception as e:
+        await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])  
+    except Exception:
         print(f"====\nError: {e}\n====")
-        fncs.log(f"Error: {e}")
+        fncs.log(traceback.format_exc())
 
-        await ctx.send(embeds=[interactions.Embed(title="Error", description="Error getting stats, check the console and log for more info.")])  # type: ignore
+        await ctx.send(embeds=[interactions.Embed(title="Error", description="Error getting stats, check the console and log for more info.")])  
 
 
     threading.Thread(target=remove_duplicates).start()
@@ -577,7 +600,7 @@ async def stats(ctx: interactions.CommandContext):  # type: ignore
 
 
 @bot.command(name="help")
-async def help(ctx: interactions.CommandContext):  # type: ignore
+async def help(ctx: interactions.CommandContext):  
     """Get help"""
     await ctx.send(
         embeds=[
@@ -602,6 +625,6 @@ if __name__ == "__main__":
                 break
             else:
                 print(e)
-                fncs.log(e)
+                fncs.log(traceback.format_exc())
                 time.sleep(30)
                 break
