@@ -216,6 +216,27 @@ def verify(search, info):
     random.shuffle(out);return out
 
 def _find(search, port="25565"):
+    """Finds a server in the database
+
+    Args:
+        search [dict], len > 0: {
+            "host":"ipv4 addr",
+            "lastOnlineMaxPlayers": int,
+            "lastOnlineVersion":"Name Version",
+            "lastOnlineDescription":"Very Good Server",
+            "lastOnlinePlayersList": ["WIP", "WIP"],
+        }
+
+    Returns:
+        [dict]: {
+            "host":"ipv4 addr",
+            "lastOnline":"unicode time",
+            "lastOnlinePlayers": int,
+            "lastOnlineVersion":"Name Version",
+            "lastOnlineDescription":"Very Good Server",
+            "lastOnlinePing":"unicode time",
+        }
+    """
     # find the server given the parameters
     if search != {}:
         servers = list(col.find())
@@ -285,6 +306,33 @@ def genEmbed(_serverList):
             button: interaction button,
         ]
     """
+    if len(_serverList) == 0:
+        embed = interactions.Embed(
+            title="No servers found",
+            description="No servers found",
+            color=0xFF0000,
+        )
+        buttons = [
+            interactions.Button(
+                label='Show Players',
+                custom_id='show_players',
+                style=interactions.ButtonStyle.PRIMARY,
+                disabled=True,
+            ),
+            interactions.Button(
+                label='Next Server',
+                custom_id='rand_select',
+                style=interactions.ButtonStyle.PRIMARY,
+                disabled=True,
+            ),
+        ]
+
+        row = interactions.ActionRow(components=buttons) # pyright: ignore [reportGeneralTypeIssues]
+
+        return [embed, None, row]
+
+
+
     random.shuffle(_serverList)
     info = _serverList[0]
     
@@ -299,7 +347,7 @@ def genEmbed(_serverList):
     # setup the embed
     embed = interactions.Embed(
         title=("🟢 " if online else "🔴 ")+info["host"],
-        description='`'+info["lastOnlineDescription"]+'`',
+        description='```'+info["lastOnlineDescription"]+'```',
         color=(0x00FF00 if online else 0xFF0000),
         type="rich",
         fields=[
@@ -439,8 +487,10 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
     # send as embed
     await ctx.defer()
 
+    global _port
     search = {}
-    info = ""
+    info = {}
+    _port = port
     # if parameters are given, add them to the search
 
     if _id:
@@ -463,28 +513,28 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
         try:
             global _serverList
             global ServerInfo
-            global _port
-
-            info = {}
+            
             _serverList = []
             _info_ = _find(search, str(port))
 
             _serverList = list(_info_[0]) # pyright: ignore [reportGeneralTypeIssues]
-            info = _info_[1] # pyright: ignore [reportGeneralTypeIssues]
-            ServerInfo = info
             numServers = len(serverList) 
 
+            fncs.dprint(len(_serverList),search)
 
-            _port = port
+
+            
 
             await command_send(ctx, embeds=[interactions.Embed(title="Searching...",description="Sorting through "+str(numServers)+" servers...")])
 
             # setup the embed
         
-            embed = genEmbed(_info)
+            embed = genEmbed(_serverList)
             _file = embed[1]
             comps = embed[2]
             embed = embed[0]
+
+            fncs.dprint("Embed generated",embed, comps, _file)
 
             
             
@@ -500,8 +550,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
         
 
 
-    threading.Thread(target=remove_duplicates).start()
-    print("Duplicates removed")
+    threading.Thread(target=remove_duplicates).start();fncs.dprint("Duplicates removed")
 
 
 @bot.component("show_players")
@@ -536,6 +585,8 @@ async def show_players(ctx: interactions.ComponentContext):
 
     await component_send(ctx, embeds=[embed], ephemeral=True)
 
+    threading.Thread(target=remove_duplicates).start();fncs.dprint("Duplicates removed")
+
 @bot.component("rand_select")
 async def rand_select(ctx: interactions.ComponentContext):
     await ctx.defer(edit_origin=True)
@@ -551,6 +602,8 @@ async def rand_select(ctx: interactions.ComponentContext):
         await component_edit(ctx, embeds=[embed], files=[_file], components=button)
     else:
         await component_edit(ctx, embeds=[embed], components=button)
+
+    threading.Thread(target=remove_duplicates).start();fncs.dprint("Duplicates removed")
 
 
 
@@ -595,8 +648,7 @@ async def stats(ctx: interactions.CommandContext):
         await ctx.send(embeds=[interactions.Embed(title="Error", description="Error getting stats, check the console and log for more info.")])  
 
 
-    threading.Thread(target=remove_duplicates).start()
-    print("Duplicates removed")
+    threading.Thread(target=remove_duplicates).start();fncs.dprint("Duplicates removed")
 
 
 

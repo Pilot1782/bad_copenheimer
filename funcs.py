@@ -203,9 +203,9 @@ class funcs:
             return "".join(arr)
 
     # Print but for debugging
-    def dprint(self, text):
+    def dprint(self, *text):
         if self.debug:
-            print(text)
+            print(' '.join((str(i) for i in text)))
 
     # Scan to increase simplicity
     def scan(self, ipL, ipU): # dont use scan_range
@@ -246,7 +246,7 @@ class funcs:
                 flag = True
 
     # If error then log it
-    def log(self, text):
+    def log(self, *text):
         """Logging function
 
         Args:
@@ -257,6 +257,7 @@ class funcs:
         """
         path_ = f"{self.path}log.txt"
         with open(f"{path_}", "a") as f:
+            text = ' '.join((str(i) for i in text))
             f.write(f"[{self.ptime()}]{'{V2.0.0}'} {text}\n")
 
     # Scan a range

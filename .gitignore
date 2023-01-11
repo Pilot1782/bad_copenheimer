@@ -30,3 +30,5 @@ privVars.py
 __pycache__
 .vscode
 testing.py
+scanHandler.py
+server-icon.png
