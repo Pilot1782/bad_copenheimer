@@ -7,10 +7,10 @@ from mcstatus import JavaServer
 
 class funcs:
     """Cursed code that I don't want to touch. It works, but it's not pretty.
-            # STOP HERE
+        # STOP HERE
 
-            Beyond this point is code unmaintained and at risk of mabye being important.
-            Once this file was made, no proper docs on the methods have been made except those that I sometimes remember.
+        Beyond this point is code unmaintained and at risk of mabye being important.
+        Once this file was made, no proper docs on the methods have been made except those that I sometimes remember.
 
     """    
 
@@ -21,7 +21,7 @@ class funcs:
             path (str, optional): Path to the directory of the folder. Defaults to os.path.dirname(os.path.abspath(__file__)).
         """
 
-        self.path = path
+        self.path = path + ("\\" if osys.name == "nt" else "/")
 
         self.settings_path = self.path+(r"\settings.json" if osys.name == "nt" else "/settings.json")
 
@@ -41,7 +41,6 @@ class funcs:
             self.home_dir = osys.path.dirname(osys.path.abspath(__file__))
 
         self.testing = data["testing"]
-        self.home_dir = data["home-dir"]
         self.output_path = self.home_dir + "outputs.json"
         self.usr_name = data["user"]
         self.lower_ip_bound = data["lower_ip_bound"]
@@ -55,7 +54,6 @@ class funcs:
             self.osp = "\\"
         else:
             self.osp = "/"
-        self.path = self.home_dir + "qubo.jar"
         self.mascan = data["masscan"]
         self.time2 = data["time2"]
         self.debug = data["debugging"]
@@ -253,9 +251,13 @@ class funcs:
 
         Args:
             text (String): text to log
+        
+        Returns:
+            None
         """
-        with open(f"{self.home_dir}log.txt", "a") as f:
-            f.write(f"[{self.ptime()}] {text}\n")
+        path_ = f"{self.path}log.txt"
+        with open(f"{path_}", "a") as f:
+            f.write(f"[{self.ptime()}]{'{V2.0.0}'} {text}\n")
 
     # Scan a range
     def scan_range(self, ip1, ip2): #legacy verson of scan

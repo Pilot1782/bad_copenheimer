@@ -1,6 +1,5 @@
-import pymongo
-import mcstatus
-from funcs import funcs
+import pymongo # type: ignore
+import mcstatus # type: ignore
 import time
 import threading
 import random
@@ -12,7 +11,6 @@ try:
     from privVars import *
 except ImportError:
     MONGO_URL = "mongodb+srv://..."
-    TOKEN = "..."
     DSICORD_WEBHOOK = "discord.api.com/..."
 
 # Setup
@@ -32,14 +30,13 @@ c = 0
 client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi("1"))  # type: ignore
 db = client["mc"]
 col = db["servers"]
-fncs = funcs()
 
 # Funcs
 # ---------------------------------------------
 
 def check(host):
     try:
-        import mcstatus
+        import mcstatus # type: ignore
         import re
 
         print("\r", end="")
@@ -50,12 +47,12 @@ def check(host):
         description = description = re.sub(r"§\S*[|]*\s*", "", description)
 
         return host, status, description
-    except Exception as err:
+    except Exception:
         return None
 
 def scan(ip_list):
     try:
-        import masscan
+        import masscan # type: ignore
         import json
 
         scanner = masscan.PortScanner()
@@ -63,12 +60,15 @@ def scan(ip_list):
             ip_list,
             ports="25565",
             arguments="--max-rate {}".format(pingsPerSec / maxActive),
+            sudo=True,
         )
         res = json.loads(scanner.scan_result) # type: ignore
- 
+        print(scanner.scan_result)
+
         return list(res["scan"].keys())
     except Exception as e:
         Eprint(e)
+        return []
 
 def dprint(text, end="\r"):
     """Debugging print
@@ -86,7 +86,7 @@ def Eprint(text):
     Args:
         text (String): Error text
     """
-    fncs.log("Error: "+"".join(str(i) for i in text))
+    disLog("Error: "+"".join(str(i) for i in text))
     dprint("\n"+"".join(str(i) for i in text)+"\n")
 
 
@@ -158,7 +158,8 @@ for i in range(255):
         ip_lists.append(f"{i}.{j}.0.0/16")
 random.shuffle(ip_lists)
 
-ip_lists = ip_lists[:50]  # remove for final version
+#ip_lists = ip_lists[:500]  # remove for final version
+print(ip_lists[0:1])
 time.sleep(0.5)
 
 normal = threading.active_count()
