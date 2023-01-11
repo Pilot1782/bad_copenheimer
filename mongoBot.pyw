@@ -6,6 +6,7 @@ import base64
 import re
 import threading
 import random
+from types import NoneType
 import requests
 import json
 
@@ -421,7 +422,7 @@ def cFilter(text):
         ),
     ],
 )
-async def find(ctx: interactions.CommandContext, _id: str = NotImplemented, player: str = NotImplemented, version: str = NotImplemented, host: str = NotImplemented, port: int = 25565, motd: str = NotImplemented, maxplayers: int = NotImplemented):  
+async def find(ctx: interactions.CommandContext, _id: str = "", player: str = "", version: str = "", host: str = "", port: int = 25565, motd: str = "", maxplayers: int = -1):  
     """Find a server
 
     Args:
@@ -453,7 +454,7 @@ async def find(ctx: interactions.CommandContext, _id: str = NotImplemented, play
         search["lastOnlineVersion"] = version.lower()
     if motd:
         search["lastOnlineDescription"] = motd.lower()
-    if maxplayers:
+    if maxplayers != -1:
         search["lastOnlinePlayersMax"] = maxplayers
 
     if search == {}:
@@ -491,7 +492,7 @@ async def find(ctx: interactions.CommandContext, _id: str = NotImplemented, play
             if _file: 
                 await command_edit(ctx, embeds=[embed], files=[_file], components=comps) 
             else:
-                await command_edit(ctx, embeds=[embed], components=comps) 
+                await command_edit(ctx, embeds=[embed], components=comps) # pyright: ignore [reportGeneralTypeIssues]
         except Exception:
             fncs.log(traceback.format_exc())
             await command_send(ctx, embeds=[interactions.Embed(title="Error", description="An error occured while searching. Please try again later and check the logs for more details.", color=0xFF0000)])
