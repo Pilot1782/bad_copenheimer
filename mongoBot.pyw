@@ -47,13 +47,7 @@ _port = "25565"
 
 fncs = funcs()
 
-buttons = [
-    interactions.Button(
-        label="Show Players",
-        custom_id="player_show",
-        style=interactions.ButtonStyle.PRIMARY,
-    )
-]
+
 # Funcs
 # ---------------------------------------------
 
@@ -157,7 +151,7 @@ def remove_duplicates():
             col.delete_one({"_id": i["_id"]})
 
 
-def verify(search, info):
+def verify(search, serverList):
     """Verifies a search
 
     Args:
@@ -172,7 +166,7 @@ def verify(search, info):
             "lastOnlinePlayersMax": int,
             "favicon":"base64 encoded image"
         }
-        info [list], len > 0: {
+        serverList [list], len > 0: {
             "host":"ipv4 addr", # optional
             "lastOnline":"unicode time", # optional
             "lastOnlinePlayers": int, # optional
@@ -199,7 +193,7 @@ def verify(search, info):
     """
     out = []
     _items = list(search.items())
-    for server in info:
+    for server in serverList:
         flag = True
         for _item in _items:
             key = str(_item[0])
@@ -260,7 +254,6 @@ def _find(search, port="25565"):
             for _item in _items:
                 if _item[0] in server:
                     if str(_item[1]).lower() in str(server[_item[0]]).lower():
-                        global _info
                         serverList.append(server)
                         break
         except Exception:
@@ -332,9 +325,10 @@ def genEmbed(_serverList):
         return [embed, None, row]
 
 
-
+    global ServerInfo
     random.shuffle(_serverList)
     info = _serverList[0]
+    ServerInfo = info
     
     numServers = len(_serverList)
     online = True if check(info["host"], str(_port)) else False
@@ -546,7 +540,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
         except Exception:
             fncs.log(traceback.format_exc())
             await command_send(ctx, embeds=[interactions.Embed(title="Error", description="An error occured while searching. Please try again later and check the logs for more details.", color=0xFF0000)])
-            print(f"----\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n====\n====\n{_info}\n====\n----") 
+            print(f"----\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n====\n====\n{ServerInfo}\n====\n----") 
         
 
 
@@ -555,35 +549,41 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
 
 @bot.component("show_players")
 async def show_players(ctx: interactions.ComponentContext):  
-    await ctx.defer()
+    try:
+        await ctx.defer()
 
-    # get current message
+        # get current message
 
-    global ServerInfo
-    info = ServerInfo
+        global ServerInfo
+        info = ServerInfo
 
-    players = list(info["lastOnlinePlayersList"])
+        players = list(info["lastOnlinePlayersList"])
 
-    embed = interactions.Embed(
-        title="Players", 
-        description="{} players online".format(len(players)),
-    )
+        embed = interactions.Embed(
+            title="Players", 
+            description="{} players online".format(len(players)),
+        )
 
-    for player in players:
-        try:
-            if str(player).startswith("{"):
-                # player is dict type
-                player = json.loads(str(player).replace("'", '"'))
-                embed.add_field(name=player["name"], value="`{}`".format(player["uuid"]), inline=True)
-            else:
-                # player is str type
-                embed.add_field(name=player, value="`{}`".format(player), inline=True)
-        except Exception:
-            print(traceback.format_exc())
-            print(player)
-            break
+        for player in players:
+            try:
+                if str(player).startswith("{"):
+                    # player is dict type
+                    player = json.loads(str(player).replace("'", '"'))
+                    embed.add_field(name=player["name"], value="`{}`".format(player["uuid"]), inline=True)
+                else:
+                    # player is str type
+                    embed.add_field(name=player, value="`{}`".format(player), inline=True)
+            except Exception:
+                print(traceback.format_exc())
+                print(player)
+                break
 
-    await component_send(ctx, embeds=[embed], ephemeral=True)
+        fncs.dprint(embed, players)
+
+        await component_send(ctx, embeds=[embed], ephemeral=True)
+    except Exception:
+        print(traceback.format_exc())
+        await component_send(ctx, embed=[interactions.Embed(title="Error", description="An error occured while searching. Please try again later and check the logs for more details.", color=0xFF0000)], ephemeral=True)
 
     threading.Thread(target=remove_duplicates).start();fncs.dprint("Duplicates removed")
 
