@@ -6,11 +6,11 @@ import base64
 import re
 import threading
 import random
-from types import NoneType
 import requests
 import json
 
 import pymongo
+from bson.objectid import ObjectId
 import mcstatus
 import interactions
 from interactions.ext.files import command_edit, component_edit, command_send, component_send
@@ -86,7 +86,7 @@ def check(host, port="25565"):
                     if jsonResp:
                         players.append(
                             {
-                                "name": cFilter(jsonResp["name"]),
+                                "name": cFilter(jsonResp["name"]).lower(),
                                 "uuid": jsonResp["id"],
                             }
                         )
@@ -485,44 +485,56 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
     search = {}
     info = {}
     _port = port
+    flag = False
     # if parameters are given, add them to the search
 
-    if _id:
-        search["_id"] = _id
     if host:
         search["host"] = host.lower()
         check(host, str(port))
-    if player:
-        search["lastOnlinepsList"] = [player]
     if version:
         search["lastOnlineVersion"] = version.lower()
     if motd:
         search["lastOnlineDescription"] = motd.lower()
     if maxplayers != -1:
         search["lastOnlinePlayersMax"] = maxplayers
+    if _id:
+        search = {}
+        info = col.find_one({"_id": ObjectId(_id)})
+        flag = True
+    if player:
+        search = {}
+        flag = True
+        url = "https://api.mojang.com/users/profiles/minecraft/" + player.lower()
+        if requests.get(url).status_code == 204:
+            await command_send(ctx, embeds=[interactions.Embed(title="Error",description="Player not found in minecraft api")])
+            return
+        else:
+            info = col.find_one({"lastOnlinePlayersList": {"$elemMatch": {"uuid": requests.get(url).json()["id"]}}})
 
-    if search == {}:
+    if search == {} and not flag:
         await command_send(ctx, embeds=[interactions.Embed(title="Error",description="No search parameters given")])
     else:
         try:
             global _serverList
             global ServerInfo
             
-            _serverList = []
-            _info_ = _find(search, str(port))
+            if not flag:
+                _serverList = []
+                _info_ = _find(search, str(port))
 
-            _serverList = list(_info_[0]) # pyright: ignore [reportGeneralTypeIssues]
-            numServers = len(serverList) 
+                _serverList = list(_info_[0]) # pyright: ignore [reportGeneralTypeIssues]
+                numServers = len(serverList) 
+            else:
+                ServerInfo = info
+                _serverList = [info]
+                numServers = 1
 
             fncs.dprint(len(_serverList),search)
-
-
             
 
             await command_send(ctx, embeds=[interactions.Embed(title="Searching...",description="Sorting through "+str(numServers)+" servers...")])
 
             # setup the embed
-        
             embed = genEmbed(_serverList)
             _file = embed[1]
             comps = embed[2]
@@ -541,7 +553,6 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
             fncs.log(traceback.format_exc())
             await command_send(ctx, embeds=[interactions.Embed(title="Error", description="An error occured while searching. Please try again later and check the logs for more details.", color=0xFF0000)])
             print(f"----\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n====\n====\n{ServerInfo}\n====\n----") 
-        
 
 
     threading.Thread(target=remove_duplicates).start();fncs.dprint("Duplicates removed")
@@ -578,7 +589,7 @@ async def show_players(ctx: interactions.ComponentContext):
                 print(player)
                 break
 
-        fncs.dprint(embed, players)
+        fncs.dprint(embed, "\n---\n", players)
 
         await component_send(ctx, embeds=[embed], ephemeral=True)
     except Exception:
