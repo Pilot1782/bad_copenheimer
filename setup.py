@@ -3,8 +3,8 @@
 import os
 from funcs import funcs
 
-path = os.path.dirname(os.path.abspath(__file__))[0].upper() + os.path.dirname(os.path.abspath(__file__))[1:] + "\\" if os.name == "nt" else "/"
-os.system('cls' if os.name == 'nt' else 'clear')
+path = (os.path.dirname(os.path.abspath(__file__))[0].upper() + os.path.dirname(os.path.abspath(__file__))[1:] + "\\" if os.name == "nt" else "/").replace("\\", "\\\\")
+
 fncs = funcs(path) #setup funcs
 fncs.dprint(path)
 
@@ -29,7 +29,6 @@ def printfl(path):
 
 
 def fix_files():
-    os.system("clear")
 
     global inp
     my_file = os.path.exists(f"{path}setup_done.yay")
@@ -40,21 +39,30 @@ def fix_files():
         with open("setup_done.yay","w") as file:
             pass
 
+    my_file = os.path.exists(f"{path}privVars.py")
+    if my_file:
+        print("Variable file found, Exiting!")
+    else:
+        imports()
+        with open("privVars.py","w") as file:
+            file.write('MONGO_URL = "mongodb+srv://..."\nTOKEN = "..."\n')
+
     print("Updating file paths...")
 
-    replace_line(f"{path}.env",0,"SET_PATH="+path) if input("Do you want to use enviroment variables? (y/n): ").lower() == "y" else None
-    replace_line(f"{path}settings.json",7,r'    "home-dir": "{}",{}'.format(r'{}'.format(path),"\n"))
+    replace_line(f"{path}.env",0,"SET_PATH="+path) if input("Do you want to use enviroment variables (legacy)? (y/n): ").lower() == "y" else None
+    replace_line(f"{path}settings.json",7,f'  "home-dir": "{path}",\n')
 
 
 def verify():
-    print("Please verify the following information is correct\n")
+    print("Verifying files...\n\n==================================\n\n")
     print(printfl(path+".env"),end="\n\n==================================\n\n")
     print(printfl(path+"settings.json"))
+    print("\n\n==================================\n\n")
+    print("Please verify the following information is correct\n")
 
 
 if __name__ == "__main__":
     try:
-        os.system('cls' if os.name == 'nt' else 'clear')
         fix_files()
         verify()
 
