@@ -1,29 +1,9 @@
 .env
 setupdone.yay
-commit.py
-bc but in c/main.c
-bc but in c/main.cp310-win_amd64.pyd
-bc but in c/main.cpp
-bc but in c/main.pyx
-bc but in c/setup.py
-bc but in c/.vscode/launch.json
-bc but in c/build/lib.win-amd64-3.10/main.cp310-win_amd64.pyd
-bc but in c/build/temp.win-amd64-3.10/Release/main.cp310-win_amd64.exp
-bc but in c/build/temp.win-amd64-3.10/Release/main.cp310-win_amd64.lib
-bc but in c/build/temp.win-amd64-3.10/Release/main.obj
-bc remastered.py
 p.env
-package-lock.json
-package.json
-reThread.py
-lol2.py
-.gitpod.yml
 bad_cope.py
-Pipfile.lock
-Pipfile
 .replit
 compose-dev.yaml
-paused.conf
 index.html
 index.js
 privVars.py
@@ -32,4 +12,4 @@ __pycache__
 testing.py
 scanHandler.py
 server-icon.png
-py3.11.bat
+mongoHandler.pyw
