@@ -263,6 +263,7 @@ def _find(search, port="25565"):
 
 
     server = col.find_one(search) # legacy backup
+
     _info = verify(search, serverList)
 
     if len(_info) > 0:
@@ -350,7 +351,7 @@ def genEmbed(_serverList):
             interactions.EmbedField(name="Ping", value=str(info["lastOnlinePing"]), inline=True),
             interactions.EmbedField(name="Last Online", value=f"{(time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(info['lastOnline']))) if info['host'] != 'Server not found.' else '0/0/0 0:0:0'}", inline=False),
         ],
-        footer=interactions.EmbedFooter(text="Server ID: "+(str(col.find_one({"host":info["host"]})["_id"])[9:-1] if info["host"] != "Server not found." else "-1")+'\n Out of {} servers'.format(numServers)) # pyright: ignore [reportOptionalSubscript]
+        footer=interactions.EmbedFooter(text="Server ID: "+(str(col.find_one({"host":info["host"]})["_id"]) if info["host"] != "Server not found." else "-1")+'\n Out of {} servers'.format(numServers)) # pyright: ignore [reportOptionalSubscript]
     )
     
 
@@ -376,7 +377,11 @@ def genEmbed(_serverList):
         print(traceback.format_exc(),info)
         _file = None
 
-    players = check(info['host'])['lastOnlinePlayersList'] 
+    players = check(info['host'])
+    if players is not None:
+        players = players['lastOnlinePlayersList'] if 'lastOnlinePlayersList' in players else []
+    else:
+        players = []
 
     buttons = [
         interactions.Button(
@@ -501,6 +506,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
         search = {}
         info = col.find_one({"_id": ObjectId(_id)})
         flag = True
+        fncs.dprint("Finding id", _id)
     if player:
         search = {}
         flag = True
@@ -510,6 +516,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
             return
         else:
             info = col.find_one({"lastOnlinePlayersList": {"$elemMatch": {"uuid": requests.get(url).json()["id"]}}})
+        fncs.dprint("Finding player", player)
 
     if search == {} and not flag:
         await command_send(ctx, embeds=[interactions.Embed(title="Error",description="No search parameters given")])
@@ -523,7 +530,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
                 _info_ = _find(search, str(port))
 
                 _serverList = list(_info_[0]) # pyright: ignore [reportGeneralTypeIssues]
-                numServers = len(serverList) 
+                numServers = len(_serverList) 
             else:
                 ServerInfo = info
                 _serverList = [info]
@@ -569,10 +576,11 @@ async def show_players(ctx: interactions.ComponentContext):
         info = ServerInfo
 
         players = list(info["lastOnlinePlayersList"])
+        random.shuffle(players) # for servers with more than 25 logged players
 
         embed = interactions.Embed(
             title="Players", 
-            description="{} players online".format(len(players)),
+            description="{} players logged".format(len(players)),
         )
 
         for player in players:
