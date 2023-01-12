@@ -333,6 +333,7 @@ def genEmbed(_serverList):
     
     numServers = len(_serverList)
     online = True if check(info["host"], str(_port)) else False
+    cracked = requests.get(f"https://api.mcstatus.io/v2/status/java/{info['host']}").json()['eula_blocked']
 
     try:
         _serverList.pop(0)
@@ -349,11 +350,12 @@ def genEmbed(_serverList):
             interactions.EmbedField(name="Players", value=f"{info['lastOnlinePlayers']}/{info['lastOnlinePlayersMax']}", inline=True),
             interactions.EmbedField(name="Version", value=info["lastOnlineVersion"], inline=True),
             interactions.EmbedField(name="Ping", value=str(info["lastOnlinePing"]), inline=True),
-            interactions.EmbedField(name="Last Online", value=f"{(time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(info['lastOnline']))) if info['host'] != 'Server not found.' else '0/0/0 0:0:0'}", inline=False),
+            interactions.EmbedField(name="Cracked", value=f"{cracked}", inline=True),
+            interactions.EmbedField(name="Last Online", value=f"{(time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(info['lastOnline']))) if info['host'] != 'Server not found.' else '0/0/0 0:0:0'}", inline=True),
         ],
         footer=interactions.EmbedFooter(text="Server ID: "+(str(col.find_one({"host":info["host"]})["_id"]) if info["host"] != "Server not found." else "-1")+'\n Out of {} servers'.format(numServers)) # pyright: ignore [reportOptionalSubscript]
     )
-    
+
 
     try: # this adds the favicon in the most overcomplicated way possible
         if online: 
