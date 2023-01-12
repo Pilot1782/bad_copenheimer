@@ -361,7 +361,7 @@ def genEmbed(_serverList):
         if online: 
             stats = check(info["host"],str(_port)) 
 
-            fav = stats["favicon"] 
+            fav = stats["favicon"] if "favicon" in stats else None
             if fav is not None:
                 bits = fav.split(",")[1]
 
