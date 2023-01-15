@@ -51,7 +51,7 @@ This will get information about the requested server, including players online, 
 `/find`
 This will look through your database to find servers that match the provided paramaters. In the new build, there are two more buttons that can be used to either show the player names and uuids of players found on the server or to pick another random server from the list, after pressing it, wait for the message to update.
 
-![showcase](https://raw.githubusercontent.com/Pilot1782/bad_copenheimer/doc-resources/Screenshot_20221227_061621.png)
+![showcase](https://raw.githubusercontent.com/Pilot1782/bad_copenheimer/doc-resources/Screenshot_20230111_083824.png)
 
 `/stats`
 This will show you the stats of the databse.

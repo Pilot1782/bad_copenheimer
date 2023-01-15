@@ -10,6 +10,7 @@ import requests
 import json
 
 import pymongo
+from bson.objectid import ObjectId
 import mcstatus
 import interactions
 from interactions.ext.files import command_edit, component_edit, command_send, component_send
@@ -46,13 +47,7 @@ _port = "25565"
 
 fncs = funcs()
 
-buttons = [
-    interactions.Button(
-        label="Show Players",
-        custom_id="player_show",
-        style=interactions.ButtonStyle.PRIMARY,
-    )
-]
+
 # Funcs
 # ---------------------------------------------
 
@@ -91,7 +86,7 @@ def check(host, port="25565"):
                     if jsonResp:
                         players.append(
                             {
-                                "name": cFilter(jsonResp["name"]),
+                                "name": cFilter(jsonResp["name"]).lower(),
                                 "uuid": jsonResp["id"],
                             }
                         )
@@ -156,7 +151,7 @@ def remove_duplicates():
             col.delete_one({"_id": i["_id"]})
 
 
-def verify(search, info):
+def verify(search, serverList):
     """Verifies a search
 
     Args:
@@ -171,7 +166,7 @@ def verify(search, info):
             "lastOnlinePlayersMax": int,
             "favicon":"base64 encoded image"
         }
-        info [list], len > 0: {
+        serverList [list], len > 0: {
             "host":"ipv4 addr", # optional
             "lastOnline":"unicode time", # optional
             "lastOnlinePlayers": int, # optional
@@ -198,7 +193,7 @@ def verify(search, info):
     """
     out = []
     _items = list(search.items())
-    for server in info:
+    for server in serverList:
         flag = True
         for _item in _items:
             key = str(_item[0])
@@ -215,6 +210,27 @@ def verify(search, info):
     random.shuffle(out);return out
 
 def _find(search, port="25565"):
+    """Finds a server in the database
+
+    Args:
+        search [dict], len > 0: {
+            "host":"ipv4 addr",
+            "lastOnlineMaxPlayers": int,
+            "lastOnlineVersion":"Name Version",
+            "lastOnlineDescription":"Very Good Server",
+            "lastOnlinePlayersList": ["WIP", "WIP"],
+        }
+
+    Returns:
+        [dict]: {
+            "host":"ipv4 addr",
+            "lastOnline":"unicode time",
+            "lastOnlinePlayers": int,
+            "lastOnlineVersion":"Name Version",
+            "lastOnlineDescription":"Very Good Server",
+            "lastOnlinePing":"unicode time",
+        }
+    """
     # find the server given the parameters
     if search != {}:
         servers = list(col.find())
@@ -238,7 +254,6 @@ def _find(search, port="25565"):
             for _item in _items:
                 if _item[0] in server:
                     if str(_item[1]).lower() in str(server[_item[0]]).lower():
-                        global _info
                         serverList.append(server)
                         break
         except Exception:
@@ -248,6 +263,7 @@ def _find(search, port="25565"):
 
 
     server = col.find_one(search) # legacy backup
+
     _info = verify(search, serverList)
 
     if len(_info) > 0:
@@ -284,11 +300,40 @@ def genEmbed(_serverList):
             button: interaction button,
         ]
     """
+    if len(_serverList) == 0:
+        embed = interactions.Embed(
+            title="No servers found",
+            description="No servers found",
+            color=0xFF0000,
+        )
+        buttons = [
+            interactions.Button(
+                label='Show Players',
+                custom_id='show_players',
+                style=interactions.ButtonStyle.PRIMARY,
+                disabled=True,
+            ),
+            interactions.Button(
+                label='Next Server',
+                custom_id='rand_select',
+                style=interactions.ButtonStyle.PRIMARY,
+                disabled=True,
+            ),
+        ]
+
+        row = interactions.ActionRow(components=buttons) # pyright: ignore [reportGeneralTypeIssues]
+
+        return [embed, None, row]
+
+
+    global ServerInfo
     random.shuffle(_serverList)
     info = _serverList[0]
+    ServerInfo = info
     
     numServers = len(_serverList)
     online = True if check(info["host"], str(_port)) else False
+    cracked = requests.get(f"https://api.mcstatus.io/v2/status/java/{info['host']}").json()['eula_blocked']
 
     try:
         _serverList.pop(0)
@@ -298,24 +343,25 @@ def genEmbed(_serverList):
     # setup the embed
     embed = interactions.Embed(
         title=("🟢 " if online else "🔴 ")+info["host"],
-        description='`'+info["lastOnlineDescription"]+'`',
+        description='```'+info["lastOnlineDescription"]+'```',
         color=(0x00FF00 if online else 0xFF0000),
         type="rich",
         fields=[
             interactions.EmbedField(name="Players", value=f"{info['lastOnlinePlayers']}/{info['lastOnlinePlayersMax']}", inline=True),
             interactions.EmbedField(name="Version", value=info["lastOnlineVersion"], inline=True),
             interactions.EmbedField(name="Ping", value=str(info["lastOnlinePing"]), inline=True),
-            interactions.EmbedField(name="Last Online", value=f"{(time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(info['lastOnline']))) if info['host'] != 'Server not found.' else '0/0/0 0:0:0'}", inline=False),
+            interactions.EmbedField(name="Cracked", value=f"{cracked}", inline=True),
+            interactions.EmbedField(name="Last Online", value=f"{(time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(info['lastOnline']))) if info['host'] != 'Server not found.' else '0/0/0 0:0:0'}", inline=True),
         ],
-        footer=interactions.EmbedFooter(text="Server ID: "+(str(col.find_one({"host":info["host"]})["_id"])[9:-1] if info["host"] != "Server not found." else "-1")+'\n Out of {} servers'.format(numServers)) # pyright: ignore [reportOptionalSubscript]
+        footer=interactions.EmbedFooter(text="Server ID: "+(str(col.find_one({"host":info["host"]})["_id"]) if info["host"] != "Server not found." else "-1")+'\n Out of {} servers'.format(numServers)) # pyright: ignore [reportOptionalSubscript]
     )
-    
+
 
     try: # this adds the favicon in the most overcomplicated way possible
         if online: 
             stats = check(info["host"],str(_port)) 
 
-            fav = stats["favicon"] 
+            fav = stats["favicon"] if "favicon" in stats else None
             if fav is not None:
                 bits = fav.split(",")[1]
 
@@ -333,7 +379,11 @@ def genEmbed(_serverList):
         print(traceback.format_exc(),info)
         _file = None
 
-    players = check(info['host'])['lastOnlinePlayersList'] 
+    players = check(info['host'])
+    if players is not None:
+        players = players['lastOnlinePlayersList'] if 'lastOnlinePlayersList' in players else []
+    else:
+        players = []
 
     buttons = [
         interactions.Button(
@@ -421,7 +471,7 @@ def cFilter(text):
         ),
     ],
 )
-async def find(ctx: interactions.CommandContext, _id: str = NotImplemented, player: str = NotImplemented, version: str = NotImplemented, host: str = NotImplemented, port: int = 25565, motd: str = NotImplemented, maxplayers: int = NotImplemented):  
+async def find(ctx: interactions.CommandContext, _id: str = "", player: str = "", version: str = "", host: str = "", port: int = 25565, motd: str = "", maxplayers: int = -1):  
     """Find a server
 
     Args:
@@ -438,52 +488,68 @@ async def find(ctx: interactions.CommandContext, _id: str = NotImplemented, play
     # send as embed
     await ctx.defer()
 
+    global _port
     search = {}
-    info = ""
+    info = {}
+    _port = port
+    flag = False
     # if parameters are given, add them to the search
 
-    if _id:
-        search["_id"] = _id
     if host:
         search["host"] = host.lower()
         check(host, str(port))
-    if player:
-        search["lastOnlinepsList"] = [player]
     if version:
         search["lastOnlineVersion"] = version.lower()
     if motd:
         search["lastOnlineDescription"] = motd.lower()
-    if maxplayers:
+    if maxplayers != -1:
         search["lastOnlinePlayersMax"] = maxplayers
+    if _id:
+        search = {}
+        info = col.find_one({"_id": ObjectId(_id)})
+        flag = True
+        fncs.dprint("Finding id", _id)
+    if player:
+        search = {}
+        flag = True
+        url = "https://api.mojang.com/users/profiles/minecraft/" + player.lower()
+        if requests.get(url).status_code == 204:
+            await command_send(ctx, embeds=[interactions.Embed(title="Error",description="Player not found in minecraft api")])
+            return
+        else:
+            info = col.find_one({"lastOnlinePlayersList": {"$elemMatch": {"uuid": requests.get(url).json()["id"]}}})
+        fncs.dprint("Finding player", player)
 
-    if search == {}:
+    if search == {} and not flag:
         await command_send(ctx, embeds=[interactions.Embed(title="Error",description="No search parameters given")])
     else:
         try:
             global _serverList
             global ServerInfo
-            global _port
+            
+            if not flag:
+                _serverList = []
+                _info_ = _find(search, str(port))
 
-            info = {}
-            _serverList = []
-            _info_ = _find(search, str(port))
+                _serverList = list(_info_[0]) # pyright: ignore [reportGeneralTypeIssues]
+                numServers = len(_serverList) 
+            else:
+                ServerInfo = info
+                _serverList = [info]
+                numServers = 1
 
-            _serverList = list(_info_[0]) # pyright: ignore [reportGeneralTypeIssues]
-            info = _info_[1] # pyright: ignore [reportGeneralTypeIssues]
-            ServerInfo = info
-            numServers = len(serverList) 
-
-
-            _port = port
+            fncs.dprint(len(_serverList),search)
+            
 
             await command_send(ctx, embeds=[interactions.Embed(title="Searching...",description="Sorting through "+str(numServers)+" servers...")])
 
             # setup the embed
-        
-            embed = genEmbed(_info)
+            embed = genEmbed(_serverList)
             _file = embed[1]
             comps = embed[2]
             embed = embed[0]
+
+            fncs.dprint("Embed generated",embed, comps, _file)
 
             
             
@@ -491,49 +557,56 @@ async def find(ctx: interactions.CommandContext, _id: str = NotImplemented, play
             if _file: 
                 await command_edit(ctx, embeds=[embed], files=[_file], components=comps) 
             else:
-                await command_edit(ctx, embeds=[embed], components=comps) 
+                await command_edit(ctx, embeds=[embed], components=comps) # pyright: ignore [reportGeneralTypeIssues]
         except Exception:
             fncs.log(traceback.format_exc())
             await command_send(ctx, embeds=[interactions.Embed(title="Error", description="An error occured while searching. Please try again later and check the logs for more details.", color=0xFF0000)])
-            print(f"----\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n====\n====\n{_info}\n====\n----") 
-        
+            print(f"----\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n====\n====\n{ServerInfo}\n====\n----") 
 
 
-    threading.Thread(target=remove_duplicates).start()
-    print("Duplicates removed")
+    threading.Thread(target=remove_duplicates).start();fncs.dprint("Duplicates removed")
 
 
 @bot.component("show_players")
 async def show_players(ctx: interactions.ComponentContext):  
-    await ctx.defer()
+    try:
+        await ctx.defer()
 
-    # get current message
+        # get current message
 
-    global ServerInfo
-    info = ServerInfo
+        global ServerInfo
+        info = ServerInfo
 
-    players = list(info["lastOnlinePlayersList"])
+        players = list(info["lastOnlinePlayersList"])
+        random.shuffle(players) # for servers with more than 25 logged players
 
-    embed = interactions.Embed(
-        title="Players", 
-        description="{} players online".format(len(players)),
-    )
+        embed = interactions.Embed(
+            title="Players", 
+            description="{} players logged".format(len(players)),
+        )
 
-    for player in players:
-        try:
-            if str(player).startswith("{"):
-                # player is dict type
-                player = json.loads(str(player).replace("'", '"'))
-                embed.add_field(name=player["name"], value="`{}`".format(player["uuid"]), inline=True)
-            else:
-                # player is str type
-                embed.add_field(name=player, value="`{}`".format(player), inline=True)
-        except Exception:
-            print(traceback.format_exc())
-            print(player)
-            break
+        for player in players:
+            try:
+                if str(player).startswith("{"):
+                    # player is dict type
+                    player = json.loads(str(player).replace("'", '"'))
+                    embed.add_field(name=player["name"], value="`{}`".format(player["uuid"]), inline=True)
+                else:
+                    # player is str type
+                    embed.add_field(name=player, value="`{}`".format(player), inline=True)
+            except Exception:
+                print(traceback.format_exc())
+                print(player)
+                break
 
-    await component_send(ctx, embeds=[embed], ephemeral=True)
+        fncs.dprint(embed, "\n---\n", players)
+
+        await component_send(ctx, embeds=[embed], ephemeral=True)
+    except Exception:
+        print(traceback.format_exc())
+        await component_send(ctx, embed=[interactions.Embed(title="Error", description="An error occured while searching. Please try again later and check the logs for more details.", color=0xFF0000)], ephemeral=True)
+
+    threading.Thread(target=remove_duplicates).start();fncs.dprint("Duplicates removed")
 
 @bot.component("rand_select")
 async def rand_select(ctx: interactions.ComponentContext):
@@ -550,6 +623,8 @@ async def rand_select(ctx: interactions.ComponentContext):
         await component_edit(ctx, embeds=[embed], files=[_file], components=button)
     else:
         await component_edit(ctx, embeds=[embed], components=button)
+
+    threading.Thread(target=remove_duplicates).start();fncs.dprint("Duplicates removed")
 
 
 
@@ -594,8 +669,7 @@ async def stats(ctx: interactions.CommandContext):
         await ctx.send(embeds=[interactions.Embed(title="Error", description="Error getting stats, check the console and log for more info.")])  
 
 
-    threading.Thread(target=remove_duplicates).start()
-    print("Duplicates removed")
+    threading.Thread(target=remove_duplicates).start();fncs.dprint("Duplicates removed")
 
 
 
