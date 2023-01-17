@@ -8,6 +8,8 @@ import threading
 import random
 import requests
 import json
+import os
+import subprocess
 
 import pymongo
 from bson.objectid import ObjectId
@@ -68,6 +70,7 @@ def check(host, port="25565"):
                     "lastOnlinePing":"unicode time",
                     "lastOnlinePlayersList":["Notch","Jeb"],
                     "lastOnlinePlayersMax": int,
+                    "cracked": bool,
                     "lastOnlineFavicon":"base64 encoded image"
                 }
     """
@@ -101,6 +104,7 @@ def check(host, port="25565"):
             "lastOnlinePlayersList": players,
             "lastOnlinePlayersMax": server.status().players.max,
             "lastOnlineVersionProtocol": cFilter(str(server.status().version.protocol)),
+            "cracked": crack(host, int(port)),
             "favicon": server.status().favicon,
         }
 
@@ -333,7 +337,6 @@ def genEmbed(_serverList):
     
     numServers = len(_serverList)
     online = True if check(info["host"], str(_port)) else False
-    cracked = requests.get(f"https://api.mcstatus.io/v2/status/java/{info['host']}").json()['eula_blocked']
 
     try:
         _serverList.pop(0)
@@ -350,7 +353,7 @@ def genEmbed(_serverList):
             interactions.EmbedField(name="Players", value=f"{info['lastOnlinePlayers']}/{info['lastOnlinePlayersMax']}", inline=True),
             interactions.EmbedField(name="Version", value=info["lastOnlineVersion"], inline=True),
             interactions.EmbedField(name="Ping", value=str(info["lastOnlinePing"]), inline=True),
-            interactions.EmbedField(name="Cracked", value=f"{cracked}", inline=True),
+            interactions.EmbedField(name="Cracked", value=f"{info['cracked']}", inline=True),
             interactions.EmbedField(name="Last Online", value=f"{(time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(info['lastOnline']))) if info['host'] != 'Server not found.' else '0/0/0 0:0:0'}", inline=True),
         ],
         footer=interactions.EmbedFooter(text="Server ID: "+(str(col.find_one({"host":info["host"]})["_id"]) if info["host"] != "Server not found." else "-1")+'\n Out of {} servers'.format(numServers)) # pyright: ignore [reportOptionalSubscript]
@@ -419,6 +422,19 @@ def cFilter(text):
     return text
     
 
+def crack(host, port=25565, name="pilot1782"):
+    file = os.path.join(os.path.dirname(__file__), "chat.py")
+
+    process = subprocess.Popen(["python", file, host, str(port), name], stdout=subprocess.PIPE)
+    for line in iter(process.stdout.readline, b""): # pyright: ignore [reportOptionalMemberAccess]
+            if line:
+                line = line.decode("utf-8").lower()
+                if ("joined" in line) or ("success" in line):
+                    process.kill()
+                    return True
+    return False
+
+
 # Commands
 # ---------------------------------------------
 
@@ -484,6 +500,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
     """
 
     print("find", _id, host, port, player, version, motd, maxplayers)
+    fncs.log("find", _id, host, port, player, version, motd, maxplayers)
     
     # send as embed
     await ctx.defer()
