@@ -6,6 +6,7 @@ import random
 import multiprocessing
 import multiprocessing.pool
 import asyncio
+import funcs
 
 try:
     from privVars import *
@@ -31,24 +32,12 @@ client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi(
 db = client["mc"]
 col = db["servers"]
 
+fncs = funcs.funcs(collection=col)
+
 # Funcs
 # ---------------------------------------------
-
 def check(host):
-    try:
-        import mcstatus # type: ignore
-        import re
-
-        print("\r", end="")
-        server = mcstatus.JavaServer.lookup(host)
-        status = server.status()
-        description = status.description
-        # remove color codes and whitespace
-        description = description = re.sub(r"§\S*[|]*\s*", "", description)
-
-        return host, status, description
-    except Exception:
-        return None
+    return fncs.check(host)
 
 def scan(ip_list):
     try:
@@ -70,16 +59,6 @@ def scan(ip_list):
         Eprint(e)
         return []
 
-def dprint(text, end="\r"):
-    """Debugging print
-
-    Args:
-        text (string): text to output
-        end (str, optional): end of print statement. Defaults to "\r".
-    """
-    if DEBUG:
-        print(text, end=end)
-
 def Eprint(text):
     """Error printer
 
@@ -87,7 +66,7 @@ def Eprint(text):
         text (String): Error text
     """
     disLog("Error: "+"".join(str(i) for i in text))
-    dprint("\n"+"".join(str(i) for i in text)+"\n")
+    fncs.dprint("\n"+"".join(str(i) for i in text)+"\n")
 
 
 def disLog(text, end="\r"):
@@ -101,47 +80,12 @@ def disLog(text, end="\r"):
         Eprint(text)
         pass
 
-def add(host):
-    if not col.find_one({"host": host}):
-        try:
-            import re
-
-            server = mcstatus.JavaServer.lookup(host)
-
-            description = server.status().description
-            description = re.sub(r"§\S*[|]*\s*", "", description)
-
-            if server.status().players.sample is not None:
-                players = [player.name for player in server.status().players.sample] # type: ignore
-            else:
-                players = []
-
-            data = {
-                "host": host,
-                "lastOnline": time.time(),
-                "lastOnlinePlayers": server.status().players.online,
-                "lastOnlineVersion": str(server.status().version.name),
-                "lastOnlineDescription": str(description),
-                "lastOnlinePing": int(server.status().latency * 10),
-                "lastOnlinePlayersList": players,
-                "lastOnlinePlayersMax": server.status().players.max,
-                "lastOnlineVersionProtocol": str(server.status().version.protocol),
-            }
-
-            col.insert_one(data)
-            print(f"\nadded {host}\n")
-            disLog(f"added {host}")
-        except Exception as e:
-            Eprint(("\r"+e+" | "+host)) # type: ignore
-
 async def threader(ip_range):
     try:
         ips = scan(ip_range)
 
         for ip in ips: # type: ignore
-            res = check(ip)
-            if res is not None:
-                add(res[0])
+            check(ip)
     except Exception as e:
         Eprint(e)
 
