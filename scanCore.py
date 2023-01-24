@@ -65,6 +65,7 @@ def Eprint(text):
     Args:
         text (String): Error text
     """
+    text = str(text)
     disLog("Error: "+"".join(str(i) for i in text))
     fncs.dprint("\n"+"".join(str(i) for i in text)+"\n")
 
