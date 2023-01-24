@@ -1,4 +1,5 @@
 # pyright: basic
+import multiprocessing
 import sys
 import time
 import traceback
@@ -425,8 +426,9 @@ def crack(host, port="25565", username="pilot1782", timeout=30):
     def start(args):
         chat.main(args)
     
+    
     args = [host, '-p', port, '--offline-name', username]
-    thread = threading.Thread(target=start, args=(args,))
+    thread = multiprocessing.Process(target=start, args=(args,))
     thread.start()
 
     timeStart = time.time()
@@ -435,8 +437,10 @@ def crack(host, port="25565", username="pilot1782", timeout=30):
             thread.join()
             return True
         if time.time() - timeStart > timeout:
+            thread.kill()
             thread.join()
             return False
+        time.sleep(1)
 
 
 # Commands

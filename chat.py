@@ -5,6 +5,7 @@ Supports Minecraft 1.16.3+.
 """
 
 # from __future__ import print_function
+import builtins
 from twisted.internet import reactor, defer
 from quarry.types.nbt import NBTFile, alt_repr
 from quarry.net.client import ClientFactory, ClientProtocol
@@ -54,8 +55,12 @@ def main(argv):
     parser.add_argument("-o", "--output-path")
     args = parser.parse_args(argv)
 
-    run(args)
-    reactor.run() # type: ignore
+    try:
+        run(args)
+        reactor.run() # type: ignore
+    except builtins.ValueError:
+        flag = False
+        exit(1)
 
 
 if __name__ == "__main__":
