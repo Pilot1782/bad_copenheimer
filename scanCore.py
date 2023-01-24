@@ -1,5 +1,5 @@
-import pymongo # type: ignore
-import mcstatus # type: ignore
+import pymongo
+import traceback
 import time
 import threading
 import random
@@ -55,8 +55,8 @@ def scan(ip_list):
         print(scanner.scan_result)
 
         return list(res["scan"].keys())
-    except Exception as e:
-        Eprint(e)
+    except Exception:
+        Eprint(traceback.format_exc())
         return []
 
 def Eprint(text):
@@ -78,7 +78,7 @@ def disLog(text, end="\r"):
         data = {"content": text + end}
         requests.post(url, data=data)
     except Exception:
-        Eprint(text)
+        Eprint(text+'\n'+traceback.format_exc())
         pass
 
 async def threader(ip_range):
@@ -87,8 +87,8 @@ async def threader(ip_range):
 
         for ip in ips: # type: ignore
             check(ip)
-    except Exception as e:
-        Eprint(e)
+    except Exception:
+        Eprint(traceback.format_exc())
 
 def crank(ip_range):
     asyncio.run(threader(ip_range))
