@@ -6,6 +6,7 @@ Supports Minecraft 1.16.3+.
 
 # from __future__ import print_function
 import builtins
+import twisted
 from twisted.internet import reactor, defer
 from quarry.types.nbt import NBTFile, alt_repr
 from quarry.net.client import ClientFactory, ClientProtocol
@@ -27,8 +28,9 @@ class DataPackDumperProtocol(ClientProtocol):
             # print(alt_repr(data_pack))
             global flag
             flag = True
+            quit()
 
-        reactor.stop() # type: ignore
+        quit()
 
 
 class DataPackDumperFactory(ClientFactory):
@@ -55,13 +57,20 @@ def main(argv):
     parser.add_argument("-o", "--output-path")
     args = parser.parse_args(argv)
 
-    try:
-        run(args)
-        reactor.run() # type: ignore
-    except builtins.ValueError:
-        flag = False
-        exit(1)
 
+    run(args)
+    # set a timer to quit the reactor if it doesn't quit on its own
+    reactor.callLater(10, quit) # type: ignore
+    reactor.run() # type: ignore
+
+
+def quit():
+    try:
+        reactor.stop() # type: ignore
+    except twisted.internet.error.ReactorNotRunning: # pyright: ignore[reportGeneralTypeIssues]
+        pass
+    except Exception:
+        pass
 
 if __name__ == "__main__":
     import sys

@@ -161,7 +161,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
             
             if not flag:
                 _serverList = []
-                _info_ = fncs._find(search, str(port), serverList=serverList)
+                _info_ = fncs._find(search, port=str(port), serverList=serverList)
 
                 _serverList = list(_info_[0]) # pyright: ignore [reportGeneralTypeIssues]
                 numServers = len(_serverList) 

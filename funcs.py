@@ -1,5 +1,5 @@
 import base64
-import multiprocessing
+import twisted
 import random
 import re
 import subprocess
@@ -588,7 +588,7 @@ class funcs:
 
         random.shuffle(out);return out
 
-    def _find(self, search, col, serverList, port="25565"):
+    def _find(self, search, serverList, port="25565"):
         """Finds a server in the database
 
         Args:
@@ -612,7 +612,7 @@ class funcs:
         """
         # find the server given the parameters
         if search != {}:
-            servers = list(col.find())
+            servers = list(self.col.find())
         else:
             return {
                 "host": "Server not found",
@@ -641,7 +641,7 @@ class funcs:
                 break
 
 
-        server = col.find_one(search) # legacy backup
+        server = self.col.find_one(search) # legacy backup
 
         _info = self.verify(search, serverList)
 
@@ -797,23 +797,17 @@ class funcs:
         return text
         
 
-    def crack(self, host, port="25565", username="pilot1782", timeout=30):
-        def start(args):
-            chat.main(args)
-        
-        
+    def crack(self, host, port="25565", username="pilot1782"):
         args = [host, '-p', port, '--offline-name', username]
-        thread = multiprocessing.Process(target=start, args=(args,))
-        thread.start()
-
         timeStart = time.time()
+        try:
+            chat.main(args)
+        except twisted.internet.error.ReactorNotRestartable: # pyright: ignore [reportGeneralTypeIssues]
+            pass
+
+        
         while True:
             if chat.flag:
-                thread.join()
                 return True
-            if time.time() - timeStart > timeout:
-                thread.kill()
-                thread.join()
+            elif time.time() - timeStart > 10:
                 return False
-            time.sleep(1)
-
