@@ -8,8 +8,7 @@ import threading
 import random
 import requests
 import json
-import os
-import subprocess
+import chat
 
 import pymongo
 from bson.objectid import ObjectId
@@ -104,7 +103,7 @@ def check(host, port="25565"):
             "lastOnlinePlayersList": players,
             "lastOnlinePlayersMax": server.status().players.max,
             "lastOnlineVersionProtocol": cFilter(str(server.status().version.protocol)),
-            "cracked": crack(host, int(port)),
+            "cracked": crack(host, port),
             "favicon": server.status().favicon,
         }
 
@@ -422,17 +421,22 @@ def cFilter(text):
     return text
     
 
-def crack(host, port=25565, name="pilot1782"):
-    file = os.path.join(os.path.dirname(__file__), "chat.py")
+def crack(host, port="25565", username="pilot1782", timeout=30):
+    def start(args):
+        chat.main(args)
+    
+    args = [host, '-p', port, '--offline-name', username]
+    thread = threading.Thread(target=start, args=(args,))
+    thread.start()
 
-    process = subprocess.Popen(["python", file, host, str(port), name], stdout=subprocess.PIPE)
-    for line in iter(process.stdout.readline, b""): # pyright: ignore [reportOptionalMemberAccess]
-            if line:
-                line = line.decode("utf-8").lower()
-                if ("joined" in line) or ("success" in line):
-                    process.kill()
-                    return True
-    return False
+    timeStart = time.time()
+    while True:
+        if chat.flag:
+            thread.join()
+            return True
+        if time.time() - timeStart > timeout:
+            thread.join()
+            return False
 
 
 # Commands
