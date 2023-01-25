@@ -7,7 +7,7 @@ import multiprocessing
 import multiprocessing.pool
 import asyncio
 import funcs
-
+useWebHook = None
 try:
     from privVars import *
 except ImportError:
@@ -17,7 +17,9 @@ except ImportError:
 # Setup
 # ---------------------------------------------
 
-useWebHook = False
+if useWebHook is None:
+    useWebHook = False
+    # whether to use discord webhooks or not when a server is found
 
 pingsPerSec = 2400
 maxActive = 5
