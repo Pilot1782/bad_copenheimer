@@ -251,6 +251,8 @@ async def rand_select(ctx: interactions.ComponentContext):
     button = embed[2]
     embed = embed[0]
 
+    fncs.dprint("Embed generated",embed, button, _file)
+
     if _file:
         await component_edit(ctx, embeds=[embed], files=[_file], components=button)
     else:

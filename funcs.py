@@ -1,5 +1,5 @@
 import base64
-import twisted
+import twisted, quarry
 import random
 import re
 import subprocess
@@ -806,6 +806,10 @@ class funcs:
             chat.main(args)
         except twisted.internet.error.ReactorNotRestartable: # pyright: ignore [reportGeneralTypeIssues]
             pass
+        except quarry.net.protocol.ProtocolError:
+            return False
+        except Exception:
+            return False
 
         
         while True:
