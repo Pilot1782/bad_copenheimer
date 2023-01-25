@@ -429,7 +429,7 @@ class funcs:
             )
 
 
-    def check(self,host, port="25565"):
+    def check(self,host, port="25565", webhook=None):
         """Checks out a host and adds it to the database if it's not there
 
         Args:
@@ -486,6 +486,8 @@ class funcs:
             if not self.col.find_one({"host": host}):
                 print("Server not in database, adding...")
                 self.col.insert_one(data)
+                if webhook:
+                    requests.post(webhook, json={"content": f"New server added to database: {host}"})
 
             for i in list(self.col.find_one({"host": host})["lastOnlinePlayersList"]): # pyright: ignore [reportOptionalSubscript]
                 try:

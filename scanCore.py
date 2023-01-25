@@ -17,6 +17,8 @@ except ImportError:
 # Setup
 # ---------------------------------------------
 
+useWebHook = False
+
 pingsPerSec = 2400
 maxActive = 5
 DEBUG = True
@@ -37,7 +39,10 @@ fncs = funcs.funcs(collection=col)
 # Funcs
 # ---------------------------------------------
 def check(host):
-    return fncs.check(host)
+    if useWebHook:
+        return fncs.check(host, webhook=DSICORD_WEBHOOK)
+    else:
+        return fncs.check(host)
 
 def scan(ip_list):
     try:
