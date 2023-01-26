@@ -795,7 +795,7 @@ class funcs:
             [str]: The string without color bits
         """
         # remove all color bits
-        text = re.sub(r'§[0-9a-fk-or]', '', text)
+        text = re.sub(r'§[0-9a-fk-or]', '', text).replace('|','')
         return text
         
 
