@@ -329,7 +329,7 @@ async def stats(ctx: interactions.CommandContext):
 
         await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])  
     except Exception:
-        print(f"====\nError: {e}\n====")
+        print(f"====\nError: {traceback.format_exc()}\n====")
         fncs.log(traceback.format_exc())
 
         await ctx.send(embeds=[interactions.Embed(title="Error", description="Error getting stats, check the console and log for more info.")])  
