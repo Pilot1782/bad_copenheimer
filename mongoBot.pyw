@@ -172,6 +172,8 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
                 _info_ = fncs._find(search, port=str(port), serverList=serverList)
 
                 _serverList = list(_info_[0]) # pyright: ignore [reportGeneralTypeIssues]
+                # remove duplicates from _serverList
+                _serverList = [i for n, i in enumerate(_serverList) if i not in _serverList[n + 1:]]
                 numServers = len(_serverList) 
             else:
                 ServerInfo = info
