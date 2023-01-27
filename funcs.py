@@ -454,20 +454,23 @@ class funcs:
             server = mcstatus.JavaServer.lookup(host+":"+str(port))
 
             players = []
-            if server.status().players.sample is not None:
-                for player in server.status().players.sample: # pyright: ignore [reportOptionalIterable]
-                    url = f"https://api.mojang.com/users/profiles/minecraft/{player.name}"
-                    jsonResp = requests.get(url)
-                    if len(jsonResp.text) > 2:
-                        jsonResp = jsonResp.json()
+            try:
+                if server.status().players.sample is not None:
+                    for player in server.status().players.sample: # pyright: ignore [reportOptionalIterable]
+                        url = f"https://api.mojang.com/users/profiles/minecraft/{player.name}"
+                        jsonResp = requests.get(url)
+                        if len(jsonResp.text) > 2:
+                            jsonResp = jsonResp.json()
 
-                        if jsonResp:
-                            players.append(
-                                {
-                                    "name": self.cFilter(jsonResp["name"]).lower(), # pyright: ignore [reportGeneralTypeIssues]
-                                    "uuid": jsonResp["id"],
-                                }
-                            )
+                            if jsonResp:
+                                players.append(
+                                    {
+                                        "name": self.cFilter(jsonResp["name"]).lower(), # pyright: ignore [reportGeneralTypeIssues]
+                                        "uuid": jsonResp["id"],
+                                    }
+                                )
+            except Exception:
+                self.log("Error getting player list", traceback.format_exc())
 
             data = {
                 "host": host,

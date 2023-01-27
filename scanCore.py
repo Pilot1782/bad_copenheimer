@@ -59,7 +59,6 @@ def scan(ip_list):
             sudo=True,
         )
         res = json.loads(scanner.scan_result) # type: ignore
-        print(scanner.scan_result)
 
         return list(res["scan"].keys())
     except Exception:
@@ -111,7 +110,7 @@ for i in range(255):
 random.shuffle(ip_lists)
 
 #ip_lists = ip_lists[:500]  # remove for final version
-print(ip_lists[0:1])
+fncs.dprint(ip_lists[0:5])
 time.sleep(0.5)
 
 normal = threading.active_count()
