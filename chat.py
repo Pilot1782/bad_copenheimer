@@ -12,6 +12,7 @@ from quarry.types.nbt import NBTFile, alt_repr
 from quarry.net.client import ClientFactory, ClientProtocol
 from quarry.net.auth import ProfileCLI
 import quarry
+import traceback
 
 flag = False
 
@@ -43,6 +44,8 @@ class DataPackDumperFactory(ClientFactory):
     except quarry.net.client.ClientProtocol:
         pass
     except Exception:
+        traceback.print_exc()
+        print("line 46")
         pass
 
 
@@ -56,7 +59,7 @@ def run(args):
             quit()
             return
 
-        print("Logged in as %s" % profile.name)
+
         # Create factory
         factory = DataPackDumperFactory(profile)
         factory.output_path = args.output_path
@@ -64,6 +67,8 @@ def run(args):
         # Connect!
         factory.connect(args.host, args.port)
     except Exception:
+        traceback.print_exc()
+        print("line 68")
         quit()
 
 
@@ -79,7 +84,11 @@ def main(argv):
         run(args)
         reactor.callLater(10, quit) # type: ignore
         reactor.run() # type: ignore
+    except twisted.internet.error.ReactorNotRestartable: # pyright: ignore[reportGeneralTypeIssues]
+        pass
     except Exception:
+        traceback.print_exc()
+        print("line 86")
         quit()
 
 
@@ -89,7 +98,8 @@ def quit():
     except twisted.internet.error.ReactorNotRunning: # pyright: ignore[reportGeneralTypeIssues]
         pass
     except Exception:
-        pass
+        traceback.print_exc()
+        print("line 97")
 
 if __name__ == "__main__":
     import sys

@@ -478,6 +478,8 @@ class funcs:
                                         "uuid": jsonResp["id"],
                                     }
                                 )
+                        else:
+                            players.append({"name": self.cFilter(player.name).lower(), "uuid": "1b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b"})
             except Exception:
                 self.log("Error getting player list", traceback.format_exc())
             
@@ -796,7 +798,7 @@ class funcs:
 
         row = interactions.ActionRow(components=buttons) # pyright: ignore [reportGeneralTypeIssues]
 
-        return embed, _file, row
+        return embed, _file, row, ServerInfo
 
 
     def cFilter(self, text):

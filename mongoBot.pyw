@@ -7,6 +7,7 @@ import base64
 import re
 import threading
 import random
+from xmlrpc.client import Server
 import requests
 import json
 import chat
@@ -152,12 +153,23 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
     if player:
         search = {}
         flag = True
-        url = "https://api.mojang.com/users/profiles/minecraft/" + player.lower()
-        if requests.get(url).status_code == 204:
-            await command_send(ctx, embeds=[interactions.Embed(title="Error",description="Player not found in minecraft api")])
-            return
+        url = "https://api.mojang.com/users/profiles/minecraft/"
+        
+        # check if player is valid or if the input is a uuid
+        resp = requests.get(url+player)
+        if 'error' in resp.json():
+            resp = requests.get("https://sessionserver.mojang.com/session/minecraft/profile/"+player.replace("-","")); jresp = resp.json()
+            if 'error' in jresp:
+                fncs.dprint("Error:\n"+jresp['errorMessage'])
+                await command_send(ctx, embeds=[interactions.Embed(title="Error",description="Player not found in minecraft api")])
+                return
+            else:
+                player = jresp['id']
         else:
-            info = col.find_one({"lastOnlinePlayersList": {"$elemMatch": {"uuid": requests.get(url).json()["id"]}}})
+            player = resp.json()['id']
+
+
+        info = col.find_one({"lastOnlinePlayersList": {"$elemMatch": {"uuid": player}}})
         fncs.dprint("Finding player", player)
 
     if search == {} and not flag:
@@ -176,6 +188,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
                 _serverList = [i for n, i in enumerate(_serverList) if i not in _serverList[n + 1:]]
                 numServers = len(_serverList) 
             else:
+                fncs.dprint("Flag is up, setting server info to", info)
                 ServerInfo = info
                 _serverList = [info]
                 numServers = 1
@@ -189,7 +202,9 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
             embed = fncs.genEmbed(_serverList, _port)
             _file = embed[1]
             comps = embed[2]
+            ServerInfo = embed[3] if ServerInfo == {} else ServerInfo
             embed = embed[0]
+            
 
             fncs.dprint("Embed generated",embed, comps, _file)
 
@@ -246,7 +261,7 @@ async def show_players(ctx: interactions.ComponentContext):
         await component_send(ctx, embeds=[embed], ephemeral=True)
     except Exception:
         print(traceback.format_exc())
-        await component_send(ctx, embed=[interactions.Embed(title="Error", description="An error occured while searching. Please try again later and check the logs for more details.", color=0xFF0000)], ephemeral=True)
+        await component_send(ctx, embeds=[interactions.Embed(title="Error", description="An error occured while searching. Please try again later and check the logs for more details.", color=0xFF0000)], ephemeral=True)
 
     threading.Thread(target=fncs.remove_duplicates).start();fncs.dprint("Duplicates removed")
 
