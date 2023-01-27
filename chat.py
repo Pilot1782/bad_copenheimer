@@ -22,8 +22,11 @@ class DataPackDumperProtocol(ClientProtocol):
         buff.discard()  # Ignore the test of the packet
 
         if self.factory.output_path:
-            data_pack = NBTFile(data_pack)
-            data_pack.save(self.factory.output_path)
+            try:
+                data_pack = NBTFile(data_pack)
+                data_pack.save(self.factory.output_path)
+            except builtins.KeyError:
+                pass
         else:
             # print(alt_repr(data_pack))
             global flag
@@ -59,9 +62,11 @@ def main(argv):
 
 
     run(args)
-    # set a timer to quit the reactor if it doesn't quit on its own
-    reactor.callLater(10, quit) # type: ignore
-    reactor.run() # type: ignore
+    try:
+        reactor.callLater(10, quit) # type: ignore
+        reactor.run() # type: ignore
+    except builtins.ValueError:
+        quit()
 
 
 def quit():
