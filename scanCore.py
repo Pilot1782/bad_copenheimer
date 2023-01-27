@@ -127,7 +127,7 @@ async def makeThreads():
             await asyncio.sleep(0.1)
         t.start()
 
-        print(f"\rstarted proc for {ip_list} | {threading.active_count()-normal}/{maxActive} active threads, #{ip_lists.index(ip_list)+1} {' '*10}", end="")
+        print(f"started proc for {ip_list} | {threading.active_count()-normal}/{maxActive} active threads, #{ip_lists.index(ip_list)+1} {' '*10}")
 
 
 asyncio.run(makeThreads())
