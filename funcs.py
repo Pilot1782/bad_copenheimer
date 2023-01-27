@@ -1,4 +1,5 @@
 import base64
+import builtins
 import twisted, quarry
 import random
 import re
@@ -452,11 +453,12 @@ class funcs:
 
         try:
             server = mcstatus.JavaServer.lookup(host+":"+str(port))
+            status = server.status()
 
             players = []
             try:
-                if server.status().players.sample is not None:
-                    for player in server.status().players.sample: # pyright: ignore [reportOptionalIterable]
+                if status.players.sample is not None:
+                    for player in status.players.sample: # pyright: ignore [reportOptionalIterable]
                         url = f"https://api.mojang.com/users/profiles/minecraft/{player.name}"
                         jsonResp = requests.get(url)
                         if len(jsonResp.text) > 2:
@@ -472,18 +474,26 @@ class funcs:
             except Exception:
                 self.log("Error getting player list", traceback.format_exc())
 
+            try:
+                players = status.players.online
+            except BrokenPipeError:
+                players = 0
+            except Exception:
+                self.log("Error getting player count", traceback.format_exc())
+                players = 0
+
             data = {
                 "host": host,
                 "lastOnline": time.time(),
-                "lastOnlinePlayers": server.status().players.online,
-                "lastOnlineVersion": self.cFilter(str(re.sub(r"§\S*[|]*\s*", "", server.status().version.name))),
-                "lastOnlineDescription": self.cFilter(str(server.status().description)),
-                "lastOnlinePing": int(server.status().latency * 10),
+                "lastOnlinePlayers": status.players.online,
+                "lastOnlineVersion": self.cFilter(str(re.sub(r"§\S*[|]*\s*", "", status.version.name))),
+                "lastOnlineDescription": self.cFilter(str(status.description)),
+                "lastOnlinePing": int(status.latency * 10),
                 "lastOnlinePlayersList": players,
-                "lastOnlinePlayersMax": server.status().players.max,
-                "lastOnlineVersionProtocol": self.cFilter(str(server.status().version.protocol)),
+                "lastOnlinePlayersMax": status.players.max,
+                "lastOnlineVersionProtocol": self.cFilter(str(status.version.protocol)),
                 "cracked": self.crack(host, port),
-                "favicon": server.status().favicon,
+                "favicon": status.favicon,
             }
 
             if not self.col.find_one({"host": host}):
@@ -810,6 +820,8 @@ class funcs:
         except twisted.internet.error.ReactorNotRestartable: # pyright: ignore [reportGeneralTypeIssues]
             pass
         except quarry.net.protocol.ProtocolError:
+            return False
+        except builtins.ValueError:
             return False
         except Exception:
             return False

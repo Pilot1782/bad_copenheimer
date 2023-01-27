@@ -110,7 +110,6 @@ for i in range(255):
 random.shuffle(ip_lists)
 
 #ip_lists = ip_lists[:500]  # remove for final version
-fncs.dprint(ip_lists[0:5])
 time.sleep(0.5)
 
 normal = threading.active_count()
