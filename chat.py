@@ -48,20 +48,23 @@ class DataPackDumperFactory(ClientFactory):
 
 @defer.inlineCallbacks # type: ignore
 def run(args):
-    # Log in
-    profile = yield ProfileCLI.make_profile(args)
-
-    # Create factory
-    factory = DataPackDumperFactory(profile)
-    factory.output_path = args.output_path
-
-    # Connect!
     try:
+        try:
+            # Log in
+            profile = yield ProfileCLI.make_profile(args)
+        except builtins.TypeError:
+            quit()
+            return
+
+        print("Logged in as %s" % profile.name)
+        # Create factory
+        factory = DataPackDumperFactory(profile)
+        factory.output_path = args.output_path
+
+        # Connect!
         factory.connect(args.host, args.port)
-    except quarry.net.client.ClientProtocol:
-        pass
     except Exception:
-        pass
+        quit()
 
 
 def main(argv):
@@ -72,16 +75,12 @@ def main(argv):
     args = parser.parse_args(argv)
 
 
-    run(args)
     try:
+        run(args)
         reactor.callLater(10, quit) # type: ignore
         reactor.run() # type: ignore
-    except builtins.ValueError:
-        quit()
-    except twisted.internet.error.ReactorNotRunning: # pyright: ignore[reportGeneralTypeIssues]
-        pass
     except Exception:
-        pass
+        quit()
 
 
 def quit():

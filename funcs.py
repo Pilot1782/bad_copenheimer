@@ -843,6 +843,7 @@ class funcs:
 
         resp = requests.get(url)
         if resp.status_code == 200:
-            return not resp.json()["eula_blocked"]
+            print("Fetching from API")
+            return resp.json()["eula_blocked"]
         else:
             return False
