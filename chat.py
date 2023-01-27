@@ -11,6 +11,7 @@ from twisted.internet import reactor, defer
 from quarry.types.nbt import NBTFile, alt_repr
 from quarry.net.client import ClientFactory, ClientProtocol
 from quarry.net.auth import ProfileCLI
+import quarry
 
 flag = False
 
@@ -37,7 +38,10 @@ class DataPackDumperProtocol(ClientProtocol):
 
 
 class DataPackDumperFactory(ClientFactory):
-    protocol = DataPackDumperProtocol
+    try:
+        protocol = DataPackDumperProtocol
+    except quarry.net.client.ClientProtocol:
+        pass
 
 
 @defer.inlineCallbacks # type: ignore
