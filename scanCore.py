@@ -18,7 +18,7 @@ except ImportError:
 # ---------------------------------------------
 
 if useWebHook is None:
-    useWebHook = False
+    useWebHook = True
     # whether to use discord webhooks or not when a server is found
 
 pingsPerSec = 2400
@@ -127,7 +127,7 @@ async def makeThreads():
             await asyncio.sleep(0.1)
         t.start()
 
-        print(f"\rstarted proc for {ip_list} | {threading.active_count()-normal}/{maxActive} active threads, #{ip_lists.index(ip_list)+1} {' '*10}", end="\r")
+        print(f"\rstarted proc for {ip_list} | {threading.active_count()-normal}/{maxActive} active threads, #{ip_lists.index(ip_list)+1} {' '*10}", end="")
 
 
 asyncio.run(makeThreads())

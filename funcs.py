@@ -500,7 +500,7 @@ class funcs:
             }
 
             if not self.col.find_one({"host": host}):
-                print("Server not in database, adding...")
+                print("{} not in database, adding...".format(host))
                 self.col.insert_one(data)
                 if webhook:
                     requests.post(webhook, json={"content": f"New server added to database: {host}"})
