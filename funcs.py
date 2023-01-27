@@ -456,13 +456,10 @@ class funcs:
             try:
                 status = server.status()
             except BrokenPipeError:
-                self.dprint("Broken Pipe Error")
                 return None
             except ConnectionRefusedError:
-                self.dprint("Connection Refused Error")
                 return None
             except OSError:
-                self.dprint("No Information")
                 return None
 
             players = []

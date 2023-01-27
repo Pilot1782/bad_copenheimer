@@ -100,9 +100,15 @@ fncs = funcs(collection=col)
             type=interactions.OptionType.INTEGER,
             required=False,
         ),
+        interactions.Option(
+            name="cracked",
+            description="If the server blocks the EULA",
+            type=interactions.OptionType.BOOLEAN,
+            required=False,
+        )
     ],
 )
-async def find(ctx: interactions.CommandContext, _id: str = "", player: str = "", version: str = "", host: str = "", port: int = 25565, motd: str = "", maxplayers: int = -1):  
+async def find(ctx: interactions.CommandContext, _id: str = "", player: str = "", version: str = "", host: str = "", port: int = 25565, motd: str = "", maxplayers: int = -1, cracked: bool = False):  
     """Find a server
 
     Args:
@@ -136,6 +142,8 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
         search["lastOnlineDescription"] = motd.lower()
     if maxplayers != -1:
         search["lastOnlinePlayersMax"] = maxplayers
+    if cracked:
+        search["cracked"] = cracked
     if _id:
         search = {}
         info = col.find_one({"_id": ObjectId(_id)})
