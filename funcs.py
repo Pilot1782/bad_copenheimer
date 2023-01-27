@@ -827,6 +827,8 @@ class funcs:
             return False
         except builtins.ValueError:
             return False
+        except builtins.KeyError:
+            pass
         except Exception:
             return False
 
