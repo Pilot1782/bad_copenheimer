@@ -24,7 +24,7 @@ class funcs:
 
     """    
 
-    def __init__(self, collection, path=osys.path.dirname(osys.path.abspath(__file__))):
+    def __init__(self, collection=[], path=osys.path.dirname(osys.path.abspath(__file__))):
         """Init the class
 
         Args:
@@ -821,17 +821,28 @@ class funcs:
         except twisted.internet.error.ReactorNotRestartable: # pyright: ignore [reportGeneralTypeIssues]
             pass
         except quarry.net.protocol.ProtocolError:
-            return False
+            return self.crackCheckAPI(host,port)
         except builtins.ValueError:
-            return False
+            return self.crackCheckAPI(host,port)
         except builtins.KeyError:
             pass
         except Exception:
-            return False
+            return self.crackCheckAPI(host,port)
 
-        
-        while True:
-            if chat.flag:
-                return True
-            elif time.time() - timeStart > 10:
-                return False
+        try:
+            while True:
+                if chat.flag:
+                    return True
+                elif time.time() - timeStart > 10:
+                    return self.crackCheckAPI(host,port)
+        except Exception:
+            return self.crackCheckAPI(host,port)
+
+    def crackCheckAPI(self,host,port="25565"):
+        url = "https://api.mcstatus.io/v2/status/java/"+host+":"+port
+
+        resp = requests.get(url)
+        if resp.status_code == 200:
+            return not resp.json()["eula_blocked"]
+        else:
+            return False

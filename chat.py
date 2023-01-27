@@ -42,6 +42,8 @@ class DataPackDumperFactory(ClientFactory):
         protocol = DataPackDumperProtocol
     except quarry.net.client.ClientProtocol:
         pass
+    except Exception:
+        pass
 
 
 @defer.inlineCallbacks # type: ignore
@@ -54,7 +56,12 @@ def run(args):
     factory.output_path = args.output_path
 
     # Connect!
-    factory.connect(args.host, args.port)
+    try:
+        factory.connect(args.host, args.port)
+    except quarry.net.client.ClientProtocol:
+        pass
+    except Exception:
+        pass
 
 
 def main(argv):
@@ -71,6 +78,10 @@ def main(argv):
         reactor.run() # type: ignore
     except builtins.ValueError:
         quit()
+    except twisted.internet.error.ReactorNotRunning: # pyright: ignore[reportGeneralTypeIssues]
+        pass
+    except Exception:
+        pass
 
 
 def quit():
