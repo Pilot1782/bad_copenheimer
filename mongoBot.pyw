@@ -157,16 +157,23 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
         
         # check if player is valid or if the input is a uuid
         resp = requests.get(url+player)
-        if 'error' in resp.json():
+        print(resp.text)
+
+        if resp.status_code == 204 and resp.text == "":
             resp = requests.get("https://sessionserver.mojang.com/session/minecraft/profile/"+player.replace("-","")); jresp = resp.json()
-            if 'error' in jresp:
-                fncs.dprint("Error:\n"+jresp['errorMessage'])
+            if 'error' in resp.text or resp.text == "":
+                fncs.dprint("Player not found in minecraft api")
                 await command_send(ctx, embeds=[interactions.Embed(title="Error",description="Player not found in minecraft api")])
                 return
             else:
                 player = jresp['id']
         else:
-            player = resp.json()['id']
+            try:
+                player = resp.json()['id']
+            except Exception:
+                fncs.dprint("Player not found in minecraft api")
+                await command_send(ctx, embeds=[interactions.Embed(title="Error",description="Player not found in minecraft api")])
+                return
 
 
         info = col.find_one({"lastOnlinePlayersList": {"$elemMatch": {"uuid": player}}})
