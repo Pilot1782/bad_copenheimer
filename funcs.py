@@ -505,7 +505,7 @@ class funcs:
 
             for i in list(self.col.find_one({"host": host})["lastOnlinePlayersList"]):
                 try:
-                    if i not in data["lastOnlinePlayersList"]:
+                    if i not in data["lastOnlinePlayersList"] and not self.crack(host, port):
                         if type(i) == str:
                             url = f"https://api.mojang.com/users/profiles/minecraft/{i}"
                             jsonResp = requests.get(url)
@@ -747,7 +747,7 @@ class funcs:
                 interactions.EmbedField(name="Cracked", value=f"{info['cracked']}", inline=True),
                 interactions.EmbedField(name="Last Online", value=f"{(time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(info['lastOnline']))) if info['host'] != 'Server not found.' else '0/0/0 0:0:0'}", inline=True),
             ],
-            footer=interactions.EmbedFooter(text="Server ID: "+(str(self.col.find_one({"host":info["host"]})["_id"]) if info["host"] != "Server not found." else "-1")+'\n Out of {} servers'.format(numServers)) # pyright: ignore [reportOptionalSubscript]
+            footer=interactions.EmbedFooter(text="Server ID: "+(str(self.col.find_one({"host":info["host"]})["_id"]) if info["host"] != "Server not found." else "-1")+'\nOut of {} servers'.format(numServers)) # pyright: ignore [reportOptionalSubscript]
         )
 
 
