@@ -453,7 +453,11 @@ class funcs:
 
         try:
             server = mcstatus.JavaServer.lookup(host+":"+str(port))
-            status = server.status()
+            try:
+                status = server.status()
+            except BrokenPipeError:
+                self.dprint("Broken Pipe Error")
+                return None
 
             players = []
             try:
@@ -473,14 +477,7 @@ class funcs:
                                 )
             except Exception:
                 self.log("Error getting player list", traceback.format_exc())
-
-            try:
-                players = status.players.online
-            except BrokenPipeError:
-                players = 0
-            except Exception:
-                self.log("Error getting player count", traceback.format_exc())
-                players = 0
+            
 
             data = {
                 "host": host,
@@ -502,7 +499,8 @@ class funcs:
                 if webhook:
                     requests.post(webhook, json={"content": f"New server added to database: {host}"})
 
-            for i in list(self.col.find_one({"host": host})["lastOnlinePlayersList"]): # pyright: ignore [reportOptionalSubscript]
+
+            for i in list(self.col.find_one({"host": host})["lastOnlinePlayersList"]):
                 try:
                     if i not in data["lastOnlinePlayersList"]:
                         if type(i) == str:
