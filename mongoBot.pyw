@@ -172,12 +172,17 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
                 player = resp.json()['id']
             except Exception:
                 fncs.dprint("Player not found in minecraft api")
-                await command_send(ctx, embeds=[interactions.Embed(title="Error",description="Player not found in minecraft api")])
+                await command_send(ctx, embeds=[interactions.Embed(title="Error",description="Player not found in minecraft api",color=0xFF6347)])
                 return
 
 
         info = col.find_one({"lastOnlinePlayersList": {"$elemMatch": {"uuid": player}}})
         fncs.dprint("Finding player", player)
+
+        if not info:
+            fncs.dprint("Player not found in database")
+            await command_send(ctx, embeds=[interactions.Embed(title="Error",description="Player not found in database",color=0xFF6347)])
+            return
 
     if search == {} and not flag:
         await command_send(ctx, embeds=[interactions.Embed(title="Error",description="No search parameters given")])
@@ -206,7 +211,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
             await command_send(ctx, embeds=[interactions.Embed(title="Searching...",description="Sorting through "+str(numServers)+" servers...")])
 
             # setup the embed
-            embed = fncs.genEmbed(_serverList, _port)
+            embed = fncs.genEmbed(_serverList, str(_port))
             _file = embed[1]
             comps = embed[2]
             ServerInfo = embed[3] if ServerInfo == {} else ServerInfo

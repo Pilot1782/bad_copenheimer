@@ -430,7 +430,7 @@ class funcs:
             )
 
 
-    def check(self,host, port="25565", webhook=None):
+    def check(self,host:str, port="25565", webhook:str=""):
         """Checks out a host and adds it to the database if it's not there
 
         Args:
@@ -501,7 +501,7 @@ class funcs:
             if not self.col.find_one({"host": host}):
                 print("{} not in database, adding...".format(host))
                 self.col.insert_one(data)
-                if webhook:
+                if webhook != "":
                     requests.post(webhook, json={"content": f"New server added to database: {host}"})
 
 
@@ -548,7 +548,7 @@ class funcs:
                 self.col.delete_one({"_id": i["_id"]})
 
 
-    def verify(self,search, serverList):
+    def verify(self,search: dict, serverList: list):
         """Verifies a search
 
         Args:
@@ -606,7 +606,7 @@ class funcs:
 
         random.shuffle(out);return out
 
-    def _find(self, search, serverList, port="25565"):
+    def _find(self, search: dict, serverList: list, port:str ="25565"):
         """Finds a server in the database
 
         Args:
@@ -674,7 +674,7 @@ class funcs:
 
         return _info, info
 
-    def genEmbed(self, _serverList, _port):
+    def genEmbed(self, _serverList: list, _port: str = "25565"):
         """Generates an embed for the server list
 
         Args:
@@ -757,7 +757,7 @@ class funcs:
             if online: 
                 stats = self.check(info["host"],str(_port)) 
 
-                fav = stats["favicon"] if "favicon" in stats else None
+                fav = stats["favicon"] if "favicon" in str(stats) and stats != None else None
                 if fav is not None:
                     bits = fav.split(",")[1]
 
@@ -801,7 +801,7 @@ class funcs:
         return embed, _file, row, ServerInfo
 
 
-    def cFilter(self, text):
+    def cFilter(self, text:str):
         """Removes all color bits from a string
 
         Args:
@@ -815,7 +815,7 @@ class funcs:
         return text
         
 
-    def crack(self, host, port="25565", username="pilot1782"):
+    def crack(self, host:str, port:str="25565", username:str="pilot1782"):
         args = [host, '-p', port, '--offline-name', username]
         timeStart = time.time()
         try:
@@ -840,7 +840,7 @@ class funcs:
         except Exception:
             return self.crackCheckAPI(host,port)
 
-    def crackCheckAPI(self,host,port="25565"):
+    def crackCheckAPI(self,host:str,port:str="25565"):
         url = "https://api.mcstatus.io/v2/status/java/"+host+":"+port
 
         resp = requests.get(url)
