@@ -1,20 +1,14 @@
 # pyright: basic
-import multiprocessing
 import sys
 import time
 import traceback
-import base64
-import re
 import threading
 import random
-from xmlrpc.client import Server
 import requests
 import json
-import chat
 
 import pymongo
 from bson.objectid import ObjectId
-import mcstatus
 import interactions
 from interactions.ext.files import command_edit, component_edit, command_send, component_send
 
@@ -40,8 +34,7 @@ if TOKEN == "...":
 
 bot = interactions.Client(token=TOKEN)
 
-client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi("1")) # pyright: ignore [reportGeneralTypeIssues=false]
-
+client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi("1"))  # type: ignore
 db = client["mc"]
 col = db["servers"]
 serverList = []
