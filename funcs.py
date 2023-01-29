@@ -543,9 +543,14 @@ class funcs:
         Returns:
             None
         """
-        for i in self.col.find():
-            if self.col.count_documents({"host": i["host"]}) > 1:
-                self.col.delete_one({"_id": i["_id"]})
+        try:
+            docs = list(self.col.find())
+            for doc in docs:
+                if docs.count(doc) > 1:
+                    self.col.delete_one(doc)
+                    docs.remove(doc)
+        except Exception:
+            pass
 
 
     def verify(self,search: dict, serverList: list):
@@ -849,3 +854,6 @@ class funcs:
             return resp.json()["eula_blocked"]
         else:
             return False
+
+if __name__ == "__main__":
+    print("Bruh what are you doing here?\n This is a module, not a script bro.")
