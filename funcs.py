@@ -507,7 +507,7 @@ class funcs:
 
             for i in list(self.col.find_one({"host": host})["lastOnlinePlayersList"]):
                 try:
-                    if i not in data["lastOnlinePlayersList"] and not self.crack(host, port):
+                    if i not in data["lastOnlinePlayersList"]:
                         if type(i) == str:
                             url = f"https://api.mojang.com/users/profiles/minecraft/{i}"
                             jsonResp = requests.get(url)
@@ -655,7 +655,11 @@ class funcs:
             try:
                 for _item in _items:
                     if _item[0] in server:
-                        if str(_item[1]).lower() in str(server[_item[0]]).lower():
+                        if type(_item[0]) == bool or type(_item[0]) == int:
+                            if _item[1] == server[_item[0]]:
+                                serverList.append(server)
+                                break
+                        elif str(_item[1]).lower() in str(server[_item[0]]).lower():
                             serverList.append(server)
                             break
             except Exception:
@@ -730,11 +734,36 @@ class funcs:
 
         global ServerInfo
         random.shuffle(_serverList)
-        info = _serverList[0]
+        info = self.check(_serverList[0]["host"], _port)
         ServerInfo = info
+
+        if info == None:
+            embed = interactions.Embed(
+                title="Server not found",
+                description="Server not found",
+                color=0xFF0000,
+            )
+            buttons = [
+                interactions.Button(
+                    label='Show Players',
+                    custom_id='show_players',
+                    style=interactions.ButtonStyle.PRIMARY,
+                    disabled=True,
+                ),
+                interactions.Button(
+                    label='Next Server',
+                    custom_id='rand_select',
+                    style=interactions.ButtonStyle.PRIMARY,
+                    disabled=True,
+                ),
+            ]
+
+            row = interactions.ActionRow(components=buttons) # pyright: ignore [reportGeneralTypeIssues]
+
+            return [embed, None, row]
         
         numServers = len(_serverList)
-        online = True if self.check(info["host"], str(_port)) else False
+        online = True if self.check(info["host"], str(_port)) else False # pyright: ignore [reportOptionalSubscript]
 
         try:
             _serverList.pop(0)
@@ -846,7 +875,7 @@ class funcs:
             return self.crackCheckAPI(host,port)
 
     def crackCheckAPI(self,host:str,port:str="25565"):
-        url = "https://api.mcstatus.io/v2/status/java/"+host+":"+port
+        url = "https://api.mcstatus.io/v2/status/java/"+host+":"+str(port)
 
         resp = requests.get(url)
         if resp.status_code == 200:

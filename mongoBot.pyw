@@ -114,8 +114,8 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
         port (int, optional): The port of the server. Defaults to 25565.
     """
 
-    print("find", _id, host, port, player, version, motd, maxplayers)
-    fncs.log("find", _id, host, port, player, version, motd, maxplayers)
+    print("find", _id, host, port, player, version, motd, maxplayers, cracked)
+    fncs.log("find", _id, host, port, player, version, motd, maxplayers, cracked)
     
     # send as embed
     await ctx.defer()
@@ -273,6 +273,8 @@ async def show_players(ctx: interactions.ComponentContext):
 @bot.component("rand_select")
 async def rand_select(ctx: interactions.ComponentContext):
     await ctx.defer(edit_origin=True)
+
+    await component_edit(ctx, embeds=[interactions.Embed(title="Randomizing...", description="Loading a random server...", color=0x00FF00)])
     
     global _serverList
 
