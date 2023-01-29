@@ -10,20 +10,24 @@ import asyncio
 import funcs
 useWebHook = None
 try:
-    from privVars import *
+    import privVars
+    MONGO_URL = privVars.MONGO_URL
+    DSICORD_WEBHOOK = privVars.DSICORD_WEBHOOK
+    pingsPerSec = privVars.pingsPerSec # pyright: ignore[reportGeneralTypeIssues]
+    maxActive = privVars.maxActive # pyright: ignore[reportGeneralTypeIssues]
+    useWebHook = privVars.useWebHook # pyright: ignore[reportGeneralTypeIssues]
 except ImportError:
     MONGO_URL = "mongodb+srv://..."
     DSICORD_WEBHOOK = "discord.api.com/..."
+    pingsPerSec = None
+    maxActive = None
 
 # Setup
 # ---------------------------------------------
 
-if useWebHook is None:
-    useWebHook = True
-    # whether to use discord webhooks or not when a server is found
-
-pingsPerSec = 2400
-maxActive = 5
+useWebHook = False if not useWebHook else useWebHook
+pingsPerSec = 2400 if not pingsPerSec else pingsPerSec
+maxActive = 5 if not maxActive else maxActive
 DEBUG = True
 time_start = time.time()
 upHosts = []
