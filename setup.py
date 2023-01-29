@@ -28,7 +28,7 @@ def privVariables():
         os.system('echo # Private Variables > privVars.py')
         # add variables
         with open("privVars.py", "a") as f:
-            f.write('\nDISCORD_WEBHOOK = ""\n')
+            f.write('\nDISCORD_WEBHOOK = "" # Not usually required\n')
             f.write('TOKEN = ""\n')
             f.write('MONGO_URL = ""\n')
     elif os.name == "posix":
@@ -36,7 +36,7 @@ def privVariables():
         os.system('touch privVars.py')
         # add variables
         with open("privVars.py", "a") as f:
-            f.write('\nDISCORD_WEBHOOK = ""\n')
+            f.write('\nDISCORD_WEBHOOK = "" # Not usually required\n')
             f.write('TOKEN = ""\n')
             f.write('MONGO_URL = ""\n')
     else:
