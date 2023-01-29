@@ -1,4 +1,5 @@
 import pymongo
+import masscan as msCan
 import traceback
 import time
 import threading
@@ -47,6 +48,13 @@ def check(host):
         return fncs.check(host)
 
 def scan(ip_list):
+    try:
+        import masscan
+        scanner = masscan.PortScanner()
+    except msCan.PortScannerError:
+        print("Masscan not found, please install it")
+        exit(1)
+
     try:
         import masscan # type: ignore
         import json
