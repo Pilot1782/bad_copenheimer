@@ -25,9 +25,9 @@ class funcs:
     """
 
     def __init__(self,
-        collection=None,
-        path=osys.path.dirname(osys.path.abspath(__file__))
-    ):
+                collection=None,
+                path=osys.path.dirname(osys.path.abspath(__file__))
+            ):
         """Init the class
 
         Args:
