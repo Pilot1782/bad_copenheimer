@@ -24,7 +24,7 @@ class funcs:
 
     """    
 
-    def __init__(self, collection=[], path=osys.path.dirname(osys.path.abspath(__file__))):
+    def __init__(self, collection=None, path=osys.path.dirname(osys.path.abspath(__file__))):
         """Init the class
 
         Args:
@@ -451,6 +451,9 @@ class funcs:
                     }
         """
 
+        if self.col == None:
+            return None
+
         try:
             server = mcstatus.JavaServer.lookup(host+":"+str(port))
             try:
@@ -543,6 +546,8 @@ class funcs:
         Returns:
             None
         """
+        if self.col == None:
+            return None
         try:
             docs = list(self.col.find())
             for doc in docs:
@@ -633,6 +638,9 @@ class funcs:
                 "lastOnlinePing":"unicode time",
             }
         """
+        if self.col == None:
+            return []
+
         # find the server given the parameters
         if search != {}:
             servers = list(self.col.find())
@@ -677,10 +685,6 @@ class funcs:
         else:
             info = server
 
-        # for server in _info:
-        #     # update the servers
-        #     check(server["host"], port)
-
         return _info, info
 
     def genEmbed(self, _serverList: list, _port: str = "25565"):
@@ -706,7 +710,8 @@ class funcs:
                 button: interaction button,
             ]
         """
-        if len(_serverList) == 0:
+
+        if len(_serverList) == 0 or self.col == None:
             embed = interactions.Embed(
                 title="No servers found",
                 description="No servers found",
@@ -737,7 +742,7 @@ class funcs:
         info = self.check(_serverList[0]["host"], _port)
         ServerInfo = info
 
-        if info == None:
+        if info is None:
             embed = interactions.Embed(
                 title="Server not found",
                 description="Server not found",
@@ -791,7 +796,7 @@ class funcs:
             if online: 
                 stats = self.check(info["host"],str(_port)) 
 
-                fav = stats["favicon"] if "favicon" in str(stats) and stats != None else None
+                fav = stats["favicon"] if "favicon" in str(stats) and stats is not None else None
                 if fav is not None:
                     bits = fav.split(",")[1]
 

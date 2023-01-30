@@ -33,9 +33,9 @@ class DataPackDumperProtocol(ClientProtocol):
             # print(alt_repr(data_pack))
             global flag
             flag = True
-            quit()
+            ReactorQuit()
 
-        quit()
+        ReactorQuit()
 
 
 class DataPackDumperFactory(ClientFactory):
@@ -56,7 +56,7 @@ def run(args):
             # Log in
             profile = yield ProfileCLI.make_profile(args)
         except builtins.TypeError:
-            quit()
+            ReactorQuit()
             return
 
 
@@ -69,7 +69,7 @@ def run(args):
     except Exception:
         traceback.print_exc()
         print("line 68")
-        quit()
+        ReactorQuit()
 
 
 def main(argv):
@@ -89,10 +89,10 @@ def main(argv):
     except Exception:
         traceback.print_exc()
         print("line 86")
-        quit()
+        ReactorQuit()
 
 
-def quit():
+def ReactorQuit():
     try:
         reactor.stop() # type: ignore
     except twisted.internet.error.ReactorNotRunning: # pyright: ignore[reportGeneralTypeIssues]

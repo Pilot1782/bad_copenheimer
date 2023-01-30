@@ -13,9 +13,9 @@ try:
     import privVars
     MONGO_URL = privVars.MONGO_URL
     DSICORD_WEBHOOK = privVars.DSICORD_WEBHOOK
-    pingsPerSec = privVars.pingsPerSec # pyright: ignore[reportGeneralTypeIssues]
-    maxActive = privVars.maxActive # pyright: ignore[reportGeneralTypeIssues]
-    useWebHook = privVars.useWebHook # pyright: ignore[reportGeneralTypeIssues]
+    pingsPerSec = privVars.pingsPerSec  # pyright: ignore[reportGeneralTypeIssues]
+    maxActive = privVars.maxActive  # pyright: ignore[reportGeneralTypeIssues]
+    useWebHook = privVars.useWebHook  # pyright: ignore[reportGeneralTypeIssues]
 except ImportError:
     MONGO_URL = "mongodb+srv://..."
     DSICORD_WEBHOOK = "discord.api.com/..."
@@ -32,7 +32,6 @@ DEBUG = True
 time_start = time.time()
 upHosts = []
 results = []
-res = []
 threads = []
 pool = multiprocessing.pool.ThreadPool(maxActive)
 c = 0
@@ -53,26 +52,24 @@ def check(host):
 
 def scan(ip_list):
     try:
-        import masscan
-        scanner = masscan.PortScanner()
+        scanner = msCan.PortScanner()
     except msCan.PortScannerError:
         print("Masscan not found, please install it")
         exit(1)
 
     try:
-        import masscan # type: ignore
         import json
 
-        scanner = masscan.PortScanner()
+        scanner = msCan.PortScanner()
         scanner.scan(
             ip_list,
             ports="25565",
             arguments="--max-rate {}".format(pingsPerSec / maxActive),
             sudo=True,
         )
-        res = json.loads(scanner.scan_result) # type: ignore
+        result = json.loads(scanner.scan_result) # type: ignore
 
-        return list(res["scan"].keys())
+        return list(result["scan"].keys())
     except Exception:
         Eprint(traceback.format_exc())
         return []
@@ -126,8 +123,6 @@ time.sleep(0.5)
 
 normal = threading.active_count()
 async def makeThreads():
-    # create threads
-    threads = []
     # Create a thread for each list of IPs
     for ip_list in ip_lists:
         # Create the thread
