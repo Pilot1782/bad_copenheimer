@@ -24,8 +24,7 @@ class funcs:
 
     """
 
-    def __init__(
-        self, 
+    def __init__(self,
         collection=None,
         path=osys.path.dirname(osys.path.abspath(__file__))
     ):
@@ -547,7 +546,7 @@ class funcs:
                             data["lastOnlinePlayersList"].append(i)
                 except Exception:
                     print(
-                        traceback.format_exc(), " \/ ", host  # pyright: ignore [reportInvalidStringEscapeSequence]
+                        traceback.format_exc(), " \\/ ", host  # pyright: ignore [reportInvalidStringEscapeSequence]
                     )
                     break
 
@@ -789,7 +788,7 @@ class funcs:
 
         numServers = len(_serverList)
         online = (
-            True if self.check(info["host"], str(_port)) else False
+            self.check(info["host"], str(_port)) is not None
         )
 
         try:
@@ -820,7 +819,9 @@ class funcs:
                 ),
                 interactions.EmbedField(
                     name="Last Online",
-                    value=f"{(time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(info['lastOnline']))) if info['host'] != 'Server not found.' else '0/0/0 0:0:0'}",
+                    value=(
+                        time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(info['lastOnline']))
+                        ) if info['host'] != 'Server not found.' else '0/0/0 0:0:0',
                     inline=True,
                 ),
             ],
