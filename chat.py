@@ -93,6 +93,7 @@ def main(argv):
 
 
 def ReactorQuit():
+    """Exits the reactor gracefully."""
     try:
         reactor.stop() # type: ignore
     except twisted.internet.error.ReactorNotRunning: # pyright: ignore[reportGeneralTypeIssues]

@@ -17,14 +17,18 @@ import chat
 
 class funcs:
     """Cursed code that I don't want to touch. It works, but it's not pretty.
-        # STOP HERE
+    # STOP HERE
 
-        Beyond this point is code unmaintained and at risk of mabye being important.
-        Once this file was made, no proper docs on the methods have been made except those that I sometimes remember.
+    Beyond this point is code unmaintained and at risk of mabye being important.
+    Once this file was made, no proper docs on the methods have been made except those that I sometimes remember.
 
-    """    
+    """
 
-    def __init__(self, collection=None, path=osys.path.dirname(osys.path.abspath(__file__))):
+    def __init__(
+        self, 
+        collection=None,
+        path=osys.path.dirname(osys.path.abspath(__file__))
+    ):
         """Init the class
 
         Args:
@@ -33,7 +37,9 @@ class funcs:
 
         self.path = path + ("\\" if osys.name == "nt" else "/")
         self.col = collection
-        self.settings_path = self.path+(r"\settings.json" if osys.name == "nt" else "/settings.json")
+        self.settings_path = self.path + (
+            r"\settings.json" if osys.name == "nt" else "/settings.json"
+        )
 
         with open(
             self.settings_path, "r"
@@ -117,14 +123,14 @@ class funcs:
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
         )
         # Read stdout from subprocess until the buffer is empty !
-        for line in iter(p.stdout.readline, b""): # type: ignore
+        for line in iter(p.stdout.readline, b""):  # type: ignore
             if line:  # Don't print blank lines
                 yield line
         # This ensures the process has completed, AND sets the 'returncode' attr
         while p.poll() is None:
             time.sleep(0.1)  # Don't waste CPU-cycles
         # Empty STDERR buffer
-        err = p.stderr.read() # type: ignore
+        err = p.stderr.read()  # type: ignore
         if p.returncode != 0:
             # The run_command() function is responsible for logging STDERR
             print(str(err))
@@ -215,10 +221,10 @@ class funcs:
     # Print but for debugging
     def dprint(self, *text):
         if self.debug:
-            print(' '.join((str(i) for i in text)))
+            print(" ".join((str(i) for i in text)))
 
     # Scan to increase simplicity
-    def scan(self, ipL, ipU): # dont use scan_range
+    def scan(self, ipL, ipU):  # dont use scan_range
         """Scan function that uses ipv4 addrs
 
         Args:
@@ -261,17 +267,17 @@ class funcs:
 
         Args:
             text (String): text to log
-        
+
         Returns:
             None
         """
         path_ = f"{self.path}log.log"
         with open(f"{path_}", "a") as f:
-            text = ' '.join((str(i) for i in text))
+            text = " ".join((str(i) for i in text))
             f.write(f"[{self.ptime()}]{'{V2.0.0}'} {text}\n")
 
     # Scan a range
-    def scan_range(self, ip1, ip2): #legacy verson of scan
+    def scan_range(self, ip1, ip2):  # legacy verson of scan
         """Legacy Scan function
 
         Args:
@@ -429,8 +435,7 @@ class funcs:
                 "Successfully appended {0} lines to the JSON file".format(len(data))
             )
 
-
-    def check(self,host:str, port="25565", webhook:str=""):
+    def check(self, host: str, port="25565", webhook: str = ""):
         """Checks out a host and adds it to the database if it's not there
 
         Args:
@@ -451,11 +456,11 @@ class funcs:
                     }
         """
 
-        if self.col == None:
+        if self.col is None:
             return None
 
         try:
-            server = mcstatus.JavaServer.lookup(host+":"+str(port))
+            server = mcstatus.JavaServer.lookup(host + ":" + str(port))
             try:
                 status = server.status()
             except BrokenPipeError:
@@ -468,7 +473,11 @@ class funcs:
             players = []
             try:
                 if status.players.sample is not None:
-                    for player in status.players.sample: # pyright: ignore [reportOptionalIterable]
+                    for (
+                        player
+                    ) in (
+                        status.players.sample
+                    ):  # pyright: ignore [reportOptionalIterable]
                         url = f"https://api.mojang.com/users/profiles/minecraft/{player.name}"
                         jsonResp = requests.get(url)
                         if len(jsonResp.text) > 2:
@@ -477,21 +486,29 @@ class funcs:
                             if jsonResp:
                                 players.append(
                                     {
-                                        "name": self.cFilter(jsonResp["name"]).lower(), # pyright: ignore [reportGeneralTypeIssues]
+                                        "name": self.cFilter(
+                                            jsonResp["name"]
+                                        ).lower(),  # pyright: ignore [reportGeneralTypeIssues]
                                         "uuid": jsonResp["id"],
                                     }
                                 )
                         else:
-                            players.append({"name": self.cFilter(player.name).lower(), "uuid": "1b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b"})
+                            players.append(
+                                {
+                                    "name": self.cFilter(player.name).lower(),
+                                    "uuid": "1b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b",
+                                }
+                            )
             except Exception:
                 self.log("Error getting player list", traceback.format_exc())
-            
 
             data = {
                 "host": host,
                 "lastOnline": time.time(),
                 "lastOnlinePlayers": status.players.online,
-                "lastOnlineVersion": self.cFilter(str(re.sub(r"§\S*[|]*\s*", "", status.version.name))),
+                "lastOnlineVersion": self.cFilter(
+                    str(re.sub(r"§\S*[|]*\s*", "", status.version.name))
+                ),
                 "lastOnlineDescription": self.cFilter(str(status.description)),
                 "lastOnlinePing": int(status.latency * 10),
                 "lastOnlinePlayersList": players,
@@ -505,8 +522,10 @@ class funcs:
                 print("{} not in database, adding...".format(host))
                 self.col.insert_one(data)
                 if webhook != "":
-                    requests.post(webhook, json={"content": f"New server added to database: {host}"})
-
+                    requests.post(
+                        webhook,
+                        json={"content": f"New server added to database: {host}"},
+                    )
 
             for i in list(self.col.find_one({"host": host})["lastOnlinePlayersList"]):
                 try:
@@ -527,7 +546,9 @@ class funcs:
                         else:
                             data["lastOnlinePlayersList"].append(i)
                 except Exception:
-                    print(traceback.format_exc(), " \/ ", host) #pyright: ignore [reportInvalidStringEscapeSequence] 
+                    print(
+                        traceback.format_exc(), " \/ ", host  # pyright: ignore [reportInvalidStringEscapeSequence]
+                    )
                     break
 
             self.col.update_one({"host": host}, {"$set": data})
@@ -539,26 +560,23 @@ class funcs:
             print(traceback.format_exc(), " | ", host)
             return None
 
-
     def remove_duplicates(self):
         """Removes duplicate entries in the database
 
         Returns:
             None
         """
-        if self.col == None:
-            return None
-        try:
-            docs = list(self.col.find())
-            for doc in docs:
-                if docs.count(doc) > 1:
-                    self.col.delete_one(doc)
-                    docs.remove(doc)
-        except Exception:
-            pass
+        if self.col is not None:
+            try:
+                docs = list(self.col.find())
+                for doc in docs:
+                    if docs.count(doc) > 1:
+                        self.col.delete_one(doc)
+                        docs.remove(doc)
+            except Exception:
+                pass
 
-
-    def verify(self,search: dict, serverList: list):
+    def verify(self, search: dict, serverList: list):
         """Verifies a search
 
         Args:
@@ -611,12 +629,13 @@ class funcs:
                         break
             if flag:
                 out.append(server)
-                
+
         print(str(len(out)) + " servers match")
 
-        random.shuffle(out);return out
+        random.shuffle(out)
+        return out
 
-    def _find(self, search: dict, serverList: list, port:str ="25565"):
+    def _find(self, search: dict, serverList: list, port: str = "25565"):
         """Finds a server in the database
 
         Args:
@@ -638,7 +657,7 @@ class funcs:
                 "lastOnlinePing":"unicode time",
             }
         """
-        if self.col == None:
+        if self.col is None:
             return []
 
         # find the server given the parameters
@@ -654,9 +673,8 @@ class funcs:
                 "lastOnlinePing": -1,
                 "lastOnlinePlayersList": [],
                 "lastOnlinePlayersMax": -1,
-                "favicon": "Server not found"
+                "favicon": "Server not found",
             }
-
 
         for server in servers:
             _items = list(search.items())
@@ -675,8 +693,7 @@ class funcs:
                 print(server, _items, type(server), type(_items))
                 break
 
-
-        server = self.col.find_one(search) # legacy backup
+        server = self.col.find_one(search)  # legacy backup
 
         _info = self.verify(search, serverList)
 
@@ -711,7 +728,7 @@ class funcs:
             ]
         """
 
-        if len(_serverList) == 0 or self.col == None:
+        if len(_serverList) == 0 or self.col is None:
             embed = interactions.Embed(
                 title="No servers found",
                 description="No servers found",
@@ -719,23 +736,24 @@ class funcs:
             )
             buttons = [
                 interactions.Button(
-                    label='Show Players',
-                    custom_id='show_players',
+                    label="Show Players",
+                    custom_id="show_players",
                     style=interactions.ButtonStyle.PRIMARY,
                     disabled=True,
                 ),
                 interactions.Button(
-                    label='Next Server',
-                    custom_id='rand_select',
+                    label="Next Server",
+                    custom_id="rand_select",
                     style=interactions.ButtonStyle.PRIMARY,
                     disabled=True,
                 ),
             ]
 
-            row = interactions.ActionRow(components=buttons) # pyright: ignore [reportGeneralTypeIssues]
+            row = interactions.ActionRow(
+                components=buttons  # pyright: ignore [reportGeneralTypeIssues]
+            )
 
             return [embed, None, row]
-
 
         global ServerInfo
         random.shuffle(_serverList)
@@ -750,25 +768,29 @@ class funcs:
             )
             buttons = [
                 interactions.Button(
-                    label='Show Players',
-                    custom_id='show_players',
+                    label="Show Players",
+                    custom_id="show_players",
                     style=interactions.ButtonStyle.PRIMARY,
                     disabled=True,
                 ),
                 interactions.Button(
-                    label='Next Server',
-                    custom_id='rand_select',
+                    label="Next Server",
+                    custom_id="rand_select",
                     style=interactions.ButtonStyle.PRIMARY,
                     disabled=True,
                 ),
             ]
 
-            row = interactions.ActionRow(components=buttons) # pyright: ignore [reportGeneralTypeIssues]
+            row = interactions.ActionRow(
+                components=buttons  # pyright: ignore [reportGeneralTypeIssues]
+            )
 
             return [embed, None, row]
-        
+
         numServers = len(_serverList)
-        online = True if self.check(info["host"], str(_port)) else False # pyright: ignore [reportOptionalSubscript]
+        online = (
+            True if self.check(info["host"], str(_port)) else False
+        )
 
         try:
             _serverList.pop(0)
@@ -777,26 +799,51 @@ class funcs:
 
         # setup the embed
         embed = interactions.Embed(
-            title=("🟢 " if online else "🔴 ")+info["host"],
-            description='```'+info["lastOnlineDescription"]+'```',
+            title=("🟢 " if online else "🔴 ") + info["host"],
+            description="```" + info["lastOnlineDescription"] + "```",
             color=(0x00FF00 if online else 0xFF0000),
             type="rich",
             fields=[
-                interactions.EmbedField(name="Players", value=f"{info['lastOnlinePlayers']}/{info['lastOnlinePlayersMax']}", inline=True),
-                interactions.EmbedField(name="Version", value=info["lastOnlineVersion"], inline=True),
-                interactions.EmbedField(name="Ping", value=str(info["lastOnlinePing"]), inline=True),
-                interactions.EmbedField(name="Cracked", value=f"{info['cracked']}", inline=True),
-                interactions.EmbedField(name="Last Online", value=f"{(time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(info['lastOnline']))) if info['host'] != 'Server not found.' else '0/0/0 0:0:0'}", inline=True),
+                interactions.EmbedField(
+                    name="Players",
+                    value=f"{info['lastOnlinePlayers']}/{info['lastOnlinePlayersMax']}",
+                    inline=True,
+                ),
+                interactions.EmbedField(
+                    name="Version", value=info["lastOnlineVersion"], inline=True
+                ),
+                interactions.EmbedField(
+                    name="Ping", value=str(info["lastOnlinePing"]), inline=True
+                ),
+                interactions.EmbedField(
+                    name="Cracked", value=f"{info['cracked']}", inline=True
+                ),
+                interactions.EmbedField(
+                    name="Last Online",
+                    value=f"{(time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(info['lastOnline']))) if info['host'] != 'Server not found.' else '0/0/0 0:0:0'}",
+                    inline=True,
+                ),
             ],
-            footer=interactions.EmbedFooter(text="Server ID: "+(str(self.col.find_one({"host":info["host"]})["_id"]) if info["host"] != "Server not found." else "-1")+'\nOut of {} servers'.format(numServers)) # pyright: ignore [reportOptionalSubscript]
+            footer=interactions.EmbedFooter(
+                text="Server ID: "
+                + (
+                    str(self.col.find_one({"host": info["host"]})["_id"])
+                    if info["host"] != "Server not found."
+                    else "-1"
+                )
+                + "\nOut of {} servers".format(numServers)
+            ),  # pyright: ignore [reportOptionalSubscript]
         )
 
+        try:  # this adds the favicon in the most overcomplicated way possible
+            if online:
+                stats = self.check(info["host"], str(_port))
 
-        try: # this adds the favicon in the most overcomplicated way possible
-            if online: 
-                stats = self.check(info["host"],str(_port)) 
-
-                fav = stats["favicon"] if "favicon" in str(stats) and stats is not None else None
+                fav = (
+                    stats["favicon"]
+                    if "favicon" in str(stats) and stats is not None
+                    else None
+                )
                 if fav is not None:
                     bits = fav.split(",")[1]
 
@@ -811,36 +858,41 @@ class funcs:
             else:
                 _file = None
         except Exception:
-            print(traceback.format_exc(),info)
+            print(traceback.format_exc(), info)
             _file = None
 
-        players = self.check(info['host'])
+        players = self.check(info["host"])
         if players is not None:
-            players = players['lastOnlinePlayersList'] if 'lastOnlinePlayersList' in players else []
+            players = (
+                players["lastOnlinePlayersList"]
+                if "lastOnlinePlayersList" in players
+                else []
+            )
         else:
             players = []
 
         buttons = [
             interactions.Button(
-                label='Show Players',
-                custom_id='show_players',
+                label="Show Players",
+                custom_id="show_players",
                 style=interactions.ButtonStyle.PRIMARY,
                 disabled=(len(players) == 0),
             ),
             interactions.Button(
-                label='Next Server',
-                custom_id='rand_select',
+                label="Next Server",
+                custom_id="rand_select",
                 style=interactions.ButtonStyle.PRIMARY,
                 disabled=(len(_serverList) == 0),
             ),
         ]
 
-        row = interactions.ActionRow(components=buttons) # pyright: ignore [reportGeneralTypeIssues]
+        row = interactions.ActionRow(
+            components=buttons  # pyright: ignore [reportGeneralTypeIssues]
+        )
 
         return embed, _file, row, ServerInfo
 
-
-    def cFilter(self, text:str):
+    def cFilter(self, text: str):
         """Removes all color bits from a string
 
         Args:
@@ -850,37 +902,36 @@ class funcs:
             [str]: The string without color bits
         """
         # remove all color bits
-        text = re.sub(r'§[0-9a-fk-or]', '', text).replace('|','')
+        text = re.sub(r"§[0-9a-fk-or]", "", text).replace("|", "")
         return text
-        
 
-    def crack(self, host:str, port:str="25565", username:str="pilot1782"):
-        args = [host, '-p', port, '--offline-name', username]
+    def crack(self, host: str, port: str = "25565", username: str = "pilot1782"):
+        args = [host, "-p", port, "--offline-name", username]
         timeStart = time.time()
         try:
             chat.main(args)
-        except twisted.internet.error.ReactorNotRestartable: # pyright: ignore [reportGeneralTypeIssues]
+        except twisted.internet.error.ReactorNotRestartable:  # pyright: ignore [reportGeneralTypeIssues]
             pass
         except quarry.net.protocol.ProtocolError:
-            return self.crackCheckAPI(host,port)
+            return self.crackCheckAPI(host, port)
         except builtins.ValueError:
-            return self.crackCheckAPI(host,port)
+            return self.crackCheckAPI(host, port)
         except builtins.KeyError:
             pass
         except Exception:
-            return self.crackCheckAPI(host,port)
+            return self.crackCheckAPI(host, port)
 
         try:
             while True:
                 if chat.flag:
                     return True
                 elif time.time() - timeStart > 10:
-                    return self.crackCheckAPI(host,port)
+                    return self.crackCheckAPI(host, port)
         except Exception:
-            return self.crackCheckAPI(host,port)
+            return self.crackCheckAPI(host, port)
 
-    def crackCheckAPI(self,host:str,port:str="25565"):
-        url = "https://api.mcstatus.io/v2/status/java/"+host+":"+str(port)
+    def crackCheckAPI(self, host: str, port: str = "25565"):
+        url = "https://api.mcstatus.io/v2/status/java/" + host + ":" + str(port)
 
         resp = requests.get(url)
         if resp.status_code == 200:
@@ -888,6 +939,7 @@ class funcs:
             return resp.json()["eula_blocked"]
         else:
             return False
+
 
 if __name__ == "__main__":
     print("Bruh what are you doing here?\n This is a module, not a script bro.")

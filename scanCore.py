@@ -67,7 +67,7 @@ def scan(ip_list):
             arguments="--max-rate {}".format(pingsPerSec / maxActive),
             sudo=True,
         )
-        result = json.loads(scanner.scan_result) # type: ignore
+        result = json.loads(scanner.scan_result)  # type: ignore
 
         return list(result["scan"].keys())
     except Exception:
