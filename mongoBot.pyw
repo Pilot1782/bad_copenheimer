@@ -72,7 +72,7 @@ fncs = funcs(collection=col)
         ),
         interactions.Option(
             name="player",
-            description="The player to search for **WIP**",
+            description="The player to search for (uuid or player name) **WIP**",
             type=interactions.OptionType.STRING,
             required=False,
         ),
