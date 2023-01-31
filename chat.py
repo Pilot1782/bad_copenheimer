@@ -26,7 +26,7 @@ class DataPackDumperProtocol(ClientProtocol):
         if self.factory.output_path:
             try:
                 data_pack = NBTFile(data_pack)
-                data_pack.save(self.factory.output_path)
+                data_pack.save(self.factory.output_path) # pyright: ignore[reportOptionalMemberAccess]
             except builtins.KeyError:
                 pass
         else:

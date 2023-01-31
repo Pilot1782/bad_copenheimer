@@ -25,8 +25,8 @@ class funcs:
     """
 
     def __init__(self,
-                collection=None,
-                path=osys.path.dirname(osys.path.abspath(__file__))
+                collection=None, # pyright: ignore[reportGeneralTypeIssues]
+                path:str=osys.path.dirname(osys.path.abspath(__file__))
             ):
         """Init the class
 
@@ -79,7 +79,7 @@ class funcs:
     # Functions getting defeined
 
     # Write to a json file
-    def write_json(self, new_data, filename="data.json"):
+    def write_json(self, new_data:dict, filename:str="data.json"):
         with open(filename, "r+") as file:
             file_data = json.load(file)
             file_data["emp_details"].append(new_data)
@@ -102,7 +102,7 @@ class funcs:
             osys.system("python -m http.server {0}".format(self.sport))
 
     # Run a command and get line by line output
-    def run_command(self, command, powershell=False):
+    def run_command(self, command:str, powershell:bool=False):
         """Just a better os.system
 
         Args:
@@ -139,7 +139,7 @@ class funcs:
     # Login into a minecraft server
     flag = False
 
-    def login(self, host):
+    def login(self, host:str):
         for i in self.run_command(
             "python3 {4}playerlist.pyw --auth {0}:{1} -p {2} {3}".format(
                 self.usr_name, self.passwd, 25565, host, self.home_dir
@@ -159,7 +159,7 @@ class funcs:
 
     # Look through your files and see if the server you scan has 'player' playing on it, going to be redon soon
     # The redoo may be implemented but i have to test the file first.
-    def find(self, player):
+    def find(self, player:str):
         """Legacy find player function, now obsolete
 
         Args:
@@ -203,14 +203,14 @@ class funcs:
             return "Done\n".join(outp)
 
     # Clean masscan output
-    def clean(self, line):
+    def clean(self, line:str):
         if "rate" in line:
             print("Skipped")
         else:
             arr = []
             words = ["Discovered", "open", "port", "25565/tcp", "on"]
-            line = line.split(" ")
-            for i in line:
+            splitLine = line.split(" ")
+            for i in splitLine:
                 if i in words:
                     pass
                 else:
@@ -223,7 +223,7 @@ class funcs:
             print(" ".join((str(i) for i in text)))
 
     # Scan to increase simplicity
-    def scan(self, ipL, ipU):  # dont use scan_range
+    def scan(self, ipL:str, ipU:str):  # dont use scan_range
         """Scan function that uses ipv4 addrs
 
         Args:
@@ -276,7 +276,7 @@ class funcs:
             f.write(f"[{self.ptime()}]{'{V2.0.0}'} {text}\n")
 
     # Scan a range
-    def scan_range(self, ip1, ip2):  # legacy verson of scan
+    def scan_range(self, ip1:str, ip2:str):  # legacy verson of scan
         """Legacy Scan function
 
         Args:
@@ -434,7 +434,7 @@ class funcs:
                 "Successfully appended {0} lines to the JSON file".format(len(data))
             )
 
-    def check(self, host: str, port="25565", webhook: str = ""):
+    def check(self, host: str, port:str="25565", webhook: str = ""):
         """Checks out a host and adds it to the database if it's not there
 
         Args:
@@ -913,7 +913,7 @@ class funcs:
             chat.main(args)
         except twisted.internet.error.ReactorNotRestartable:  # pyright: ignore [reportGeneralTypeIssues]
             pass
-        except quarry.net.protocol.ProtocolError:
+        except quarry.net.protocol.ProtocolError: # pyright: ignore [reportGeneralTypeIssues]
             return self.crackCheckAPI(host, port)
         except builtins.ValueError:
             return self.crackCheckAPI(host, port)
@@ -943,4 +943,4 @@ class funcs:
 
 
 if __name__ == "__main__":
-    print("Bruh what are you doing here?\n This is a module, not a script bro.")
+    print("Bruh what are you doing here?\nThis is a library, not a script bro.")
