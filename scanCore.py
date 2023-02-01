@@ -17,7 +17,7 @@ try:
     maxActive = privVars.maxActive  # pyright: ignore[reportGeneralTypeIssues]
     useWebHook = privVars.useWebHook  # pyright: ignore[reportGeneralTypeIssues]
 except Exception as err:
-    if err == ImportError or err == AttributeError:
+    if err is ImportError or err is AttributeError:
         MONGO_URL = "mongodb+srv://..."
         DSICORD_WEBHOOK = "discord.api.com/..."
         pingsPerSec = None
