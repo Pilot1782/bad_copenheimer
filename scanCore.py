@@ -23,7 +23,7 @@ except Exception as err:
         pingsPerSec = None
         maxActive = None
     else:
-        print(err)
+        print(traceback.format_exc())
         exit(1)
 
 # Setup
