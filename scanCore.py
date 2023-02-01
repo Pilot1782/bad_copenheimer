@@ -73,6 +73,9 @@ def scan(ip_list):
         result = json.loads(scanner.scan_result)  # type: ignore
 
         return list(result["scan"].keys())
+    except OSError:
+        Eprint(traceback.format_exc())
+        exit(1)
     except Exception:
         Eprint(traceback.format_exc())
         return []
@@ -105,6 +108,9 @@ async def threader(ip_range):
 
         for ip in ips: # type: ignore
             check(ip)
+    except OSError:
+        Eprint(traceback.format_exc())
+        exit(1)
     except Exception:
         Eprint(traceback.format_exc())
 
