@@ -8,7 +8,7 @@ the server and prints the players listed in the tab menu.
 from twisted.internet import reactor, defer
 from quarry.net.client import ClientFactory, ClientProtocol
 from quarry.net.auth import ProfileCLI
-import twisted, traceback
+import twisted, traceback, quarry
 
 playerArr = []
 
@@ -141,6 +141,8 @@ def main(argv):
         pass
     except twisted.internet.error.ReactorAlreadyRunning: # pyright: ignore[reportGeneralTypeIssues]
         pass
+    except quarry.net.protocol.ProtocolError:
+        ReactorQuit()
     except Exception:
         traceback.print_exc()
         print("line 86")
