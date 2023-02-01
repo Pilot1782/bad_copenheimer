@@ -16,11 +16,15 @@ try:
     pingsPerSec = privVars.pingsPerSec  # pyright: ignore[reportGeneralTypeIssues]
     maxActive = privVars.maxActive  # pyright: ignore[reportGeneralTypeIssues]
     useWebHook = privVars.useWebHook  # pyright: ignore[reportGeneralTypeIssues]
-except ImportError:
-    MONGO_URL = "mongodb+srv://..."
-    DSICORD_WEBHOOK = "discord.api.com/..."
-    pingsPerSec = None
-    maxActive = None
+except Exception as err:
+    if err == ImportError or err == AttributeError:
+        MONGO_URL = "mongodb+srv://..."
+        DSICORD_WEBHOOK = "discord.api.com/..."
+        pingsPerSec = None
+        maxActive = None
+    else:
+        print(err)
+        exit(1)
 
 # Setup
 # ---------------------------------------------
