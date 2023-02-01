@@ -12,7 +12,7 @@ import interactions
 from mcstatus import JavaServer
 import mcstatus
 import requests
-import chat
+import chat as chat2
 
 
 class funcs:
@@ -40,43 +40,47 @@ class funcs:
             r"\settings.json" if osys.name == "nt" else "/settings.json"
         )
 
-        with open(
-            self.settings_path, "r"
-        ) as read_file:  # Open the settings file and start defineing variables from it
-            global data
-            data = json.load(read_file)
+        try:
+            with open(
+                self.settings_path, "r"
+            ) as read_file:  # Open the settings file and start defineing variables from it
+                global data
+                data = json.load(read_file)
 
-        # Define based on testing
-        self.testing = data["testing"]  # bc it easier
-        if not self.testing:
-            self.TOKEN = data["TOKEN"]
-            self.home_dir = data["home-dir"]
-        else:
-            self.TOKEN = osys.getenv("TOKEN")
-            self.home_dir = osys.path.dirname(osys.path.abspath(__file__))
+            # Define based on testing
+            self.testing = data["testing"]  # bc it easier
+            if not self.testing:
+                self.TOKEN = data["TOKEN"]
+                self.home_dir = data["home-dir"]
+            else:
+                self.TOKEN = osys.getenv("TOKEN")
+                self.home_dir = osys.path.dirname(osys.path.abspath(__file__))
 
-        self.testing = data["testing"]
-        self.output_path = self.home_dir + "outputs.json"
-        self.usr_name = data["user"]
-        self.lower_ip_bound = data["lower_ip_bound"]
-        self.upper_ip_bound = data["upper_ip_bound"]
-        self.threads = data["threads"]
-        self.threads = int(self.threads)
-        self.timeout = data["timeout"]
-        self.timeout = int(self.timeout)
-        self.os = 1 if osys.name == "nt" else 0
-        if self.os == 1:
-            self.osp = "\\"
-        else:
-            self.osp = "/"
-        self.mascan = data["masscan"]
-        self.time2 = data["time2"]
-        self.debug = data["debugging"]
-        self.passwd = data["password"]
-        self.server = data["server"]
-        self.sport = data["server-port"]
+            self.testing = data["testing"]
+            self.output_path = self.home_dir + "outputs.json"
+            self.usr_name = data["user"]
+            self.lower_ip_bound = data["lower_ip_bound"]
+            self.upper_ip_bound = data["upper_ip_bound"]
+            self.threads = data["threads"]
+            self.threads = int(self.threads)
+            self.timeout = data["timeout"]
+            self.timeout = int(self.timeout)
+            self.os = 1 if osys.name == "nt" else 0
+            if self.os == 1:
+                self.osp = "\\"
+            else:
+                self.osp = "/"
+            self.mascan = data["masscan"]
+            self.time2 = data["time2"]
+            self.debug = data["debugging"]
+            self.passwd = data["password"]
+            self.server = data["server"]
+            self.sport = data["server-port"]
+        except FileNotFoundError:
+            pass
 
     # Functions getting defeined
+
 
     # Write to a json file
     def write_json(self, new_data:dict, filename:str="data.json"):
@@ -218,9 +222,11 @@ class funcs:
             return "".join(arr)
 
     # Print but for debugging
-    def dprint(self, *text):
+    def dprint(self, *text, log:bool=True):
         if self.debug:
             print(" ".join((str(i) for i in text)))
+            if log:
+                self.log(" ".join((str(i) for i in text)))
 
     # Scan to increase simplicity
     def scan(self, ipL:str, ipU:str):  # dont use scan_range
@@ -456,6 +462,7 @@ class funcs:
         """
 
         if self.col is None:
+            self.dprint("Collection is None")
             return None
 
         try:
@@ -471,7 +478,7 @@ class funcs:
 
             players = []
             try:
-                if status.players.sample is not None:
+                if status.players.sample is not None and self.crackedPlayerList(host, port) == []:
                     for (
                         player
                     ) in (
@@ -498,6 +505,19 @@ class funcs:
                                     "uuid": "1b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b",
                                 }
                             )
+                else:
+                    playerlst = self.crackedPlayerList(host, port)
+                    for player in playerlst:
+                        players.append(
+                            {
+                                "name": self.cFilter(player).lower(),
+                                "uuid": "1b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b",
+                            }
+                        )
+                # remove 'pilot1782' from the list
+                for player in players:
+                    if player["name"] == "pilot1782":
+                        players.remove(player)
             except Exception:
                 self.log("Error getting player list", traceback.format_exc())
 
@@ -513,7 +533,7 @@ class funcs:
                 "lastOnlinePlayersList": players,
                 "lastOnlinePlayersMax": status.players.max,
                 "lastOnlineVersionProtocol": self.cFilter(str(status.version.protocol)),
-                "cracked": self.crack(host, port),
+                "cracked": self.crackedPlayerList(host, port) != [],
                 "favicon": status.favicon,
             }
 
@@ -554,6 +574,7 @@ class funcs:
 
             return data
         except TimeoutError:
+            self.dprint("Timeout Error")
             return None
         except Exception:
             print(traceback.format_exc(), " | ", host)
@@ -906,31 +927,6 @@ class funcs:
         text = re.sub(r"§[0-9a-fk-or]", "", text).replace("|", "")
         return text
 
-    def crack(self, host: str, port: str = "25565", username: str = "pilot1782"):
-        args = [host, "-p", port, "--offline-name", username]
-        timeStart = time.time()
-        try:
-            chat.main(args)
-        except twisted.internet.error.ReactorNotRestartable:  # pyright: ignore [reportGeneralTypeIssues]
-            pass
-        except quarry.net.protocol.ProtocolError: # pyright: ignore [reportGeneralTypeIssues]
-            return self.crackCheckAPI(host, port)
-        except builtins.ValueError:
-            return self.crackCheckAPI(host, port)
-        except builtins.KeyError:
-            pass
-        except Exception:
-            return self.crackCheckAPI(host, port)
-
-        try:
-            while True:
-                if chat.flag:
-                    return True
-                elif time.time() - timeStart > 10:
-                    return self.crackCheckAPI(host, port)
-        except Exception:
-            return self.crackCheckAPI(host, port)
-
     def crackCheckAPI(self, host: str, port: str = "25565"):
         url = "https://api.mcstatus.io/v2/status/java/" + host + ":" + str(port)
 
@@ -940,6 +936,20 @@ class funcs:
             return resp.json()["eula_blocked"]
         else:
             return False
+
+    def crackedPlayerList(self, host:str, port:str = "25565", username:str = "pilot1782") -> list:
+        args = [host, '--port', port, '--offline-name', username]
+        tStart = time.time()
+        chat2.main(args)
+
+        while True:
+            if time.time() - tStart > 5:
+                break
+            if len(chat2.playerArr) > 0:
+                return chat2.playerArr
+            time.sleep(1)
+
+        return []
 
 
 if __name__ == "__main__":
