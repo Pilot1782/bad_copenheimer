@@ -23,6 +23,7 @@ except ImportError:
     DSICORD_WEBHOOK = "discord.api.com/..."
     pingsPerSec = None
     maxActive = None
+    useWebHook = None
 
 # Setup
 # ---------------------------------------------
