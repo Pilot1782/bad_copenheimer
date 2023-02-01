@@ -58,7 +58,7 @@ def scan(ip_list):
         scanner = msCan.PortScanner()
     except msCan.PortScannerError:
         print("Masscan not found, please install it")
-        exit(1)
+        exit(0)
 
     try:
         import json
@@ -74,8 +74,7 @@ def scan(ip_list):
 
         return list(result["scan"].keys())
     except OSError:
-        Eprint(traceback.format_exc())
-        exit(1)
+        exit(0)
     except Exception:
         Eprint(traceback.format_exc())
         return []
@@ -109,8 +108,7 @@ async def threader(ip_range):
         for ip in ips: # type: ignore
             check(ip)
     except OSError:
-        Eprint(traceback.format_exc())
-        exit(1)
+        exit(0)
     except Exception:
         Eprint(traceback.format_exc())
 

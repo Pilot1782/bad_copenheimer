@@ -139,6 +139,8 @@ def main(argv):
         reactor.run() # type: ignore
     except twisted.internet.error.ReactorNotRestartable: # pyright: ignore[reportGeneralTypeIssues]
         pass
+    except twisted.internet.error.ReactorAlreadyRunning: # pyright: ignore[reportGeneralTypeIssues]
+        pass
     except Exception:
         traceback.print_exc()
         print("line 86")
