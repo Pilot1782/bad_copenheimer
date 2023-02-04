@@ -586,15 +586,8 @@ class funcs:
         Returns:
             None
         """
-        if self.col is not None:
-            try:
-                docs = list(self.col.find())
-                for doc in docs:
-                    if docs.count(doc) > 1:
-                        self.col.delete_one(doc)
-                        docs.remove(doc)
-            except Exception:
-                pass
+        lst = list(self.col.find()) if self.col is not None else []
+        return list({v['_id']: v for v in lst}.values())
 
     def verify(self, search: dict, serverList: list):
         """Verifies a search
@@ -940,7 +933,10 @@ class funcs:
     def crackedPlayerList(self, host:str, port:str = "25565", username:str = "pilot1782") -> list:
         args = [host, '--port', port, '--offline-name', username]
         tStart = time.time()
-        chat2.main(args)
+        try:
+            chat2.main(args)
+        except Exception:
+            return []
 
         while True:
             if time.time() - tStart > 5:
@@ -950,6 +946,14 @@ class funcs:
             time.sleep(1)
 
         return []
+
+    def playerHead(self, name):
+        url = "https://mc-heads.net/avatar/" + name
+        r = requests.get(url)
+        with open("playerhead.png", "wb") as f:
+            f.write(r.content)
+
+        return interactions.File(filename="playerhead.png")
 
 
 if __name__ == "__main__":

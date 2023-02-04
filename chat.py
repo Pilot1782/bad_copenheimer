@@ -1,3 +1,4 @@
+
 """
 Player lister example client
 
@@ -112,19 +113,31 @@ class PlayerListProtocol(ClientProtocol):
 
 
 class PlayerListFactory(ClientFactory):
-    protocol = PlayerListProtocol
+    try:
+        protocol = PlayerListProtocol
+    except quarry.net.client.ClientProtocol:
+        pass
+    except Exception:
+        traceback.print_exc()
+        print("line 122")
+        pass
 
 
 @defer.inlineCallbacks # pyright: ignore[reportGeneralTypeIssues]
 def run(args):
-    # Log in
-    profile = yield ProfileCLI.make_profile(args)
+    try:
+        # Log in
+        profile = yield ProfileCLI.make_profile(args)
 
-    # Create factory
-    factory = PlayerListFactory(profile)
+        # Create factory
+        factory = PlayerListFactory(profile)
 
-    # Connect!
-    factory.connect(args.host, args.port)
+        # Connect!
+        factory.connect(args.host, args.port)
+    except Exception:
+        traceback.print_exc()
+        print("line 131")
+        ReactorQuit()
 
 
 def main(argv):
@@ -135,29 +148,24 @@ def main(argv):
 
     try:
         run(args)
-        reactor.callLater(10, quit) # type: ignore
+        reactor.callLater(10, ReactorQuit) # type: ignore
         reactor.run() # type: ignore
     except twisted.internet.error.ReactorNotRestartable: # pyright: ignore[reportGeneralTypeIssues]
         pass
-    except twisted.internet.error.ReactorAlreadyRunning: # pyright: ignore[reportGeneralTypeIssues]
-        pass
-    except quarry.net.protocol.ProtocolError:
-        ReactorQuit()
     except Exception:
         traceback.print_exc()
-        print("line 86")
+        print("line 153")
         ReactorQuit()
 
+
 def ReactorQuit():
-    """Exits the reactor gracefully."""
     try:
         reactor.stop() # type: ignore
     except twisted.internet.error.ReactorNotRunning: # pyright: ignore[reportGeneralTypeIssues]
         pass
     except Exception:
         traceback.print_exc()
-        print("line 97")
-
+        print("line 165")
 
 if __name__ == "__main__":
     import sys

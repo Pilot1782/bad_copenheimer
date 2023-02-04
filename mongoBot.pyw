@@ -147,6 +147,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
         search = {}
         flag = True
         url = "https://api.mojang.com/users/profiles/minecraft/"
+        name = ""
         
         # check if player is valid or if the input is a uuid
         resp = requests.get(url+player)
@@ -160,9 +161,11 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
                 return
             else:
                 player = jresp['id']
+                name = jresp['name']
         else:
             try:
                 player = resp.json()['id']
+                name = resp.json()['name']
             except Exception:
                 fncs.dprint("Player not found in minecraft api")
                 await command_send(ctx, embeds=[interactions.Embed(title="Error",description="Player not found in minecraft api",color=0xFF6347)])
@@ -170,12 +173,29 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
 
 
         info = col.find_one({"lastOnlinePlayersList": {"$elemMatch": {"uuid": player}}})
+        # if not info:
+        #     fncs.dprint("Player not found, tying username")
+        #     info = col.find_one({"lastOnlinePlayersList": {"$elemMatch": {"name": name.lower()}}})
+
         fncs.dprint("Finding player", player)
 
         if not info:
             fncs.dprint("Player not found in database")
             await command_send(ctx, embeds=[interactions.Embed(title="Error",description="Player not found in database",color=0xFF6347)])
             return
+
+        # get player head
+        face = fncs.playerHead(name)
+
+        embed = interactions.Embed(
+            title=f"{name} found",
+            description=f"Found {name} in {info['host']}",
+            color=0x00FF00,
+        )
+        embed.set_thumbnail(url="attachment://playerhead.png")
+
+        await command_send(ctx, embeds=[embed], files=[face])
+        
 
     if search == {} and not flag:
         await command_send(ctx, embeds=[interactions.Embed(title="Error",description="No search parameters given")])
