@@ -957,11 +957,11 @@ class funcs:
         return [] if self.crackCheckAPI(host, port) else False
 
     def playerHead(self, name):
-        url = "https://mc-heads.net/avatar/" + name
+        url = "https://minotar.net/avatar/" + name
         r = requests.get(url)
         with open("playerhead.png", "wb") as f:
             f.write(r.content)
-
+        self.dprint("Player head downloaded")
         return interactions.File(filename="playerhead.png")
 
 
