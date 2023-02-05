@@ -106,6 +106,7 @@ async def threader(ip_range):
         ips = scan(ip_range)
 
         for ip in ips: # type: ignore
+            # this is done indiviuallly to prevent your internet from being overloaded
             check(ip)
     except OSError:
         exit(0)
