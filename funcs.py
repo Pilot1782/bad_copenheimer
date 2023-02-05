@@ -539,7 +539,7 @@ class funcs:
                 "lastOnlinePlayersList": players,
                 "lastOnlinePlayersMax": status.players.max,
                 "lastOnlineVersionProtocol": self.cFilter(str(status.version.protocol)),
-                "cracked": (cpLST is True or cpLST == []),
+                "cracked": (True if cpLST or cpLST == [] else False),
                 "favicon": status.favicon,
             }
 
