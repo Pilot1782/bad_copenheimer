@@ -104,10 +104,11 @@ class PlayerListProtocol(ClientProtocol):
         printable_players = []
         for data in self.players.values():
             printable_players.append((data['name'], data['ping']))
+            playerArr.append(data['name'].lower())
+            # self.logger.info(data['name'].lower())
 
-        for display_name, ping in sorted(printable_players):
+        # for display_name, ping in sorted(printable_players):
             # self.logger.info("%4sms %s" % (ping, display_name))
-            playerArr.append(display_name)
 
         ReactorQuit()
 

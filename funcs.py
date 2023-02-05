@@ -12,7 +12,6 @@ import interactions
 from mcstatus import JavaServer
 import mcstatus
 import requests
-import chat as chat2
 
 
 class funcs:
@@ -222,7 +221,7 @@ class funcs:
             return "".join(arr)
 
     # Print but for debugging
-    def dprint(self, *text, log:bool=True):
+    def dprint(self, *text, log:bool=False):
         if self.debug:
             print(" ".join((str(i) for i in text)))
             if log:
@@ -279,7 +278,7 @@ class funcs:
         path_ = f"{self.path}log.log"
         with open(f"{path_}", "a") as f:
             text = " ".join((str(i) for i in text))
-            f.write(f"[{self.ptime()}]{'{V2.0.0}'} {text}\n")
+            f.write(f"[{self.ptime()}]{'{V2.0.0}'} {str(text)}\n")
 
     # Scan a range
     def scan_range(self, ip1:str, ip2:str):  # legacy verson of scan
@@ -476,14 +475,12 @@ class funcs:
             except OSError:
                 return None
 
+            cpLST = self.crackedPlayerList(host, port) # cracked player list
+
             players = []
             try:
-                if status.players.sample is not None and self.crackedPlayerList(host, port) == []:
-                    for (
-                        player
-                    ) in (
-                        status.players.sample
-                    ):  # pyright: ignore [reportOptionalIterable]
+                if status.players.sample is not None and (cpLST == [] or cpLST):
+                    for player in list(status.players.sample):  # pyright: ignore [reportOptionalIterable]
                         url = f"https://api.mojang.com/users/profiles/minecraft/{player.name}"
                         jsonResp = requests.get(url)
                         if len(jsonResp.text) > 2:
@@ -499,27 +496,36 @@ class funcs:
                                     }
                                 )
                         else:
+                            uuid = "1b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b"
+                            if "id" in str(jsonResp.text):
+                                uuid = jsonResp.json()["id"]
                             players.append(
                                 {
                                     "name": self.cFilter(player.name).lower(),
-                                    "uuid": "1b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b",
+                                    "uuid": uuid,
                                 }
                             )
                 else:
-                    playerlst = self.crackedPlayerList(host, port)
+                    playerlst = cpLST
+                    if playerlst == [] or not playerlst or playerlst is None or playerlst == False or playerlst == True:
+                        playerlst = []
+
                     for player in playerlst:
+                        jsonResp = requests.get("https://api.mojang.com/users/profiles/minecraft/" + player)
+                        uuid = "1b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b"
+                        if "id" in str(jsonResp.text):
+                            uuid = jsonResp.json()["id"]
                         players.append(
                             {
                                 "name": self.cFilter(player).lower(),
-                                "uuid": "1b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b",
+                                "uuid": uuid,
                             }
                         )
-                # remove 'pilot1782' from the list
-                for player in players:
-                    if player["name"] == "pilot1782":
-                        players.remove(player)
             except Exception:
                 self.log("Error getting player list", traceback.format_exc())
+
+            # remove duplicates from player list
+            players = [i for n, i in enumerate(players) if i not in players[n + 1 :]]
 
             data = {
                 "host": host,
@@ -533,7 +539,7 @@ class funcs:
                 "lastOnlinePlayersList": players,
                 "lastOnlinePlayersMax": status.players.max,
                 "lastOnlineVersionProtocol": self.cFilter(str(status.version.protocol)),
-                "cracked": self.crackedPlayerList(host, port) != [],
+                "cracked": (cpLST is True or cpLST == []),
                 "favicon": status.favicon,
             }
 
@@ -891,7 +897,7 @@ class funcs:
                 label="Show Players",
                 custom_id="show_players",
                 style=interactions.ButtonStyle.PRIMARY,
-                disabled=(len(players) == 0),
+                disabled=(len(players) == 0 or not online or info["lastOnlinePlayers"] == 0),
             ),
             interactions.Button(
                 label="Next Server",
@@ -930,22 +936,25 @@ class funcs:
         else:
             return False
 
-    def crackedPlayerList(self, host:str, port:str = "25565", username:str = "pilot1782") -> list:
+    def crackedPlayerList(self, host:str, port:str = "25565", username:str = "pilot1782") -> list[str] | bool:
+        import chat as chat2
         args = [host, '--port', port, '--offline-name', username]
         tStart = time.time()
         try:
             chat2.main(args)
         except Exception:
-            return []
+            print(traceback.format_exc())
+            return [] if self.crackCheckAPI(host, port) else False
 
         while True:
-            if time.time() - tStart > 5:
+            if time.time() - tStart > 10:
                 break
             if len(chat2.playerArr) > 0:
+                chat2.playerArr.remove(username.lower())
                 return chat2.playerArr
-            time.sleep(1)
-
-        return []
+            time.sleep(0.25)
+        self.dprint("Timed out: "+(", ".join(chat2.playerArr)))
+        return [] if self.crackCheckAPI(host, port) else False
 
     def playerHead(self, name):
         url = "https://mc-heads.net/avatar/" + name
