@@ -8,28 +8,18 @@ import multiprocessing
 import multiprocessing.pool
 import asyncio
 import funcs
-useWebHook = None
+useWebHook = None;pingsPerSec = None;maxActive = None
 try:
-    import privVars
-    MONGO_URL = privVars.MONGO_URL
-    DSICORD_WEBHOOK = privVars.DSICORD_WEBHOOK
-
-    # optional vars
-    pingsPerSec = privVars.pingsPerSec if 'pingsPerSec' in dir(privVars) else None # pyright: ignore[reportGeneralTypeIssues]
-    maxActive = privVars.maxActive if 'maxActive' in dir(privVars) else None # pyright: ignore[reportGeneralTypeIssues]
-    useWebHook = privVars.useWebHook if 'useWebHook' in dir(privVars) else None # pyright: ignore[reportGeneralTypeIssues]
+    from privVars import *
 except ImportError:
     MONGO_URL = "mongodb+srv://..."
     DSICORD_WEBHOOK = "discord.api.com/..."
-    pingsPerSec = None
-    maxActive = None
-    useWebHook = None
 
 # Setup
 # ---------------------------------------------
 
-useWebHook = False if not useWebHook else useWebHook
-pingsPerSec = 2400 if not pingsPerSec else pingsPerSec
+useWebHook = False if useWebHook is None else useWebHook
+pingsPerSec = 2400 if pingsPerSec is None else pingsPerSec
 maxActive = 5 if not maxActive else maxActive
 DEBUG = True
 time_start = time.time()
