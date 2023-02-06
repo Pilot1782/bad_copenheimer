@@ -8,7 +8,8 @@ import multiprocessing
 import multiprocessing.pool
 import asyncio
 import funcs
-useWebHook = None;pingsPerSec = None;maxActive = None
+
+useWebHook, pingsPerSec , maxActive = None, None, None
 try:
     from privVars import *
 except ImportError:
@@ -37,6 +38,7 @@ fncs = funcs.funcs(collection=col)
 
 # Funcs
 # ---------------------------------------------
+
 def check(host):
     if useWebHook:
         return fncs.check(host, webhook=DSICORD_WEBHOOK)
