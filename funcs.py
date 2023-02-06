@@ -808,7 +808,7 @@ class funcs:
 
         numServers = len(_serverList)
         online = (
-            self.check(info["host"], str(_port)) is not None
+            info is not None
         )
 
         try:
@@ -858,7 +858,7 @@ class funcs:
 
         try:  # this adds the favicon in the most overcomplicated way possible
             if online:
-                stats = self.check(info["host"], str(_port))
+                stats = info
 
                 fav = (
                     stats["favicon"]
