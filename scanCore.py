@@ -20,7 +20,7 @@ except ImportError:
 
 useWebHook = False if useWebHook is None else useWebHook
 pingsPerSec = 2400 if pingsPerSec is None else pingsPerSec
-maxActive = 5 if not maxActive else maxActive
+maxActive = 5 if maxActive is None else maxActive
 DEBUG = True
 time_start = time.time()
 upHosts = []
