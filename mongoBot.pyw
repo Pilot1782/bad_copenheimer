@@ -130,6 +130,9 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
     if host:
         search["host"] = host.lower()
         fncs.check(host, str(port))
+        info = col.find_one({"host": host.lower(), "port": str(port)})
+        flag = True
+        search = {}
     if version:
         search["lastOnlineVersion"] = version.lower()
     if motd:
@@ -148,7 +151,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
         flag = True
         url = "https://api.mojang.com/users/profiles/minecraft/"
         name = ""
-        
+
         # check if player is valid or if the input is a uuid
         resp = requests.get(url+player)
         print(resp.text)
@@ -173,9 +176,6 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
 
 
         info = col.find_one({"lastOnlinePlayersList": {"$elemMatch": {"uuid": player}}})
-        # if not info:
-        #     fncs.dprint("Player not found, tying username")
-        #     info = col.find_one({"lastOnlinePlayersList": {"$elemMatch": {"name": name.lower()}}})
 
         fncs.dprint("Finding player", player)
 
@@ -195,7 +195,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
         embed.set_thumbnail(url="attachment://playerhead.png")
 
         await command_send(ctx, embeds=[embed], files=[face])
-        
+
 
     if search == {} and not flag:
         await command_send(ctx, embeds=[interactions.Embed(title="Error",description="No search parameters given")])
@@ -208,7 +208,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
                 _serverList = []
                 _info_ = fncs._find(search, port=str(port), serverList=serverList)
 
-                _serverList = list(_info_[0]) # pyright: ignore [reportGeneralTypeIssues]
+                _serverList = list(_info_[0])
                 # remove duplicates from _serverList
                 _serverList = [i for n, i in enumerate(_serverList) if i not in _serverList[n + 1:]]
                 numServers = len(_serverList) 
@@ -239,7 +239,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
             if _file: 
                 await command_edit(ctx, embeds=[embed], files=[_file], components=comps) 
             else:
-                await command_edit(ctx, embeds=[embed], components=comps) # pyright: ignore [reportGeneralTypeIssues]
+                await command_edit(ctx, embeds=[embed], components=comps)
         except Exception:
             fncs.log(traceback.format_exc())
             await command_send(ctx, embeds=[interactions.Embed(title="Error", description="An error occured while searching. Please try again later and check the logs for more details.", color=0xFF0000)])

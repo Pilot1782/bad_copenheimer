@@ -654,7 +654,7 @@ class funcs:
         random.shuffle(out)
         return out
 
-    def _find(self, search: dict, serverList: list, port: str = "25565"):
+    def _find(self, search: dict, serverList: list, port: str = "25565") -> list:
         """Finds a server in the database
 
         Args:
@@ -683,7 +683,7 @@ class funcs:
         if search != {}:
             servers = list(self.col.find())
         else:
-            return {
+            return [{
                 "host": "Server not found",
                 "lastOnline": 0,
                 "lastOnlinePlayers": -1,
@@ -693,7 +693,7 @@ class funcs:
                 "lastOnlinePlayersList": [],
                 "lastOnlinePlayersMax": -1,
                 "favicon": "Server not found",
-            }
+            }]
 
         for server in servers:
             _items = list(search.items())
@@ -721,7 +721,7 @@ class funcs:
         else:
             info = server
 
-        return _info, info
+        return [_info, info]
 
     def genEmbed(self, _serverList: list, _port: str = "25565"):
         """Generates an embed for the server list
