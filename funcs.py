@@ -965,7 +965,6 @@ class funcs:
         return interactions.File(filename="playerhead.png")
     
     def countSort(self, lst, remDups:bool=True) -> list:
-        self.dprint("Starting count sort: "+time.strftime('%Y/%m/%d %H:%M:%S', time.localtime()))
         # sort by frequency
         counts = {}
         
@@ -976,11 +975,12 @@ class funcs:
                 counts[i] = 1
                 
         out = sorted(lst, key=lambda x: counts[x], reverse=True)
-        self.dprint("Finished count sort: "+time.strftime('%Y/%m/%d %H:%M:%S', time.localtime()))
         if remDups:
-            self.dprint("Removing duplicates: "+time.strftime('%Y/%m/%d %H:%M:%S', time.localtime()))
-            out = ([i for n, i in enumerate(out) if i not in out[:n]])
-            self.dprint("Finished removing duplicates: "+time.strftime('%Y/%m/%d %H:%M:%S', time.localtime()))
+            tmp = []
+            for i in out:
+                if i not in tmp:
+                    tmp.append(i)
+            out = tmp
 
         return out
 
