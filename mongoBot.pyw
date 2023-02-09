@@ -323,21 +323,21 @@ async def stats(ctx: interactions.CommandContext):
     try:
         """Get stats about the database"""
         players = 0
-        for i in col.find():
-            players += i["lastOnlinePlayers"]
+        for i in list(col.find()):
+            players += i["lastOnlinePlayers"] if i["lastOnlinePlayers"] < 100000 else 0
         serverCount = col.count_documents({})
 
         text = f"Total servers: `{serverCount}`\nTotal players: `{players}`\nMost common version: `...`"
 
         await ctx.send(embeds=[interactions.Embed(title="Stats", description=text)])  
-        print("Getting most common version...")
+        fncs.dprint("Getting most common version...")
 
         versions = []
 
-        for i in col.find():
+        for i in list(col.find()):
             versions.append(i["lastOnlineVersion"])
 
-        versions.sort(key=versions.count, reverse=True)
+        versions = fncs.countSort(versions)
 
 
         print(
