@@ -128,9 +128,12 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
     # if parameters are given, add them to the search
 
     if host:
+        global ServerInfo
+        global serverList
+        
         search["host"] = host.lower()
         fncs.check(host, str(port))
-        info = col.find_one({"host": host.lower(), "port": str(port)})
+        info = col.find_one({"host": host.lower()})
         flag = True
         search = {}
     if version:
@@ -213,7 +216,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
                 _serverList = [i for n, i in enumerate(_serverList) if i not in _serverList[n + 1:]]
                 numServers = len(_serverList) 
             else:
-                fncs.dprint("Flag is up, setting server info to", info)
+                fncs.dprint("Flag is up, setting server info")
                 ServerInfo = info
                 _serverList = [info]
                 numServers = 1
