@@ -14,6 +14,7 @@ from interactions.ext.files import command_edit, component_edit, command_send, c
 
 from funcs import funcs
 
+autoRestart = False
 try:
     from privVars import *
 except ImportError:
@@ -349,7 +350,7 @@ async def stats(ctx: interactions.CommandContext):
         )
 
         # edit the message
-        text = "Total servers: `{}`\nTotal players: `{}`\nMost common version:\n```{}```".format(serverCount,players,('\n'.join(versions[0:5])))
+        text = "Total servers: `{}`\nTotal players: `{}`\nMost common version:\n```\n{}\n```".format(serverCount,players,('\n'.join(versions[:5])))
 
         await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])  
     except Exception:
@@ -370,7 +371,17 @@ async def help(ctx: interactions.CommandContext):
         embeds=[
             interactions.Embed(
                 title="Help",
-                description="""Commands: \n`/find` - Find a server\n*Returns:*\n`    (desc, db _id, players, version, ping, players online, last online (y/m/d h:m:s))`\n`/stats` - Get stats about the database\n`/restart` - Restart the bot\n`/help` - Get help\n""",
+                description="""Commands:
+`/find` - Find a server
+    *Returns:*
+        `(desc, db _id, players, version, ping, players online, last online (y/m/d h:m:s))`
+        
+`/stats` - Get stats about the database
+
+`/restart` - Restart the bot
+
+`/help` - Get help
+""",
             )
         ]
     )
@@ -391,4 +402,8 @@ if __name__ == "__main__":
                 print(e)
                 fncs.log(traceback.format_exc())
                 time.sleep(30)
-                break
+                if autoRestart:
+                    print("Restarting...")
+                    continue
+                else:
+                    break
