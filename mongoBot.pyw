@@ -207,6 +207,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
             global _serverList
             global ServerInfo
             
+            # get server info
             if not flag:
                 _serverList = []
                 _info_ = fncs._find(search, port=str(port), serverList=serverList)
@@ -330,7 +331,7 @@ async def stats(ctx: interactions.CommandContext):
             players += i["lastOnlinePlayers"] if i["lastOnlinePlayers"] < 100000 else 0
         serverCount = col.count_documents({})
 
-        text = f"Total servers: `{serverCount}`\nTotal players: `{players}`\nMost common version: `...`"
+        text = f"Total servers: `{serverCount}`\nTotal players: `{players}`\nMost common version:\n`...`"
 
         await ctx.send(embeds=[interactions.Embed(title="Stats", description=text)])  
         fncs.dprint("Getting most common version...")
@@ -344,7 +345,7 @@ async def stats(ctx: interactions.CommandContext):
 
 
         print(
-            f"Total servers: {serverCount}\nTotal players: {players}\nMost common version: {str(versions[0:10])[1:-1]}"
+            f"Total servers: {serverCount}\nTotal players: {players}\nMost common version: {str(versions[:10])}"
         )
 
         # edit the message
