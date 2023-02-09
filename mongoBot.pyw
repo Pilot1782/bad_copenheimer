@@ -327,30 +327,28 @@ async def stats(ctx: interactions.CommandContext):
     await ctx.defer()
     try:
         """Get stats about the database"""
+        
+        await ctx.send(embeds=[interactions.Embed(title="Stats", description="Getting stats...")])
         players = 0
+        versions = []
         for i in list(col.find()):
             players += i["lastOnlinePlayers"] if i["lastOnlinePlayers"] < 100000 else 0
+            versions.append(i["lastOnlineVersion"])
         serverCount = col.count_documents({})
 
         text = f"Total servers: `{serverCount}`\nTotal players: `{players}`\nMost common version:\n`...`"
 
-        await ctx.send(embeds=[interactions.Embed(title="Stats", description=text)])  
+        await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])  
+        
         fncs.dprint("Getting most common version...")
-
-        versions = []
-
-        for i in list(col.find()):
-            versions.append(i["lastOnlineVersion"])
-
         versions = fncs.countSort(versions)
 
-
         print(
-            f"Total servers: {serverCount}\nTotal players: {players}\nMost common version: {str(versions[:10])}"
+            f"Total servers: {serverCount}\nTotal players: {players}\nMost common versions: {str(versions[:10])}"
         )
 
         # edit the message
-        text = "Total servers: `{}`\nTotal players: `{}`\nMost common version:\n```\n{}\n```".format(serverCount,players,('\n'.join(versions[:5])))
+        text = "Total servers: `{}`\nTotal players: `{}`\nMost common version:```\n{}\n```".format(serverCount,players,('\n'.join(versions[:5])))
 
         await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])  
     except Exception:
@@ -377,8 +375,6 @@ async def help(ctx: interactions.CommandContext):
         `(desc, db _id, players, version, ping, players online, last online (y/m/d h:m:s))`
         
 `/stats` - Get stats about the database
-
-`/restart` - Restart the bot
 
 `/help` - Get help
 """,
