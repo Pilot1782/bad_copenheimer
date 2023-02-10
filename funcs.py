@@ -819,7 +819,7 @@ class funcs:
         # setup the embed
         embed = interactions.Embed(
             title=("🟢 " if online else "🔴 ") + info["host"],
-            description="```" + info["lastOnlineDescription"] + "```",
+            description="```desc.txt\n" + info["lastOnlineDescription"] + "```",
             color=(0x00FF00 if online else 0xFF0000),
             type="rich",
             fields=[
@@ -913,7 +913,7 @@ class funcs:
 
         return embed, _file, row, ServerInfo
 
-    def cFilter(self, text: str):
+    def cFilter(self, text: str, trim:bool = True):
         """Removes all color bits from a string
 
         Args:
@@ -923,7 +923,9 @@ class funcs:
             [str]: The string without color bits
         """
         # remove all color bits
-        text = re.sub(r"§[0-9a-fk-or]", "", text).replace("|", "")
+        text = re.sub(r"§[0-9a-fk-or]*", "", text).replace("|", "")
+        if trim:
+            text = text.strip()
         return text
 
     def crackCheckAPI(self, host: str, port: str = "25565"):
