@@ -819,7 +819,7 @@ class funcs:
         # setup the embed
         embed = interactions.Embed(
             title=("🟢 " if online else "🔴 ") + info["host"],
-            description="```desc.txt\n" + info["lastOnlineDescription"] + "```",
+            description="```\n" + info["lastOnlineDescription"] + "```",
             color=(0x00FF00 if online else 0xFF0000),
             type="rich",
             fields=[
@@ -882,7 +882,7 @@ class funcs:
             print(traceback.format_exc(), info)
             _file = None
 
-        players = self.check(info["host"])
+        players = info
         if players is not None:
             players = (
                 players["lastOnlinePlayersList"]
@@ -954,7 +954,8 @@ class funcs:
             if len(chat2.playerArr) > 0:
                 chat2.playerArr.remove(username.lower())
                 return chat2.playerArr
-            time.sleep(0.25)
+            time.sleep(0.2)
+
         self.dprint("Timed out: "+(", ".join(chat2.playerArr)))
         return [] if self.crackCheckAPI(host, port) else False
 

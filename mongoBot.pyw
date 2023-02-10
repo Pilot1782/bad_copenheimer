@@ -130,7 +130,6 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
 
     if host:
         search["host"] = host.lower()
-        fncs.check(host, str(port))
         serverList = [col.find_one({"host": host.lower()})]
         flag = True
         search = {}
@@ -227,7 +226,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
                 
 
             fncs.dprint(len(_serverList),search,flag)
-            await command_send(ctx, embeds=[interactions.Embed(title="Searching...",description="Getting info of a server out of "+str(numServers)+" servers...")])
+            await command_send(ctx, embeds=[interactions.Embed(title="Searching...",description="Getting info about a server out of "+str(numServers)+" servers...")])
 
 
             # setup the embed
@@ -347,7 +346,7 @@ async def stats(ctx: interactions.CommandContext):
         )
 
         # edit the message
-        text = "Total servers: `{}`\nTotal players: `{}`\nMost common version:```\n{}\n```".format(serverCount,players,('\n'.join(versions[:5])))
+        text = "Total servers: `{}`\nTotal players: `{}`\nMost common version:```css\n{}\n```".format(serverCount,players,('\n'.join(versions[:5])))
 
         await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])  
     except Exception:
