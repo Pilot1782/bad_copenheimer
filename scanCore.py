@@ -9,7 +9,7 @@ import multiprocessing.pool
 import asyncio
 import funcs
 
-useWebHook, pingsPerSec , maxActive = None, None, None
+useWebHook, pingsPerSec , maxActive = False, 2400, 5
 try:
     from privVars import *
 except ImportError:
@@ -19,16 +19,13 @@ except ImportError:
 # Setup
 # ---------------------------------------------
 
-useWebHook = False if useWebHook is None else useWebHook
-pingsPerSec = 2400 if pingsPerSec is None else pingsPerSec
-maxActive = 5 if maxActive is None else maxActive
 DEBUG = True
+
 time_start = time.time()
 upHosts = []
 results = []
 threads = []
 pool = multiprocessing.pool.ThreadPool(maxActive)
-c = 0
 
 client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi("1"))  # type: ignore
 db = client["mc"]
