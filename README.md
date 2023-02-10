@@ -12,7 +12,7 @@ The new bot is now public, you can check it out in the [dev-builds](https://gith
 
 ## Installation
 
-[Installation Page](https://www.github.com/Pilot1782/bad_copenheimer/wiki/Installation)
+[Installation Page](https://github.com/Pilot1782/bad_copenheimer/wiki/Installation-(New-Bot))
 
 [Wiki](https://www.github.com/Pilot1782/bad_copenheimer/wiki)
 
