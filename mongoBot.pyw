@@ -6,6 +6,7 @@ import threading
 import random
 import requests
 import json
+import io
 
 import pymongo
 from bson.objectid import ObjectId
@@ -41,10 +42,11 @@ col = db["servers"]
 serverList = []
 ServerInfo = {}
 _port = "25565"
+stdout = io.StringIO()
 
 fncs = funcs(collection=col)
-
-
+def print(*args, **kwargs):
+    fncs.print(' '.join(map(str, args)), **kwargs)
 # Commands
 # ---------------------------------------------
 
@@ -116,7 +118,6 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
     """
 
     print("find", _id, host, port, player, version, motd, maxplayers, cracked)
-    fncs.log("find", _id, host, port, player, version, motd, maxplayers, cracked)
     
     # send as embed
     await ctx.defer()
@@ -244,7 +245,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
             else:
                 await command_edit(ctx, embeds=[embed], components=comps)
         except Exception:
-            fncs.log(traceback.format_exc())
+            fncs.dprint(traceback.format_exc())
             await command_send(ctx, embeds=[interactions.Embed(title="Error", description="An error occured while searching. Please try again later and check the logs for more details.", color=0xFF0000)])
             print(f"----\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n====\n====\n{ServerInfo}\n====\n----") 
 
@@ -351,7 +352,7 @@ async def stats(ctx: interactions.CommandContext):
         await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])  
     except Exception:
         print(f"====\nError: {traceback.format_exc()}\n====")
-        fncs.log(traceback.format_exc())
+        fncs.dprint(traceback.format_exc())
 
         await ctx.send(embeds=[interactions.Embed(title="Error", description="Error getting stats, check the console and log for more info.")])  
 
@@ -394,7 +395,7 @@ if __name__ == "__main__":
                 break
             else:
                 print(e)
-                fncs.log(traceback.format_exc())
+                fncs.dprint(traceback.format_exc())
                 time.sleep(30)
                 if autoRestart:
                     print("Restarting...")

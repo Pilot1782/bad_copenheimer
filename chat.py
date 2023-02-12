@@ -161,7 +161,8 @@ def main(argv):
 
 def ReactorQuit():
     try:
-        reactor.stop() # type: ignore
+        if reactor.running: # type: ignore
+            reactor.stop() # type: ignore
     except twisted.internet.error.ReactorNotRunning: # pyright: ignore[reportGeneralTypeIssues]
         pass
     except Exception:

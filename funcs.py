@@ -1,6 +1,4 @@
 import base64
-import builtins
-import twisted, quarry
 import random
 import re
 import subprocess
@@ -12,7 +10,37 @@ import interactions
 from mcstatus import JavaServer
 import mcstatus
 import requests
+from contextlib import redirect_stdout
+import sys
+import logging
 
+norm = sys.stdout
+
+class StreamToLogger(object):
+    """
+    Fake file-like stream object that redirects writes to a logger instance.
+    """
+    def __init__(self, logger, level):
+       self.logger = logger
+       self.level = level
+       self.linebuf = ''
+
+    def write(self, buf):
+       for line in buf.rstrip().splitlines():
+          self.logger.log(self.level, line.rstrip())
+
+    def flush(self):
+        pass
+    
+    def read(self):
+        with open("log.log", "r") as f:
+            return f.read()
+
+logging.basicConfig(level=logging.DEBUG,format='%(asctime)s:%(levelname)s:%(name)s:%(message)s',filename='log.log',filemode='a')
+log = logging.getLogger('STDOUT')
+out = StreamToLogger(log,logging.INFO)
+sys.stdout = out
+sys.stderr = StreamToLogger(log,logging.ERROR)
 
 class funcs:
     """Cursed code that I don't want to touch. It works, but it's not pretty.
@@ -25,7 +53,7 @@ class funcs:
 
     def __init__(self,
                 collection=None, # pyright: ignore[reportGeneralTypeIssues]
-                path:str=osys.path.dirname(osys.path.abspath(__file__))
+                path:str=osys.path.dirname(osys.path.abspath(__file__)),
             ):
         """Init the class
 
@@ -33,6 +61,7 @@ class funcs:
             path (str, optional): Path to the directory of the folder. Defaults to os.path.dirname(os.path.abspath(__file__)).
         """
 
+        self.stdout = out
         self.path = path + ("\\" if osys.name == "nt" else "/")
         self.col = collection
         self.settings_path = self.path + (
@@ -77,6 +106,10 @@ class funcs:
             self.sport = data["server-port"]
         except FileNotFoundError:
             pass
+        
+        # clear log.log
+        with open(self.path + "log.log", "w") as f:
+            f.write("")
 
     # Functions getting defeined
 
@@ -135,8 +168,7 @@ class funcs:
         err = p.stderr.read()  # type: ignore
         if p.returncode != 0:
             # The run_command() function is responsible for logging STDERR
-            print(str(err))
-            self.log(str(err))
+            self.dprint(str(err))
             return "Error: " + str(err)
 
     # Login into a minecraft server
@@ -181,7 +213,7 @@ class funcs:
                     server = JavaServer.lookup(f"{ip}:25565")
 
                     status = server.status()
-                    print(
+                    self.print(
                         "The server has {0} players and replied in {1} ms".format(
                             status.players.online, status.latency
                         )
@@ -190,25 +222,25 @@ class funcs:
                     # 'ping' is supported by all Minecraft servers that are version 1.7 or higher.
                     # It is included in a 'status' call, but is exposed separate if you do not require the additional info.
                     latency = server.ping()
-                    print("The server replied in {0} ms".format(latency))
+                    self.print("The server replied in {0} ms".format(latency))
 
                     # 'query' has to be enabled in a servers' server.properties file.
                     # It may give more information than a ping, such as a full player list or mod information.
                     query = server.query()
-                    print(
+                    self.print(
                         "The server has the following players online: {0}".format(
                             ", ".join(query.players.names)
                         )
                     )
             except:
                 outp.append("Sorry, execution failed.")
-            print("\n".join(outp))
+            self.print("\n".join(outp))
             return "Done\n".join(outp)
 
     # Clean masscan output
     def clean(self, line:str):
         if "rate" in line:
-            print("Skipped")
+            self.print("Skipped")
         else:
             arr = []
             words = ["Discovered", "open", "port", "25565/tcp", "on"]
@@ -221,11 +253,16 @@ class funcs:
             return "".join(arr)
 
     # Print but for debugging
-    def dprint(self, *text, log:bool=False):
-        if self.debug:
+    def dprint(self, *text, override:bool=False):
+        print(" ".join((str(i) for i in text)))
+
+        if self.debug or override:
+            sys.stdout = norm  # reset stdout
             print(" ".join((str(i) for i in text)))
-            if log:
-                self.log(" ".join((str(i) for i in text)))
+            sys.stdout = self.stdout  # redirect stdout
+                
+    def print(self, *args, **kwargs):
+        self.dprint(' '.join(map(str, args)), **kwargs, override=True)
 
     # Scan to increase simplicity
     def scan(self, ipL:str, ipU:str):  # dont use scan_range
@@ -265,21 +302,6 @@ class funcs:
                 global flag
                 flag = True
 
-    # If error then log it
-    def log(self, *text):
-        """Logging function
-
-        Args:
-            text (String): text to log
-
-        Returns:
-            None
-        """
-        path_ = f"{self.path}log.log"
-        with open(f"{path_}", "a") as f:
-            text = " ".join((str(i) for i in text))
-            f.write(f"[{self.ptime()}]{'{V2.0.0}'} {str(text)}\n")
-
     # Scan a range
     def scan_range(self, ip1:str, ip2:str):  # legacy verson of scan
         """Legacy Scan function
@@ -293,19 +315,19 @@ class funcs:
             string: output for discord
         """
 
-        print("This is a legacy version of scan, use scan instead")
+        self.print("This is a legacy version of scan, use scan instead")
 
         yield f"Scanning started: {self.ptime()}"
 
         flag = False
-        print(self.ptime())
+        self.print(self.ptime())
         yield "Testing the Tool"
-        print(f"Scanning {'172.65.238.0'}-{'172.65.240.255'}")
+        self.print(f"Scanning {'172.65.238.0'}-{'172.65.240.255'}")
         arr = []
         bol = False
 
         if osys == 0 and self.mascan is True:
-            print("testing using masscan")
+            self.print("testing using masscan")
 
             for line in self.scan("172.65.238.0", "172.65.239.0"):
                 if flag:
@@ -322,7 +344,6 @@ class funcs:
                 yield "Test passed!"
             else:
                 self.dprint("Test failed.")
-                self.log("Test failed.")
                 yield "Test Failed."
         else:
             command = f"java -Dfile.encoding=UTF-8 -jar {self.path} -nooutput -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {self.threads} -ti {self.timeout}"
@@ -342,7 +363,7 @@ class funcs:
                 yield "Test Failed."
         yield f"\nStarting the scan at {self.ptime()}\nPinging {self.lower_ip_bound} through {self.upper_ip_bound}, using {self.threads} threads and timingout after {self.timeout} miliseconds."
 
-        print(
+        self.print(
             f"\nScanning on {self.lower_ip_bound} through {self.upper_ip_bound}, with {self.threads} threads and timeout of {self.timeout}"
         )
 
@@ -360,7 +381,7 @@ class funcs:
                         bol = True
                         cnt += 1
                         arr.append(line)
-                        print(line)
+                        self.print(line)
                         yield line
                 except:
                     bol = False
@@ -370,7 +391,7 @@ class funcs:
             command = f"java -Dfile.encoding=UTF-8 -jar {self.path} -nooutput -range {self.lower_ip_bound}-{self.upper_ip_bound} -ports 25565-25577 -th {self.threads} -ti {self.timeout}"
             arr = []
             if self.debug:
-                print(command)
+                self.print(command)
             for line in self.scan(self.lower_ip_bound, self.upper_ip_bound):
                 if flag:
                     break
@@ -433,9 +454,9 @@ class funcs:
             with open(filename, "w") as json_file:
                 json.dump(data, json_file, indent=4, separators=(",", ": "))
             self.dprint(data)
-            print("Successfully appended {0} lines to the JSON file".format(len(data)))
+            self.print("Successfully appended {0} lines to the JSON file".format(len(data)))
             yield "Successfully appended {0} lines to the JSON file".format(len(data))
-            self.log(
+            self.dprint(
                 "Successfully appended {0} lines to the JSON file".format(len(data))
             )
 
@@ -522,7 +543,7 @@ class funcs:
                             }
                         )
             except Exception:
-                self.log("Error getting player list", traceback.format_exc())
+                self.dprint("Error getting player list", traceback.format_exc())
 
             # remove duplicates from player list
             players = [i for n, i in enumerate(players) if i not in players[n + 1 :]]
@@ -544,7 +565,7 @@ class funcs:
             }
 
             if not self.col.find_one({"host": host}):
-                print("{} not in database, adding...".format(host))
+                self.print("{} not in database, adding...".format(host))
                 self.col.insert_one(data)
                 if webhook != "":
                     requests.post(
@@ -571,7 +592,7 @@ class funcs:
                         else:
                             data["lastOnlinePlayersList"].append(i)
                 except Exception:
-                    print(
+                    self.print(
                         traceback.format_exc(), " \\/ ", host  # pyright: ignore [reportInvalidStringEscapeSequence]
                     )
                     break
@@ -583,7 +604,7 @@ class funcs:
             self.dprint("Timeout Error")
             return None
         except Exception:
-            print(traceback.format_exc(), " | ", host)
+            self.print(traceback.format_exc(), " | ", host)
             return None
 
     def remove_duplicates(self):
@@ -649,7 +670,7 @@ class funcs:
             if flag:
                 out.append(server)
 
-        print(str(len(out)) + " servers match")
+        self.print(str(len(out)) + " servers match")
 
         random.shuffle(out)
         return out
@@ -708,8 +729,8 @@ class funcs:
                             serverList.append(server)
                             break
             except Exception:
-                print(traceback.format_exc())
-                print(server, _items, type(server), type(_items))
+                self.print(traceback.format_exc())
+                self.print(server, _items, type(server), type(_items))
                 break
 
         server = self.col.find_one(search)  # legacy backup
@@ -780,6 +801,7 @@ class funcs:
         ServerInfo = info
 
         if info is None:
+            self.dprint("Server not found",len(_serverList))
             embed = interactions.Embed(
                 title="Server not found",
                 description="Server not found",
@@ -873,13 +895,13 @@ class funcs:
                     _file = interactions.File(filename="server-icon.png")
                     embed.set_thumbnail(url="attachment://server-icon.png")
 
-                    print("Favicon added")
+                    self.print("Favicon added")
                 else:
                     _file = None
             else:
                 _file = None
         except Exception:
-            print(traceback.format_exc(), info)
+            self.print(traceback.format_exc(), info)
             _file = None
 
         players = info
@@ -933,7 +955,7 @@ class funcs:
 
         resp = requests.get(url)
         if resp.status_code == 200:
-            print("Fetching from API")
+            self.print("Fetching from API")
             return resp.json()["eula_blocked"]
         else:
             return False
@@ -945,19 +967,24 @@ class funcs:
         try:
             chat2.main(args)
         except Exception:
-            print(traceback.format_exc())
+            self.print(traceback.format_exc())
             return [] if self.crackCheckAPI(host, port) else False
 
         while True:
-            if time.time() - tStart > 10:
+            if time.time() - tStart > 15:
                 break
             if len(chat2.playerArr) > 0:
                 chat2.playerArr.remove(username.lower())
                 return chat2.playerArr
             time.sleep(0.2)
 
-        self.dprint("Timed out: "+(", ".join(chat2.playerArr)))
-        return [] if self.crackCheckAPI(host, port) else False
+        out = [] if self.crackCheckAPI(host, port) else False
+
+        if "kicked: this server has mods that require" in self.stdout.read().lower():
+            self.dprint("Server has mods, assuming not cracked")
+            out = False if out is False else True
+
+        return out
 
     def playerHead(self, name):
         url = "https://minotar.net/avatar/" + name
@@ -989,4 +1016,5 @@ class funcs:
 
 
 if __name__ == "__main__":
+    sys.stdout = norm
     print("Bruh what are you doing here?\nThis is a library, not a script bro.")
