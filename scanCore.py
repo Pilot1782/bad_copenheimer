@@ -10,6 +10,7 @@ import asyncio
 import funcs
 
 useWebHook, pingsPerSec , maxActive = False, 2400, 5
+masscan_search_path = 'masscan', '/usr/bin/masscan', '/usr/local/bin/masscan', '/sw/bin/masscan', '/opt/local/bin/masscan'
 try:
     from privVars import *
 except ImportError:
@@ -30,11 +31,15 @@ pool = multiprocessing.pool.ThreadPool(maxActive)
 client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi("1"))  # type: ignore
 db = client["mc"]
 col = db["servers"]
-
 fncs = funcs.funcs(collection=col)
 
 # Funcs
 # ---------------------------------------------
+
+def print(*args, **kwargs):
+    fncs.print(' '.join(map(str, args)), **kwargs)
+
+print(masscan_search_path)
 
 def check(host):
     if useWebHook:
@@ -44,7 +49,7 @@ def check(host):
 
 def scan(ip_list):
     try:
-        scanner = msCan.PortScanner()
+        scanner = msCan.PortScanner(masscan_search_path=masscan_search_path)
     except msCan.PortScannerError:
         print("Masscan not found, please install it")
         exit(0)
@@ -52,7 +57,6 @@ def scan(ip_list):
     try:
         import json
 
-        scanner = msCan.PortScanner()
         scanner.scan(
             ip_list,
             ports="25565",
@@ -80,15 +84,16 @@ def Eprint(text):
 
 
 def disLog(text, end="\r"):
-    try:
-        import requests
+    if useWebHook:
+        try:
+            import requests
 
-        url = DSICORD_WEBHOOK
-        data = {"content": text + end}
-        requests.post(url, data=data)
-    except Exception:
-        Eprint(text+'\n'+traceback.format_exc())
-        pass
+            url = DSICORD_WEBHOOK
+            data = {"content": text + end}
+            requests.post(url, data=data)
+        except Exception:
+            Eprint(text+'\n'+traceback.format_exc())
+            pass
 
 async def threader(ip_range):
     try:
@@ -115,7 +120,7 @@ for i in range(255):
         ip_lists.append(f"{i}.{j}.0.0/16")
 random.shuffle(ip_lists)
 
-ip_lists = ip_lists[:500]  # remove for final version
+ip_lists = ip_lists[:1]  # remove for final version
 time.sleep(0.5)
 
 normal = threading.active_count()
