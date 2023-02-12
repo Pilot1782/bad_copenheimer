@@ -1,3 +1,5 @@
+# pyriht: reportGeneralTypeIssues=false
+
 import base64
 import random
 import re
@@ -253,15 +255,15 @@ class funcs:
             return "".join(arr)
 
     # Print but for debugging
-    def dprint(self, *text, override:bool=False):
-        print(" ".join((str(i) for i in text)))
+    def dprint(self, *text, override:bool=False, end="\n"):
+        print(" ".join((str(i) for i in text)), end=end)
 
         if self.debug or override:
             sys.stdout = norm  # reset stdout
             print(" ".join((str(i) for i in text)))
             sys.stdout = self.stdout  # redirect stdout
-                
-    def print(self, *args, **kwargs):
+
+    def print(self,*args, **kwargs):
         self.dprint(' '.join(map(str, args)), **kwargs, override=True)
 
     # Scan to increase simplicity

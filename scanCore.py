@@ -120,7 +120,7 @@ for i in range(255):
         ip_lists.append(f"{i}.{j}.0.0/16")
 random.shuffle(ip_lists)
 
-ip_lists = ip_lists[:1]  # remove for final version
+# ip_lists = ip_lists[:1000]  # remove for final version
 time.sleep(0.5)
 
 normal = threading.active_count()
@@ -136,7 +136,7 @@ async def makeThreads():
             await asyncio.sleep(0.1)
         t.start()
 
-        print(f"started proc for {ip_list} | {threading.active_count()-normal}/{maxActive} active threads, #{ip_lists.index(ip_list)+1} {' '*10}")
+        # print(f"started proc for {ip_list} | {threading.active_count()-normal}/{maxActive} active threads, #{ip_lists.index(ip_list)+1} {' '*10}")
 
 
 asyncio.run(makeThreads())
