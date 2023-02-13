@@ -56,6 +56,7 @@ class funcs:
     def __init__(self,
                 collection=None, # pyright: ignore[reportGeneralTypeIssues]
                 path:str=osys.path.dirname(osys.path.abspath(__file__)),
+                debug:bool=True
             ):
         """Init the class
 
@@ -69,50 +70,13 @@ class funcs:
         self.settings_path = self.path + (
             r"\settings.json" if osys.name == "nt" else "/settings.json"
         )
+        self.debug = debug
 
-        try:
-            with open(
-                self.settings_path, "r"
-            ) as read_file:  # Open the settings file and start defineing variables from it
-                global data
-                data = json.load(read_file)
-
-            # Define based on testing
-            self.testing = data["testing"]  # bc it easier
-            if not self.testing:
-                self.TOKEN = data["TOKEN"]
-                self.home_dir = data["home-dir"]
-            else:
-                self.TOKEN = osys.getenv("TOKEN")
-                self.home_dir = osys.path.dirname(osys.path.abspath(__file__))
-
-            self.testing = data["testing"]
-            self.output_path = self.home_dir + "outputs.json"
-            self.usr_name = data["user"]
-            self.lower_ip_bound = data["lower_ip_bound"]
-            self.upper_ip_bound = data["upper_ip_bound"]
-            self.threads = data["threads"]
-            self.threads = int(self.threads)
-            self.timeout = data["timeout"]
-            self.timeout = int(self.timeout)
-            self.os = 1 if osys.name == "nt" else 0
-            if self.os == 1:
-                self.osp = "\\"
-            else:
-                self.osp = "/"
-            self.mascan = data["masscan"]
-            self.time2 = data["time2"]
-            self.debug = data["debugging"]
-            self.passwd = data["password"]
-            self.server = data["server"]
-            self.sport = data["server-port"]
-        except FileNotFoundError:
-            pass
-        
         # clear log.log
         with open(self.path + "log.log", "w") as f:
             f.write("")
 
+    # ------------------ #
     # Functions getting defeined
 
 
@@ -124,6 +88,7 @@ class funcs:
             file.seek(0)
             json.dump(file_data, file, indent=4)
 
+
     # Print the Time
     def ptime(self):
         x = time.localtime()
@@ -134,10 +99,6 @@ class funcs:
         z = f"{z[0]} {z[1]}/{z[2]} {z[3]}:{z[4]}:{z[5]}"
         return z
 
-    # Start a python server
-    def hserver(self):
-        if self.server:
-            osys.system("python -m http.server {0}".format(self.sport))
 
     # Run a command and get line by line output
     def run_command(self, command:str, powershell:bool=False):
@@ -173,71 +134,6 @@ class funcs:
             self.dprint(str(err))
             return "Error: " + str(err)
 
-    # Login into a minecraft server
-    flag = False
-
-    def login(self, host:str):
-        for i in self.run_command(
-            "python3 {4}playerlist.pyw --auth {0}:{1} -p {2} {3}".format(
-                self.usr_name, self.passwd, 25565, host, self.home_dir
-            )
-        ):
-            self.dprint(i.decode("utf-8"))
-            flag = True
-
-            return i.decode("utf-8")
-
-    # Get the file output depending on the os
-    def file_out(self):
-        with open(self.output_path, "r") as f:
-            data1 = json.load(f)
-            for i in data1:
-                return i["ip"]
-
-    # Look through your files and see if the server you scan has 'player' playing on it, going to be redon soon
-    # The redoo may be implemented but i have to test the file first.
-    def find(self, player:str):
-        """Legacy find player function, now obsolete
-
-        Args:
-            player (string): ip addr
-
-        Returns:
-            string: ip addr
-        """
-
-        outp = []
-        with open(f"{self.home_dir}outputs.json", "r") as f:
-            data = json.load(f)
-            try:
-                for i in data:
-                    ip = i["ip"]
-                    server = JavaServer.lookup(f"{ip}:25565")
-
-                    status = server.status()
-                    self.print(
-                        "The server has {0} players and replied in {1} ms".format(
-                            status.players.online, status.latency
-                        )
-                    )
-
-                    # 'ping' is supported by all Minecraft servers that are version 1.7 or higher.
-                    # It is included in a 'status' call, but is exposed separate if you do not require the additional info.
-                    latency = server.ping()
-                    self.print("The server replied in {0} ms".format(latency))
-
-                    # 'query' has to be enabled in a servers' server.properties file.
-                    # It may give more information than a ping, such as a full player list or mod information.
-                    query = server.query()
-                    self.print(
-                        "The server has the following players online: {0}".format(
-                            ", ".join(query.players.names)
-                        )
-                    )
-            except:
-                outp.append("Sorry, execution failed.")
-            self.print("\n".join(outp))
-            return "Done\n".join(outp)
 
     # Clean masscan output
     def clean(self, line:str):
@@ -266,201 +162,6 @@ class funcs:
     def print(self, *args, **kwargs):
         self.dprint(' '.join(map(str, args)), **kwargs, override=True)
 
-    # Scan to increase simplicity
-    def scan(self, ipL:str, ipU:str):  # dont use scan_range
-        """Scan function that uses ipv4 addrs
-
-        Args:
-            ipL (ip String): lower bound
-            ipU (ip String): upper bound
-
-        Yields:
-            ip String: active servers
-        """
-
-        if osys == 0 and self.mascan is True:
-            command = f"sudo masscan -p25565 {ipL}-{ipU} --rate={self.threads * 3} --exclude 255.255.255.255"
-            for i in self.run_command(command):
-                self.dprint(i.decode("utf-8"))
-                if "Discovered" in i.decode("utf-8"):
-                    yield self.clean(i.decode("utf-8"))
-        else:
-            command = f"java -Dfile.encoding=UTF-8 -jar {self.path} -range {ipL}-{ipU} -ports 25565-25577 -th {self.threads} -ti {self.timeout}"
-            for i in self.run_command(command):
-                self.dprint(i.decode("utf-8"))
-                if "(" in i.decode("utf-8"):
-                    yield self.clean(i.decode("utf-8"))
-
-            osys.chdir("outputs")
-            files = osys.listdir(osys.getcwd())
-            for i in files:
-                if i.endswith(".txt"):
-                    osys.remove(f"{self.home_dir}outputs\\{i}")
-
-    # Stop command
-    def halt(self):
-        for line in self.run_command(f"{self.home_dir}stopper.pyw"):
-            if "halt" in line:  # type: ignore
-                global flag
-                flag = True
-
-    # Scan a range
-    def scan_range(self, ip1:str, ip2:str):  # legacy verson of scan
-        """Legacy Scan function
-
-        Args:
-            ip1 (ip String): lower bound
-            ip2 (ip String): upper bound
-
-        Yields:
-            ip String: active servers
-            string: output for discord
-        """
-
-        self.print("This is a legacy version of scan, use scan instead")
-
-        yield f"Scanning started: {self.ptime()}"
-
-        flag = False
-        self.print(self.ptime())
-        yield "Testing the Tool"
-        self.print(f"Scanning {'172.65.238.0'}-{'172.65.240.255'}")
-        arr = []
-        bol = False
-
-        if osys == 0 and self.mascan is True:
-            self.print("testing using masscan")
-
-            for line in self.scan("172.65.238.0", "172.65.239.0"):
-                if flag:
-                    break
-                try:
-                    self.dprint(line)
-                    if "D" in line:  # type: ignore
-                        bol = True
-                        break
-                except:
-                    bol = False
-            if bol:
-                self.dprint("Test passed!")
-                yield "Test passed!"
-            else:
-                self.dprint("Test failed.")
-                yield "Test Failed."
-        else:
-            command = f"java -Dfile.encoding=UTF-8 -jar {self.path} -nooutput -range 172.65.238.0-172.65.240.255 -ports 25565-25577 -th {self.threads} -ti {self.timeout}"
-            bol = False
-            self.dprint(command)
-            for line in list(self.scan("172.65.238.0", "172.65.240.255")):
-                if flag:
-                    break
-                if "(" in line:  # type: ignore
-                    bol = True
-                    break
-            if bol:
-                self.dprint("Test passed!")
-                yield "Test passed!"
-            else:
-                self.dprint("Test failed.")
-                yield "Test Failed."
-        yield f"\nStarting the scan at {self.ptime()}\nPinging {self.lower_ip_bound} through {self.upper_ip_bound}, using {self.threads} threads and timingout after {self.timeout} miliseconds."
-
-        self.print(
-            f"\nScanning on {self.lower_ip_bound} through {self.upper_ip_bound}, with {self.threads} threads and timeout of {self.timeout}"
-        )
-
-        outp = []
-        if osys == 0 and self.mascan is True:
-            command = f"sudo masscan -p25565 {self.lower_ip_bound}-{self.upper_ip_bound} --rate={self.threads * 3} --exclude 255.255.255.255"
-            bol = False
-            cnt = 0
-            self.dprint(command)
-            for line in self.scan(self.lower_ip_bound, self.upper_ip_bound):
-                if flag:
-                    break
-                try:
-                    if "." in line:  # type: ignore
-                        bol = True
-                        cnt += 1
-                        arr.append(line)
-                        self.print(line)
-                        yield line
-                except:
-                    bol = False
-            outp = arr
-            self.dprint(outp)
-        else:
-            command = f"java -Dfile.encoding=UTF-8 -jar {self.path} -nooutput -range {self.lower_ip_bound}-{self.upper_ip_bound} -ports 25565-25577 -th {self.threads} -ti {self.timeout}"
-            arr = []
-            if self.debug:
-                self.print(command)
-            for line in self.scan(self.lower_ip_bound, self.upper_ip_bound):
-                if flag:
-                    break
-                if line == "" or line is None:
-                    pass
-                else:
-                    try:
-                        if line.startswith("[") or line.startswith("("):
-                            yield line
-                            arr.append(line)
-                    except:
-                        pass
-            a = []
-            for i in arr:
-                if i.startswith("(1") or i.startswith("(2"):
-                    a.append(i)
-            b = []
-            for i in a:
-                f = []
-                for j in i:
-                    if j == ":":
-                        break
-                    if j == "(":
-                        pass
-                    else:
-                        f.append(j)
-                b.append("".join(f))
-            self.dprint("{0}\n{1}".format(b, len(b)))
-            outp = b
-        yield f"\nScanning finished at {self.ptime()}"
-        with open(self.output_path) as fp:
-            data = json.load(fp)
-            for i in outp:
-                bol = False
-                for j in data:
-                    if i in j["ip"]:
-                        bol = False
-                        break
-                    bol = True
-                if bol:
-                    data.append(
-                        {
-                            "ip": i,
-                            "timestamp": "1641565033",
-                            "ports": [
-                                {
-                                    "port": 25565,
-                                    "proto": "tcp",
-                                    "status": "open",
-                                    "reason": "syn-ack",
-                                    "ttl": 64,
-                                }
-                            ],
-                        }
-                    )
-            filename = self.output_path
-
-            self.dprint(outp)
-
-            with open(filename, "w") as json_file:
-                json.dump(data, json_file, indent=4, separators=(",", ": "))
-            self.dprint(data)
-            self.print("Successfully appended {0} lines to the JSON file".format(len(data)))
-            yield "Successfully appended {0} lines to the JSON file".format(len(data))
-            self.dprint(
-                "Successfully appended {0} lines to the JSON file".format(len(data))
-            )
 
     def check(self, host: str, port:str="25565", webhook: str = ""):
         """Checks out a host and adds it to the database if it's not there
