@@ -1,4 +1,4 @@
-# pyriht: reportGeneralTypeIssues=false
+# pyright: reportGeneralTypeIssues=false
 
 import base64
 import random
@@ -199,7 +199,7 @@ class funcs:
             except OSError:
                 return None
 
-            cpLST = self.crackedPlayerList(host, port) # cracked player list
+            cpLST = self.crackedPlayerList(host, str(port)) # cracked player list
 
             players = []
             try:
@@ -493,7 +493,7 @@ class funcs:
             ]
 
             row = interactions.ActionRow(
-                components=buttons  # pyright: ignore [reportGeneralTypeIssues]
+                components=buttons
             )
 
             return [embed, None, row]

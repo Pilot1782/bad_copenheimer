@@ -127,13 +127,14 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
     global _port, serverList, ServerInfo
     search = {}
     info = {}
-    _port = port
+    _port = str(port)
     flag = False
     # if parameters are given, add them to the search
 
     if host:
         search["host"] = host.lower()
-        serverList = [col.find_one({"host": host.lower()})]
+        ServerInfo = col.find_one({"host": host.lower()})
+        serverList = [ServerInfo]
         flag = True
         search = {}
     if version:
@@ -204,41 +205,37 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
         await command_send(ctx, embeds=[interactions.Embed(title="Error",description="No search parameters given")])
     else:
         try:
-            global _serverList
-            global ServerInfo
-
             # get server info
             if not flag:
-                _serverList = []
-                _info_ = fncs._find(search, port=str(port), serverList=_serverList)
+                serverList = []
+                _info_ = fncs._find(search, port=str(port), serverList=serverList)
 
-                _serverList = list(_info_[0])
+                serverList = list(_info_[0])
                 # remove duplicates from _serverList
                 tmp = []
-                for i in _serverList:
+                for i in serverList:
                     if i not in tmp:
                         tmp.append(i)
-                _serverList = tmp
+                serverList = tmp
 
-                numServers = len(_serverList) 
+                numServers = len(serverList) 
             else:
                 fncs.dprint("Flag is up, setting server info")
                 random.shuffle(serverList)
-                _serverList = serverList
                 numServers = len(serverList)
 
 
-            fncs.dprint(len(_serverList),search,flag)
+            fncs.dprint(len(serverList),search,flag)
             await command_send(ctx, embeds=[interactions.Embed(title="Searching...",description="Getting info about a server out of "+str(numServers)+" servers...")])
 
 
             # setup the embed
-            embed = fncs.genEmbed(_serverList, str(_port))
+            embed = fncs.genEmbed(serverList, str(_port))
             _file = embed[1]
             comps = embed[2]
             ServerInfo = embed[3] if ServerInfo == {} else ServerInfo
             embed = embed[0]
-            
+
             fncs.dprint("Embed generated",embed, comps, _file)
 
             # send the embed sometimes with the favicon
@@ -304,7 +301,7 @@ async def rand_select(ctx: interactions.ComponentContext):
     
     global _serverList
 
-    embed = fncs.genEmbed(_serverList, _port)
+    embed = fncs.genEmbed(serverList, _port)
     _file = embed[1]
     button = embed[2]
     embed = embed[0]
