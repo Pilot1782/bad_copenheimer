@@ -10,7 +10,12 @@ import asyncio
 import funcs
 
 useWebHook, pingsPerSec , maxActive = False, 2400, 5
-masscan_search_path = 'masscan', '/usr/bin/masscan', '/usr/local/bin/masscan', '/sw/bin/masscan', '/opt/local/bin/masscan'
+masscan_search_path = ('masscan',
+                       '/usr/bin/masscan',
+                       '/usr/local/bin/masscan',
+                       '/sw/bin/masscan',
+                       '/opt/local/bin/masscan'
+                       )
 try:
     from privVars import *
 except ImportError:
@@ -36,10 +41,9 @@ fncs = funcs.funcs(collection=col)
 # Funcs
 # ---------------------------------------------
 
+
 def print(*args, **kwargs):
     fncs.print(' '.join(map(str, args)), **kwargs)
-
-print(masscan_search_path)
 
 def check(host):
     if useWebHook:
@@ -93,7 +97,6 @@ def disLog(text, end="\r"):
             requests.post(url, data=data)
         except Exception:
             Eprint(text+'\n'+traceback.format_exc())
-            pass
 
 async def threader(ip_range):
     try:
@@ -135,8 +138,6 @@ async def makeThreads():
         while threading.active_count()-normal >= maxActive:
             await asyncio.sleep(0.1)
         t.start()
-
-        # print(f"started proc for {ip_list} | {threading.active_count()-normal}/{maxActive} active threads, #{ip_lists.index(ip_list)+1} {' '*10}")
 
 
 asyncio.run(makeThreads())

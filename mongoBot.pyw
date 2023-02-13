@@ -45,8 +45,10 @@ _port = "25565"
 stdout = io.StringIO()
 
 fncs = funcs(collection=col)
+
 def print(*args, **kwargs):
     fncs.print(' '.join(map(str, args)), **kwargs)
+
 # Commands
 # ---------------------------------------------
 
@@ -217,7 +219,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
                     if i not in tmp:
                         tmp.append(i)
                 _serverList = tmp
-                
+
                 numServers = len(_serverList) 
             else:
                 fncs.dprint("Flag is up, setting server info")

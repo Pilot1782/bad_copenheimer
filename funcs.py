@@ -263,7 +263,7 @@ class funcs:
             print(" ".join((str(i) for i in text)))
             sys.stdout = self.stdout  # redirect stdout
 
-    def print(self,*args, **kwargs):
+    def print(self, *args, **kwargs):
         self.dprint(' '.join(map(str, args)), **kwargs, override=True)
 
     # Scan to increase simplicity
@@ -828,7 +828,7 @@ class funcs:
                 components=buttons  # pyright: ignore [reportGeneralTypeIssues]
             )
 
-            return [embed, None, row]
+            return [embed, None, row, info]
 
         numServers = len(_serverList)
         online = (
