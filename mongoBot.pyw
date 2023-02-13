@@ -120,7 +120,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
     """
 
     print("find", _id, host, port, player, version, motd, maxplayers, cracked)
-    
+
     # send as embed
     await ctx.defer()
 
@@ -206,7 +206,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
         try:
             global _serverList
             global ServerInfo
-            
+
             # get server info
             if not flag:
                 _serverList = []
@@ -226,7 +226,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
                 random.shuffle(serverList)
                 _serverList = serverList
                 numServers = len(serverList)
-                
+
 
             fncs.dprint(len(_serverList),search,flag)
             await command_send(ctx, embeds=[interactions.Embed(title="Searching...",description="Getting info about a server out of "+str(numServers)+" servers...")])

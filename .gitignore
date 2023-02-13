@@ -1,5 +1,4 @@
 .env
-setupdone.yay
 p.env
 bad_cope.py
 .replit
@@ -16,3 +15,4 @@ mongoHandler.pyw
 testing.pyw
 funcs.py
 playerhead.png
+setup_done.yay

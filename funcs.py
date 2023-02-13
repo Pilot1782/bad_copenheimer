@@ -8,13 +8,13 @@ import json
 import time
 import os as osys
 import traceback
+import requests
+import sys
+import logging
+
 import interactions
 from mcstatus import JavaServer
 import mcstatus
-import requests
-from contextlib import redirect_stdout
-import sys
-import logging
 
 norm = sys.stdout
 
@@ -33,7 +33,7 @@ class StreamToLogger(object):
 
     def flush(self):
         pass
-    
+
     def read(self):
         with open("log.log", "r") as f:
             return f.read()

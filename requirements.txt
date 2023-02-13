@@ -4,3 +4,5 @@ pymongo
 requests
 python-masscan
 interactions-files
+twisted
+quarry
