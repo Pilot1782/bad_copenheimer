@@ -44,8 +44,8 @@ def privVariables():
 
 
 def main():
-    checkMasscan()
     instPyPackage()
+    checkMasscan()
     privVariables()
 
 if __name__ == "__main__":
