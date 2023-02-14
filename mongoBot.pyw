@@ -320,6 +320,13 @@ async def stats(ctx: interactions.CommandContext):
         await ctx.send(embeds=[interactions.Embed(title="Stats", description="Getting stats...")])
         
         fncs.dprint("Getting stats...")
+        
+        serverCount = col.count_documents({})
+        
+        text = f"Total servers: `{serverCount}`\nRough Player Count: `...`\nMost common version:\n`...`"
+        
+        await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])
+        
         players = 0
         versions = []
         
@@ -327,8 +334,6 @@ async def stats(ctx: interactions.CommandContext):
         for i in col.find({}).sort("lastOnlinePlayers", pymongo.DESCENDING).limit(1000):
             players += i["lastOnlinePlayers"] if i["lastOnlinePlayers"] < 100000 else 0
             versions.append(i["lastOnlineVersion"])
-
-        serverCount = col.count_documents({})
 
         text = f"Total servers: `{serverCount}`\nRough Player Count: `{players}`\nMost common version:\n`...`"
 
