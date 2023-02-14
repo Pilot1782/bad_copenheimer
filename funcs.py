@@ -313,18 +313,15 @@ class funcs:
     def remove_duplicates(self):
         if self.col is None:
             return
-        
         field = "host"
-        # Get all the documents from the collection
-        all_docs = list(self.col.find({}))
-        # Create a set to store the unique values of the given field
-        unique_field_values = set()
-
-        # Loop through the documents and only keep the ones with unique values in the given field
-        for doc in all_docs:
-            if doc[field] not in unique_field_values:
-                unique_field_values.add(doc[field])
+        cursor = self.col.find({})
+        seen = set()
+        for doc in cursor:
+            value = doc[field]
+            if value in seen:
                 self.col.delete_one({"_id": doc["_id"]})
+            else:
+                seen.add(value)
 
 
     def verify(self, search: dict, serverList: list):
