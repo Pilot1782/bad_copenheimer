@@ -9,7 +9,7 @@ import multiprocessing.pool
 import asyncio
 import funcs
 
-useWebHook, pingsPerSec , maxActive = False, 2400, 5
+useWebHook, pingsPerSec , maxActive = False, 4800, 10
 masscan_search_path = ('masscan',
                        '/usr/bin/masscan',
                        '/usr/local/bin/masscan',
