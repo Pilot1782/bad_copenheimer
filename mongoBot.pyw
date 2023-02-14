@@ -246,9 +246,6 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
             print(f"----\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n====\n====\n{ServerInfo}\n====\n----") 
 
 
-    threading.Thread(target=fncs.remove_duplicates).start();fncs.dprint("Duplicates removed")
-
-
 @bot.component("show_players")
 async def show_players(ctx: interactions.ComponentContext):  
     try:
@@ -289,7 +286,6 @@ async def show_players(ctx: interactions.ComponentContext):
         print(traceback.format_exc())
         await component_send(ctx, embeds=[interactions.Embed(title="Error", description="An error occured while searching. Please try again later and check the logs for more details.", color=0xFF0000)], ephemeral=True)
 
-    threading.Thread(target=fncs.remove_duplicates).start();fncs.dprint("Duplicates removed")
 
 @bot.component("rand_select")
 async def rand_select(ctx: interactions.ComponentContext):
@@ -310,9 +306,6 @@ async def rand_select(ctx: interactions.ComponentContext):
         await component_edit(ctx, embeds=[embed], files=[_file], components=button)
     else:
         await component_edit(ctx, embeds=[embed], components=button)
-
-    threading.Thread(target=fncs.remove_duplicates).start();fncs.dprint("Duplicates removed")
-
 
 
 @bot.command(
@@ -360,10 +353,6 @@ async def stats(ctx: interactions.CommandContext):
         fncs.dprint(traceback.format_exc())
 
         await ctx.send(embeds=[interactions.Embed(title="Error", description="Error getting stats, check the console and log for more info.")])  
-
-
-    threading.Thread(target=fncs.remove_duplicates).start();fncs.dprint("Duplicates removed")
-
 
 
 @bot.command(name="help")
