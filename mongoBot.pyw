@@ -1,4 +1,4 @@
-# pyright: basic
+# pyright: basic, reportGeneralTypeIssues=false
 import sys
 import time
 import traceback
@@ -124,7 +124,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
     # send as embed
     await ctx.defer()
 
-    global _port, serverList, ServerInfo
+    global _port, serverList
     search = {}
     info = {}
     _port = str(port)
@@ -133,8 +133,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
 
     if host:
         search["host"] = host.lower()
-        ServerInfo = col.find_one({"host": host.lower()})
-        serverList = [ServerInfo]
+        serverList = [fncs.check(host, port)]
         flag = True
         search = {}
     if version:
@@ -147,7 +146,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
         search["cracked"] = cracked
     if _id:
         search = {}
-        info = col.find_one({"_id": ObjectId(_id)})
+        serverList = [col.find_one({"_id": ObjectId(_id)})]
         flag = True
         fncs.dprint("Finding id", _id)
     if player:
@@ -178,7 +177,6 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
                 await command_send(ctx, embeds=[interactions.Embed(title="Error",description="Player not found in minecraft api",color=0xFF6347)])
                 return
 
-
         serverList = list(col.find({"lastOnlinePlayersList": {"$elemMatch": {"uuid": player}}}))
 
         fncs.dprint("Finding player", player)
@@ -208,15 +206,8 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
             # get server info
             if not flag:
                 serverList = []
-                _info_ = fncs._find(search, port=str(port), serverList=serverList)
-
-                serverList = list(_info_[0])
-                # remove duplicates from _serverList
-                tmp = []
-                for i in serverList:
-                    if i not in tmp:
-                        tmp.append(i)
-                serverList = tmp
+                fncs.dprint("Flag is down, getting server info from database")
+                serverList = fncs._find(search)
 
                 numServers = len(serverList) 
             else:
@@ -233,7 +224,6 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
             embed = fncs.genEmbed(serverList, str(_port))
             _file = embed[1]
             comps = embed[2]
-            ServerInfo = embed[3] if ServerInfo == {} else ServerInfo
             embed = embed[0]
 
             fncs.dprint("Embed generated",embed, comps, _file)
@@ -255,14 +245,15 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
 @bot.component("show_players")
 async def show_players(ctx: interactions.ComponentContext):  
     try:
-        await ctx.defer()
+        await ctx.defer(ephemeral=True)
 
         # get current message
+        msg = ctx.message
 
-        global ServerInfo
-        info = ServerInfo
+        host = msg.embeds[0].title[2:]  #pyright: ignore[reportOptionalSubscript, reportOptionalMemberAccess]
 
-        players = list(info["lastOnlinePlayersList"])
+        players = col.find_one({"host": host})["lastOnlinePlayersList"]  #pyright: ignore[reportOptionalSubscript]
+
         random.shuffle(players) # for servers with more than 25 logged players
 
         embed = interactions.Embed(

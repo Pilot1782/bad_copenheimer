@@ -311,13 +311,21 @@ class funcs:
             return None
 
     def remove_duplicates(self):
-        """Removes duplicate entries in the database
+        if self.col is None:
+            return
+        
+        field = "host"
+        # Get all the documents from the collection
+        all_docs = list(self.col.find({}))
+        # Create a set to store the unique values of the given field
+        unique_field_values = set()
 
-        Returns:
-            None
-        """
-        lst = list(self.col.find()) if self.col is not None else []
-        return list({v['_id']: v for v in lst}.values())
+        # Loop through the documents and only keep the ones with unique values in the given field
+        for doc in all_docs:
+            if doc[field] not in unique_field_values:
+                unique_field_values.add(doc[field])
+                self.col.delete_one({"_id": doc["_id"]})
+
 
     def verify(self, search: dict, serverList: list):
         """Verifies a search
@@ -378,7 +386,7 @@ class funcs:
         random.shuffle(out)
         return out
 
-    def _find(self, search: dict, serverList: list, port: str = "25565") -> list:
+    def _find(self, search: dict) -> list:
         """Finds a server in the database
 
         Args:
@@ -404,9 +412,7 @@ class funcs:
             return []
 
         # find the server given the parameters
-        if search != {}:
-            servers = list(self.col.find())
-        else:
+        if search == {}:
             return [{
                 "host": "Server not found",
                 "lastOnline": 0,
@@ -419,33 +425,14 @@ class funcs:
                 "favicon": "Server not found",
             }]
 
-        for server in servers:
-            _items = list(search.items())
-            try:
-                for _item in _items:
-                    if _item[0] in server:
-                        if type(_item[0]) == bool or type(_item[0]) == int:
-                            if _item[1] == server[_item[0]]:
-                                serverList.append(server)
-                                break
-                        elif str(_item[1]).lower() in str(server[_item[0]]).lower():
-                            serverList.append(server)
-                            break
-            except Exception:
-                self.print(traceback.format_exc())
-                self.print(server, _items, type(server), type(_items))
-                break
 
-        server = self.col.find_one(search)  # legacy backup
-
-        _info = self.verify(search, serverList)
-
-        if len(_info) > 0:
-            info = random.choice(_info)
-        else:
-            info = server
-
-        return [_info, info]
+        search_query = {}
+        for key, value in search.items():
+            if isinstance(value, str):
+                search_query[key] = {"$regex": f"^{value}$", "$options": "i"}
+            else:
+                search_query[key] = value
+        return list(self.col.find(search_query))
 
     def genEmbed(self, _serverList: list, _port: str = "25565"):
         """Generates an embed for the server list
@@ -498,10 +485,9 @@ class funcs:
 
             return [embed, None, row]
 
-        global ServerInfo
         random.shuffle(_serverList)
-        info = self.check(_serverList[0]["host"], _port)
-        ServerInfo = info
+        info = _serverList[0]
+
 
         if info is None:
             self.dprint("Server not found",len(_serverList))
@@ -636,7 +622,7 @@ class funcs:
             components=buttons  # pyright: ignore [reportGeneralTypeIssues]
         )
 
-        return embed, _file, row, ServerInfo
+        return embed, _file, row
 
     def cFilter(self, text: str, trim:bool = True):
         """Removes all color bits from a string
