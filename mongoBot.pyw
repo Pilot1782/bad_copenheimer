@@ -132,8 +132,15 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
     # if parameters are given, add them to the search
 
     if host:
-        search["host"] = host.lower()
-        serverList = [fncs.check(host, port)]
+        serverList = [col.find_one({"host": host})]
+        
+        if not serverList[0]:
+            # try to get the server info from check
+            info = fncs.check(host, port)
+            
+            if not info:
+                serverList = []
+        
         flag = True
         search = {}
     if version:
@@ -322,14 +329,12 @@ async def stats(ctx: interactions.CommandContext):
         fncs.dprint("Getting stats...")
         
         serverCount = col.count_documents({})
-        
         text = f"Total servers: `{serverCount}`\nRough Player Count: `...`\nMost common version:\n`...`"
-        
         await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])
         
+        # count the players and compile a list of versions
         players = 0
         versions = []
-        
         # parse the top 1000 servers
         for i in col.find({}).sort("lastOnlinePlayers", pymongo.DESCENDING).limit(1000):
             players += i["lastOnlinePlayers"] if i["lastOnlinePlayers"] < 100000 else 0

@@ -200,10 +200,13 @@ class funcs:
                 return None
 
             cpLST = self.crackedPlayerList(host, str(port)) # cracked player list
+            cracked = bool(cpLST or cpLST == [])
 
             players = []
             try:
-                if status.players.sample is not None and (cpLST == [] or cpLST):
+                if status.players.sample is not None:
+                    self.dprint("Getting players from sample")
+                    
                     for player in list(status.players.sample):  # pyright: ignore [reportOptionalIterable]
                         url = f"https://api.mojang.com/users/profiles/minecraft/{player.name}"
                         jsonResp = requests.get(url)
@@ -229,10 +232,9 @@ class funcs:
                                     "uuid": uuid,
                                 }
                             )
-                else:
+                elif cracked:
+                    self.dprint("Getting players from cracked player list")
                     playerlst = cpLST
-                    if playerlst == [] or not playerlst or playerlst is None or playerlst == False or playerlst == True:
-                        playerlst = []
 
                     for player in playerlst:
                         jsonResp = requests.get("https://api.mojang.com/users/profiles/minecraft/" + player)
@@ -263,7 +265,7 @@ class funcs:
                 "lastOnlinePlayersList": players,
                 "lastOnlinePlayersMax": status.players.max,
                 "lastOnlineVersionProtocol": self.cFilter(str(status.version.protocol)),
-                "cracked": bool(cpLST or cpLST == []),
+                "cracked": cracked,
                 "favicon": status.favicon,
             }
 
