@@ -322,13 +322,15 @@ async def stats(ctx: interactions.CommandContext):
         fncs.dprint("Getting stats...")
         players = 0
         versions = []
-        for i in col.find():
+        
+        # parse the top 1000 servers
+        for i in col.find({}).sort("lastOnlinePlayers", pymongo.DESCENDING).limit(1000):
             players += i["lastOnlinePlayers"] if i["lastOnlinePlayers"] < 100000 else 0
             versions.append(i["lastOnlineVersion"])
 
         serverCount = col.count_documents({})
 
-        text = f"Total servers: `{serverCount}`\nTotal players: `{players}`\nMost common version:\n`...`"
+        text = f"Total servers: `{serverCount}`\nRough Player Count: `{players}`\nMost common version:\n`...`"
 
         await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])  
         
@@ -336,11 +338,11 @@ async def stats(ctx: interactions.CommandContext):
         versions = fncs.countSort(versions)
 
         print(
-            f"Total servers: {serverCount}\nTotal players: {players}\nMost common versions: {str(versions[:10])}"
+            f"Total servers: {serverCount}\nRough Player Count: {players}\nMost common versions: {str(versions[:10])}"
         )
 
         # edit the message
-        text = "Total servers: `{}`\nTotal players: `{}`\nMost common version:```css\n{}\n```".format(serverCount,players,('\n'.join(versions[:5])))
+        text = "Total servers: `{}`\nRough Player Count: `{}`\nMost common version:```css\n{}\n```".format(serverCount,players,('\n'.join(versions[:5])))
 
         await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])  
     except Exception:
