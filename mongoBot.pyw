@@ -318,11 +318,14 @@ async def stats(ctx: interactions.CommandContext):
         """Get stats about the database"""
         
         await ctx.send(embeds=[interactions.Embed(title="Stats", description="Getting stats...")])
+        
+        fncs.dprint("Getting stats...")
         players = 0
         versions = []
-        for i in list(col.find()):
+        for i in col.find():
             players += i["lastOnlinePlayers"] if i["lastOnlinePlayers"] < 100000 else 0
             versions.append(i["lastOnlineVersion"])
+
         serverCount = col.count_documents({})
 
         text = f"Total servers: `{serverCount}`\nTotal players: `{players}`\nMost common version:\n`...`"

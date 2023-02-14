@@ -38,7 +38,7 @@ class StreamToLogger(object):
         with open("log.log", "r") as f:
             return f.read()
 
-logging.basicConfig(level=logging.DEBUG,format='%(asctime)s:%(levelname)s:%(name)s:%(message)s',filename='log.log',filemode='a')
+logging.basicConfig(level=logging.INFO,format='%(asctime)s:%(levelname)s:%(name)s:%(message)s',filename='log.log',filemode='a')
 log = logging.getLogger('STDOUT')
 out = StreamToLogger(log,logging.INFO)
 sys.stdout = out
