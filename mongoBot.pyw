@@ -355,7 +355,7 @@ async def stats(ctx: interactions.CommandContext):
         fncs.dprint("Sorting server list...")
         versions.sort(key=lambda x: x["count"], reverse=True)
         
-        topTen = [f"{x['name']} - {x['count']}" for x in versions[:10]]
+        topTen = [x['name'] for x in versions[:10]]
 
         print(
             f"Total servers: {serverCount}\nRough Player Count: {players}\nMost common versions: {topTen}"
