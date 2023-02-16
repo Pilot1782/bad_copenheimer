@@ -332,7 +332,7 @@ async def stats(ctx: interactions.CommandContext):
         versions = []
         for server in servers:
             version = server["lastOnlineVersion"]
-            players += server["lastOnlinePlayers"]
+            players += server["lastOnlinePlayers"] if server["lastOnlinePlayers"] < 100000 else 0
             
             if version == "":
                 continue
