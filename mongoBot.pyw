@@ -322,6 +322,8 @@ async def stats(ctx: interactions.CommandContext):
         fncs.dprint("Getting stats...")
         
         serverCount = col.count_documents({})
+        # add commas to server count
+        serverCount = "{:,}".format(serverCount)
         text = f"Total servers: `{serverCount}`\nRough Player Count: `...`\nMost common version:\n`...`"
         await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])
         
@@ -347,7 +349,9 @@ async def stats(ctx: interactions.CommandContext):
                         v["count"] += 1
                         break
 
-
+        # add commas to player count
+        players = "{:,}".format(players)
+        
         text = f"Total servers: `{serverCount}`\nRough Player Count: `{players}`\nMost common version:\n`...`"
 
         await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])  
