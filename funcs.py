@@ -223,7 +223,7 @@ class funcs:
                                     }
                                 )
                         else:
-                            uuid = "1b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b"
+                            uuid = "---n/a---"
                             if "id" in str(jsonResp.text):
                                 uuid = jsonResp.json()["id"]
                             players.append(
@@ -238,7 +238,7 @@ class funcs:
 
                     for player in playerlst:
                         jsonResp = requests.get("https://api.mojang.com/users/profiles/minecraft/" + player)
-                        uuid = "1b1b1b1b-1b1b-1b1b-1b1b-1b1b1b1b1b1b"
+                        uuid = "---n/a---"
                         if "id" in str(jsonResp.text):
                             uuid = jsonResp.json()["id"]
                         players.append(
@@ -489,6 +489,8 @@ class funcs:
 
 
         if info is None:
+            logging.error("Server not found: "+str(_serverList))
+            
             self.dprint("Server not found",len(_serverList))
             embed = interactions.Embed(
                 title="Server not found",
@@ -515,6 +517,10 @@ class funcs:
             )
 
             return [embed, None, row, info]
+        
+        info2 = self.check(info["host"], _port)
+        if info2 is not None:
+            info = info2
 
         numServers = len(_serverList)
         online = (
