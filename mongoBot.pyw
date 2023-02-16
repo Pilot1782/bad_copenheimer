@@ -188,7 +188,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
 
         fncs.dprint("Finding player", player)
 
-        if not info:
+        if not serverList:
             fncs.dprint("Player not found in database")
             await command_send(ctx, embeds=[interactions.Embed(title="Error",description="Player not found in database",color=0xFF6347)])
             return
@@ -198,7 +198,7 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
 
         embed = interactions.Embed(
             title=f"{name} found",
-            description=f"Found {name} in {info['host']}",
+            description=f"Found {name} in {len(serverList)} servers",
             color=0x00FF00,
         )
         embed.set_thumbnail(url="attachment://playerhead.png")
@@ -325,27 +325,44 @@ async def stats(ctx: interactions.CommandContext):
         text = f"Total servers: `{serverCount}`\nRough Player Count: `...`\nMost common version:\n`...`"
         await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])
         
+        
+        servers = col.find().sort("lastOnlinePlayers", pymongo.DESCENDING).limit(3000)
         # count the players and compile a list of versions
         players = 0
         versions = []
-        # parse the top 1000 servers
-        for i in col.find({}).sort("lastOnlinePlayers", pymongo.DESCENDING).limit(1000):
-            players += i["lastOnlinePlayers"] if i["lastOnlinePlayers"] < 100000 else 0
-            versions.append(i["lastOnlineVersion"])
+        for server in servers:
+            version = server["lastOnlineVersion"]
+            players += server["lastOnlinePlayers"]
+            
+            if version == "":
+                continue
+            elif version not in [x["name"] for x in versions]:
+                versions.append({
+                    "name": version,
+                    "count": 1
+                })
+            else:
+                for v in versions:
+                    if v["name"] == version:
+                        v["count"] += 1
+                        break
+
 
         text = f"Total servers: `{serverCount}`\nRough Player Count: `{players}`\nMost common version:\n`...`"
 
         await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])  
         
-        fncs.dprint("Getting most common version...")
-        versions = fncs.countSort(versions)
+        fncs.dprint("Sorting server list...")
+        versions.sort(key=lambda x: x["count"], reverse=True)
+        
+        topTen = [f"{x['name']} - {x['count']}" for x in versions[:10]]
 
         print(
-            f"Total servers: {serverCount}\nRough Player Count: {players}\nMost common versions: {str(versions[:10])}"
+            f"Total servers: {serverCount}\nRough Player Count: {players}\nMost common versions: {topTen}"
         )
 
         # edit the message
-        text = "Total servers: `{}`\nRough Player Count: `{}`\nMost common version:```css\n{}\n```".format(serverCount,players,('\n'.join(versions[:5])))
+        text = "Total servers: `{}`\nRough Player Count: `{}`\nMost common version:```css\n{}\n```".format(serverCount,players,('\n'.join(topTen[:5])))
 
         await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])  
     except Exception:
