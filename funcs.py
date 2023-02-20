@@ -657,7 +657,7 @@ class funcs:
         else:
             return False
 
-    def crackedPlayerList(self, host:str, port:str = "25565", username:str = "pilot1782") -> list[str] | False:
+    def crackedPlayerList(self, host:str, port:str = "25565", username:str = "pilot1782") -> list[str] | bool:
         """Gets a list of players on a server
 
         Args:

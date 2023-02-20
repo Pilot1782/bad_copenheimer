@@ -340,10 +340,7 @@ async def stats(ctx: interactions.CommandContext):
 
 
         fncs.dprint("Getting player count...")
-        servers = col.find().sort("lastOnlinePlayers", pymongo.DESCENDING).limit(3000)
-        players = 0
-        for server in servers:
-            players += server["lastOnlinePlayers"] if server["lastOnlinePlayers"] < 100000 else 0
+        players = fncs.get_total_players_online(col)
         # add commas to player count
         players = "{:,}".format(players)
         
