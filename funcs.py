@@ -11,6 +11,7 @@ import traceback
 import requests
 import sys
 import logging
+import pymongo
 
 import interactions
 from mcstatus import JavaServer
@@ -79,18 +80,12 @@ class funcs:
     # ------------------ #
     # Functions getting defeined
 
+    def ptime(self) -> str:
+        """Get the current time in a readable format
 
-    # Write to a json file
-    def write_json(self, new_data:dict, filename:str="data.json"):
-        with open(filename, "r+") as file:
-            file_data = json.load(file)
-            file_data["emp_details"].append(new_data)
-            file.seek(0)
-            json.dump(file_data, file, indent=4)
-
-
-    # Print the Time
-    def ptime(self):
+        Returns:
+            str: time in format: year month/day hour:minute:second
+        """
         x = time.localtime()
         z = []
         for i in x:
@@ -101,7 +96,7 @@ class funcs:
 
 
     # Run a command and get line by line output
-    def run_command(self, command:str, powershell:bool=False):
+    def run_command(self, command:str, powershell:bool=False) -> str:
         """Just a better os.system
 
         Args:
@@ -135,23 +130,14 @@ class funcs:
             return "Error: " + str(err)
 
 
-    # Clean masscan output
-    def clean(self, line:str):
-        if "rate" in line:
-            self.print("Skipped")
-        else:
-            arr = []
-            words = ["Discovered", "open", "port", "25565/tcp", "on"]
-            splitLine = line.split(" ")
-            for i in splitLine:
-                if i in words:
-                    pass
-                else:
-                    arr.append(i)
-            return "".join(arr)
-
     # Print but for debugging
     def dprint(self, *text, override:bool=False, end="\n"):
+        """Prints a message to the console and the log file
+
+        Args:
+            override (bool, optional): Force print to the console regardless of debugging. Defaults to False.
+            end (str, optional): end of the string. Defaults to "\n".
+        """
         print(" ".join((str(i) for i in text)), end=end)
 
         if self.debug or override:
@@ -159,11 +145,13 @@ class funcs:
             print(" ".join((str(i) for i in text)))
             sys.stdout = self.stdout  # redirect stdout
 
-    def print(self, *args, **kwargs):
+    def print(self, *args, **kwargs) -> None:
+        """Prints a message to the console
+        """
         self.dprint(' '.join(map(str, args)), **kwargs, override=True)
 
 
-    def check(self, host: str, port:str="25565", webhook: str = ""):
+    def check(self, host: str, port:str="25565", webhook: str = "") -> list | None:
         """Checks out a host and adds it to the database if it's not there
 
         Args:
@@ -182,6 +170,7 @@ class funcs:
                         "cracked": bool,
                         "lastOnlineFavicon":"base64 encoded image"
                     }
+            | None: if the server is offline
         """
 
         if self.col is None:
@@ -312,7 +301,12 @@ class funcs:
             self.print(traceback.format_exc(), " | ", host)
             return None
 
-    def remove_duplicates(self):
+    def remove_duplicates(self) -> None:
+        """Removes duplicate entries from the database
+        
+        Returns:
+            None
+        """
         if self.col is None:
             return
         field = "host"
@@ -433,7 +427,7 @@ class funcs:
                 search_query[key] = value
         return list(self.col.find(search_query))
 
-    def genEmbed(self, _serverList: list, _port: str = "25565"):
+    def genEmbed(self, _serverList: list[dict], _port: str = "25565"):
         """Generates an embed for the server list
 
         Args:
@@ -644,7 +638,16 @@ class funcs:
             text = text.strip()
         return text
 
-    def crackCheckAPI(self, host: str, port: str = "25565"):
+    def crackCheckAPI(self, host: str, port: str = "25565") -> bool:
+        """Checks if a server is cracked using the mcstatus.io API
+
+        Args:
+            host (str): the host of the server
+            port (str, optional): port of the server. Defaults to "25565".
+
+        Returns:
+            bool: True if the server is cracked, False if not
+        """
         url = "https://api.mcstatus.io/v2/status/java/" + host + ":" + str(port)
 
         resp = requests.get(url)
@@ -654,7 +657,17 @@ class funcs:
         else:
             return False
 
-    def crackedPlayerList(self, host:str, port:str = "25565", username:str = "pilot1782") -> list[str] | bool:
+    def crackedPlayerList(self, host:str, port:str = "25565", username:str = "pilot1782") -> list[str] | False:
+        """Gets a list of players on a server
+
+        Args:
+            host (str): the host of the server
+            port (str, optional): the port of the server. Defaults to "25565".
+            username (str, optional): Username to join with. Defaults to "pilot1782".
+
+        Returns:
+            list[str] | False: A list of players on the server, or False if the server is not cracked
+        """
         import chat as chat2
         args = [host, '--port', port, '--offline-name', username]
         tStart = time.time()
@@ -680,7 +693,15 @@ class funcs:
 
         return out
 
-    def playerHead(self, name):
+    def playerHead(self, name: str) -> interactions.File | None:
+        """Downloads a player head from minotar.net
+
+        Args:
+            name (str): player name
+
+        Returns:
+            interactions.file | None: file object of the player head
+        """
         url = "https://minotar.net/avatar/" + name
         r = requests.get(url)
         with open("playerhead.png", "wb") as f:
@@ -688,25 +709,42 @@ class funcs:
         self.dprint("Player head downloaded")
         return interactions.File(filename="playerhead.png")
     
-    def countSort(self, lst, remDups:bool=True) -> list:
-        # sort by frequency
-        counts = {}
-        
-        for i in lst:
-            if i in counts:
-                counts[i] += 1
-            else:
-                counts[i] = 1
-                
-        out = sorted(lst, key=lambda x: counts[x], reverse=True)
-        if remDups:
-            tmp = []
-            for i in out:
-                if i not in tmp:
-                    tmp.append(i)
-            out = tmp
+    def get_sorted_versions(self, collection: pymongo.collection.Collection) -> list[dict[str, int]]:
+        """I have no idea how this works, but it does, thanks github copilot
 
-        return out
+        Args:
+            collection (pymongo.collection.Collection): server collection
+
+        Returns:
+            list[dict[str, int]]: sorted list of versions by frequency
+        """
+        pipeline = [
+            {"$match": {"lastOnlineVersion": {"$exists": True}}},
+            {"$group": {"_id": "$lastOnlineVersion", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}}
+        ]
+        result = list(collection.aggregate(pipeline))
+        result = [{"version": r["_id"], "count": r["count"]} for r in result]
+        return result
+    
+    def get_total_players_online(self, collection: pymongo.collection.Collection) -> int:
+        """Gets the total number of players online across all servers via ai voodoo
+
+        Args:
+            collection (pymongo.collection.Collection): server collection
+
+        Returns:
+            int: total number of players online
+        """
+        pipeline = [
+            {"$match": {"lastOnlinePlayers": {"$lt": 100000}}},
+            {"$group": {"_id": None, "total_players": {"$sum": "$lastOnlinePlayers"}}}
+        ]
+        result = list(collection.aggregate(pipeline))
+        if len(result) > 0:
+            return result[0]["total_players"]
+        else:
+            return 0
 
 
 if __name__ == "__main__":

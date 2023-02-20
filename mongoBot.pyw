@@ -328,45 +328,42 @@ async def stats(ctx: interactions.CommandContext):
         await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])
         
         
-        servers = col.find().sort("lastOnlinePlayers", pymongo.DESCENDING).limit(3000)
-        # count the players and compile a list of versions
-        players = 0
-        versions = []
-        for server in servers:
-            version = server["lastOnlineVersion"]
-            players += server["lastOnlinePlayers"] if server["lastOnlinePlayers"] < 100000 else 0
-            
-            if version == "":
-                continue
-            elif version not in [x["name"] for x in versions]:
-                versions.append({
-                    "name": version,
-                    "count": 1
-                })
-            else:
-                for v in versions:
-                    if v["name"] == version:
-                        v["count"] += 1
-                        break
+        fncs.dprint("Getting versions...")
+        versions = fncs.get_sorted_versions(col)
+        topTen = [x['version'] for x in versions[:10]]
 
+        text = "Total servers: `{}`\nRough Player Count: `...`\nMost common version:```css\n{}\n```".format(
+            serverCount,
+            ('\n'.join(topTen[:5]))
+        )
+        await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])
+
+
+        fncs.dprint("Getting player count...")
+        servers = col.find().sort("lastOnlinePlayers", pymongo.DESCENDING).limit(3000)
+        players = 0
+        for server in servers:
+            players += server["lastOnlinePlayers"] if server["lastOnlinePlayers"] < 100000 else 0
         # add commas to player count
         players = "{:,}".format(players)
         
-        text = f"Total servers: `{serverCount}`\nRough Player Count: `{players}`\nMost common version:\n`...`"
-
+        text = "Total servers: `{}`\nRough Player Count: `{}`\nMost common version:\n`{}`".format(
+            serverCount,
+            players,
+            ('\n'.join(topTen[:5]))
+        )
         await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])  
-        
-        fncs.dprint("Sorting server list...")
-        versions.sort(key=lambda x: x["count"], reverse=True)
-        
-        topTen = [x['name'] for x in versions[:10]]
 
         print(
             f"Total servers: {serverCount}\nRough Player Count: {players}\nMost common versions: {topTen}"
         )
 
         # edit the message
-        text = "Total servers: `{}`\nRough Player Count: `{}`\nMost common version:```css\n{}\n```".format(serverCount,players,('\n'.join(topTen[:5])))
+        text = "Total servers: `{}`\nRough Player Count: `{}`\nMost common version:```css\n{}\n```".format(
+            serverCount,
+            players,
+            ('\n'.join(topTen[:5]))
+        )
 
         await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])  
     except Exception:
