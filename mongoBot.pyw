@@ -1,4 +1,4 @@
-# pyright: basic, reportGeneralTypeIssues=false
+# pyright: basic, reportGeneralTypeIssues=false, reportOptionalSubscript=false
 import sys
 import time
 import traceback
@@ -327,15 +327,15 @@ async def show_players(ctx: interactions.ComponentContext):
         # get current message
         msg = ctx.message
 
-        host = msg.embeds[  # pyright: ignore[reportOptionalSubscript, reportOptionalMemberAccess]
-            0
+        host = msg.embeds[  # pyright: ignore[reportOptionalMemberAccess]
+            0  # content
         ].title[
-            2:
+            2:  # exclude the online symbol
         ]
 
         players = col.find_one(
             {"host": host}
-        )[  # pyright: ignore[reportOptionalSubscript]
+        )[
             "lastOnlinePlayersList"
         ]
 
@@ -448,11 +448,6 @@ async def stats(ctx: interactions.CommandContext):
         players = fncs.get_total_players_online(col)
         # add commas to player count
         players = "{:,}".format(players)
-
-        text = "Total servers: `{}`\nRough Player Count: `{}`\nMost common version:\n`{}`".format(
-            serverCount, players, ("\n".join(topTen[:5]))
-        )
-        await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])
 
         print(
             f"Total servers: {serverCount}\nRough Player Count: {players}\nMost common versions: {topTen}"

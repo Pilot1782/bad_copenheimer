@@ -65,7 +65,7 @@ def scan(ip_list):
             ip_list,
             ports="25565",
             arguments="--max-rate {}".format(pingsPerSec / maxActive),
-            sudo=True,
+            # sudo=True,
         )
         result = json.loads(scanner.scan_result)  # type: ignore
 
