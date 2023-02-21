@@ -2,7 +2,6 @@
 import sys
 import time
 import traceback
-import threading
 import random
 import requests
 import json
@@ -11,7 +10,12 @@ import io
 import pymongo
 from bson.objectid import ObjectId
 import interactions
-from interactions.ext.files import command_edit, component_edit, command_send, component_send
+from interactions.ext.files import (
+    command_edit,
+    component_edit,
+    command_send,
+    component_send,
+)
 
 from funcs import funcs
 
@@ -46,8 +50,10 @@ stdout = io.StringIO()
 
 fncs = funcs(collection=col)
 
+
 def print(*args, **kwargs):
-    fncs.print(' '.join(map(str, args)), **kwargs)
+    fncs.print(" ".join(map(str, args)), **kwargs)
+
 
 # Commands
 # ---------------------------------------------
@@ -104,10 +110,20 @@ def print(*args, **kwargs):
             description="If the server blocks the EULA",
             type=interactions.OptionType.BOOLEAN,
             required=False,
-        )
+        ),
     ],
 )
-async def find(ctx: interactions.CommandContext, _id: str = "", player: str = "", version: str = "", host: str = "", port: int = 25565, motd: str = "", maxplayers: int = -1, cracked: bool = False):  
+async def find(
+    ctx: interactions.CommandContext,
+    _id: str = "",
+    player: str = "",
+    version: str = "",
+    host: str = "",
+    port: int = 25565,
+    motd: str = "",
+    maxplayers: int = -1,
+    cracked: bool = False,
+):
     """Find a server
 
     Args:
@@ -133,14 +149,14 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
 
     if host:
         serverList = [col.find_one({"host": host})]
-        
+
         if not serverList[0]:
             # try to get the server info from check
             info = fncs.check(host, port)
-            
+
             if not info:
                 serverList = []
-        
+
         flag = True
         search = {}
     if version:
@@ -163,34 +179,66 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
         name = ""
 
         # check if player is valid or if the input is a uuid
-        resp = requests.get(url+player)
+        resp = requests.get(url + player)
         print(resp.text)
 
         if resp.status_code == 204 and resp.text == "":
-            resp = requests.get("https://sessionserver.mojang.com/session/minecraft/profile/"+player.replace("-","")); jresp = resp.json()
-            if 'error' in resp.text or resp.text == "":
+            resp = requests.get(
+                "https://sessionserver.mojang.com/session/minecraft/profile/"
+                + player.replace("-", "")
+            )
+            jresp = resp.json()
+            if "error" in resp.text or resp.text == "":
                 fncs.dprint("Player not found in minecraft api")
-                await command_send(ctx, embeds=[interactions.Embed(title="Error",description="Player not found in minecraft api")])
+                await command_send(
+                    ctx,
+                    embeds=[
+                        interactions.Embed(
+                            title="Error",
+                            description="Player not found in minecraft api",
+                        )
+                    ],
+                )
                 return
             else:
-                player = jresp['id']
-                name = jresp['name']
+                player = jresp["id"]
+                name = jresp["name"]
         else:
             try:
-                player = resp.json()['id']
-                name = resp.json()['name']
+                player = resp.json()["id"]
+                name = resp.json()["name"]
             except Exception:
                 fncs.dprint("Player not found in minecraft api")
-                await command_send(ctx, embeds=[interactions.Embed(title="Error",description="Player not found in minecraft api",color=0xFF6347)])
+                await command_send(
+                    ctx,
+                    embeds=[
+                        interactions.Embed(
+                            title="Error",
+                            description="Player not found in minecraft api",
+                            color=0xFF6347,
+                        )
+                    ],
+                )
                 return
 
-        serverList = list(col.find({"lastOnlinePlayersList": {"$elemMatch": {"uuid": player}}}))
+        serverList = list(
+            col.find({"lastOnlinePlayersList": {"$elemMatch": {"uuid": player}}})
+        )
 
         fncs.dprint("Finding player", player)
 
         if not serverList:
             fncs.dprint("Player not found in database")
-            await command_send(ctx, embeds=[interactions.Embed(title="Error",description="Player not found in database",color=0xFF6347)])
+            await command_send(
+                ctx,
+                embeds=[
+                    interactions.Embed(
+                        title="Error",
+                        description="Player not found in database",
+                        color=0xFF6347,
+                    )
+                ],
+            )
             return
 
         # get player head
@@ -205,9 +253,15 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
 
         await command_send(ctx, embeds=[embed], files=[face])
 
-
     if search == {} and not flag:
-        await command_send(ctx, embeds=[interactions.Embed(title="Error",description="No search parameters given")])
+        await command_send(
+            ctx,
+            embeds=[
+                interactions.Embed(
+                    title="Error", description="No search parameters given"
+                )
+            ],
+        )
     else:
         try:
             # get server info
@@ -216,16 +270,24 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
                 fncs.dprint("Flag is down, getting server info from database")
                 serverList = fncs._find(search)
 
-                numServers = len(serverList) 
+                numServers = len(serverList)
             else:
                 fncs.dprint("Flag is up, setting server info")
                 random.shuffle(serverList)
                 numServers = len(serverList)
 
-
-            fncs.dprint(len(serverList),search,flag)
-            await command_send(ctx, embeds=[interactions.Embed(title="Searching...",description="Getting info about a server out of "+str(numServers)+" servers...")])
-
+            fncs.dprint(len(serverList), search, flag)
+            await command_send(
+                ctx,
+                embeds=[
+                    interactions.Embed(
+                        title="Searching...",
+                        description="Getting info about a server out of "
+                        + str(numServers)
+                        + " servers...",
+                    )
+                ],
+            )
 
             # setup the embed
             embed = fncs.genEmbed(serverList, str(_port))
@@ -233,35 +295,54 @@ async def find(ctx: interactions.CommandContext, _id: str = "", player: str = ""
             comps = embed[2]
             embed = embed[0]
 
-            fncs.dprint("Embed generated",embed, comps, _file)
+            fncs.dprint("Embed generated", embed, comps, _file)
 
             # send the embed sometimes with the favicon
-            if _file: 
-                await command_edit(ctx, embeds=[embed], files=[_file], components=comps) 
+            if _file:
+                await command_edit(ctx, embeds=[embed], files=[_file], components=comps)
             else:
                 await command_edit(ctx, embeds=[embed], components=comps)
         except Exception:
             fncs.dprint(traceback.format_exc())
-            await command_send(ctx, embeds=[interactions.Embed(title="Error", description="An error occured while searching. Please try again later and check the logs for more details.", color=0xFF0000)])
-            print(f"----\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n====\n====\n{ServerInfo}\n====\n----") 
+            await command_send(
+                ctx,
+                embeds=[
+                    interactions.Embed(
+                        title="Error",
+                        description="An error occured while searching. Please try again later and check the logs for more details.",
+                        color=0xFF0000,
+                    )
+                ],
+            )
+            print(
+                f"----\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n====\n====\n{ServerInfo}\n====\n----"
+            )
 
 
 @bot.component("show_players")
-async def show_players(ctx: interactions.ComponentContext):  
+async def show_players(ctx: interactions.ComponentContext):
     try:
         await ctx.defer(ephemeral=True)
 
         # get current message
         msg = ctx.message
 
-        host = msg.embeds[0].title[2:]  #pyright: ignore[reportOptionalSubscript, reportOptionalMemberAccess]
+        host = msg.embeds[  # pyright: ignore[reportOptionalSubscript, reportOptionalMemberAccess]
+            0
+        ].title[
+            2:
+        ]
 
-        players = col.find_one({"host": host})["lastOnlinePlayersList"]  #pyright: ignore[reportOptionalSubscript]
+        players = col.find_one(
+            {"host": host}
+        )[  # pyright: ignore[reportOptionalSubscript]
+            "lastOnlinePlayersList"
+        ]
 
-        random.shuffle(players) # for servers with more than 25 logged players
+        random.shuffle(players)  # for servers with more than 25 logged players
 
         embed = interactions.Embed(
-            title="Players", 
+            title="Players",
             description="{} players logged".format(len(players)),
         )
 
@@ -270,10 +351,16 @@ async def show_players(ctx: interactions.ComponentContext):
                 if str(player).startswith("{"):
                     # player is dict type
                     player = json.loads(str(player).replace("'", '"'))
-                    embed.add_field(name=player["name"], value="`{}`".format(player["uuid"]), inline=True)
+                    embed.add_field(
+                        name=player["name"],
+                        value="`{}`".format(player["uuid"]),
+                        inline=True,
+                    )
                 else:
                     # player is str type
-                    embed.add_field(name=player, value="`{}`".format(player), inline=True)
+                    embed.add_field(
+                        name=player, value="`{}`".format(player), inline=True
+                    )
             except Exception:
                 print(traceback.format_exc())
                 print(player)
@@ -284,15 +371,34 @@ async def show_players(ctx: interactions.ComponentContext):
         await component_send(ctx, embeds=[embed], ephemeral=True)
     except Exception:
         print(traceback.format_exc())
-        await component_send(ctx, embeds=[interactions.Embed(title="Error", description="An error occured while searching. Please try again later and check the logs for more details.", color=0xFF0000)], ephemeral=True)
+        await component_send(
+            ctx,
+            embeds=[
+                interactions.Embed(
+                    title="Error",
+                    description="An error occured while searching. Please try again later and check the logs for more details.",
+                    color=0xFF0000,
+                )
+            ],
+            ephemeral=True,
+        )
 
 
 @bot.component("rand_select")
 async def rand_select(ctx: interactions.ComponentContext):
     await ctx.defer(edit_origin=True)
 
-    await component_edit(ctx, embeds=[interactions.Embed(title="Randomizing...", description="Loading a random server...", color=0x00FF00)])
-    
+    await component_edit(
+        ctx,
+        embeds=[
+            interactions.Embed(
+                title="Randomizing...",
+                description="Loading a random server...",
+                color=0x00FF00,
+            )
+        ],
+    )
+
     global _serverList
 
     embed = fncs.genEmbed(serverList, _port)
@@ -300,7 +406,7 @@ async def rand_select(ctx: interactions.ComponentContext):
     button = embed[2]
     embed = embed[0]
 
-    fncs.dprint("Embed generated",embed, button, _file)
+    fncs.dprint("Embed generated", embed, button, _file)
 
     if _file:
         await component_edit(ctx, embeds=[embed], files=[_file], components=button)
@@ -312,44 +418,41 @@ async def rand_select(ctx: interactions.ComponentContext):
     name="stats",
     description="Get stats about the database",
 )
-async def stats(ctx: interactions.CommandContext):  
+async def stats(ctx: interactions.CommandContext):
     await ctx.defer()
     try:
         """Get stats about the database"""
-        
-        await ctx.send(embeds=[interactions.Embed(title="Stats", description="Getting stats...")])
-        
+
+        await ctx.send(
+            embeds=[interactions.Embed(title="Stats", description="Getting stats...")]
+        )
+
         fncs.dprint("Getting stats...")
-        
+
         serverCount = col.count_documents({})
         # add commas to server count
         serverCount = "{:,}".format(serverCount)
         text = f"Total servers: `{serverCount}`\nRough Player Count: `...`\nMost common version:\n`...`"
         await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])
-        
-        
+
         fncs.dprint("Getting versions...")
         versions = fncs.get_sorted_versions(col)
-        topTen = [x['version'] for x in versions[:10]]
+        topTen = [x["version"] for x in versions[:10]]
 
         text = "Total servers: `{}`\nRough Player Count: `...`\nMost common version:```css\n{}\n```".format(
-            serverCount,
-            ('\n'.join(topTen[:5]))
+            serverCount, ("\n".join(topTen[:5]))
         )
         await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])
-
 
         fncs.dprint("Getting player count...")
         players = fncs.get_total_players_online(col)
         # add commas to player count
         players = "{:,}".format(players)
-        
+
         text = "Total servers: `{}`\nRough Player Count: `{}`\nMost common version:\n`{}`".format(
-            serverCount,
-            players,
-            ('\n'.join(topTen[:5]))
+            serverCount, players, ("\n".join(topTen[:5]))
         )
-        await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])  
+        await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])
 
         print(
             f"Total servers: {serverCount}\nRough Player Count: {players}\nMost common versions: {topTen}"
@@ -357,21 +460,26 @@ async def stats(ctx: interactions.CommandContext):
 
         # edit the message
         text = "Total servers: `{}`\nRough Player Count: `{}`\nMost common version:```css\n{}\n```".format(
-            serverCount,
-            players,
-            ('\n'.join(topTen[:5]))
+            serverCount, players, ("\n".join(topTen[:5]))
         )
 
-        await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])  
+        await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text)])
     except Exception:
         print(f"====\nError: {traceback.format_exc()}\n====")
         fncs.dprint(traceback.format_exc())
 
-        await ctx.send(embeds=[interactions.Embed(title="Error", description="Error getting stats, check the console and log for more info.")])  
+        await ctx.send(
+            embeds=[
+                interactions.Embed(
+                    title="Error",
+                    description="Error getting stats, check the console and log for more info.",
+                )
+            ]
+        )
 
 
 @bot.command(name="help")
-async def help(ctx: interactions.CommandContext):  
+async def help(ctx: interactions.CommandContext):
     """Get help"""
     await ctx.send(
         embeds=[

@@ -19,18 +19,20 @@ import mcstatus
 
 norm = sys.stdout
 
+
 class StreamToLogger(object):
     """
     Fake file-like stream object that redirects writes to a logger instance.
     """
+
     def __init__(self, logger, level):
-       self.logger = logger
-       self.level = level
-       self.linebuf = ''
+        self.logger = logger
+        self.level = level
+        self.linebuf = ""
 
     def write(self, buf):
-       for line in buf.rstrip().splitlines():
-          self.logger.log(self.level, line.rstrip())
+        for line in buf.rstrip().splitlines():
+            self.logger.log(self.level, line.rstrip())
 
     def flush(self):
         pass
@@ -39,11 +41,18 @@ class StreamToLogger(object):
         with open("log.log", "r") as f:
             return f.read()
 
-logging.basicConfig(level=logging.INFO,format='%(asctime)s:%(levelname)s:%(name)s:%(message)s',filename='log.log',filemode='a')
-log = logging.getLogger('STDOUT')
-out = StreamToLogger(log,logging.INFO)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s:%(levelname)s:%(name)s:%(message)s",
+    filename="log.log",
+    filemode="a",
+)
+log = logging.getLogger("STDOUT")
+out = StreamToLogger(log, logging.INFO)
 sys.stdout = out
-sys.stderr = StreamToLogger(log,logging.ERROR)
+sys.stderr = StreamToLogger(log, logging.ERROR)
+
 
 class funcs:
     """Cursed code that I don't want to touch. It works, but it's not pretty.
@@ -54,11 +63,12 @@ class funcs:
 
     """
 
-    def __init__(self,
-                collection=None, # pyright: ignore[reportGeneralTypeIssues]
-                path:str=osys.path.dirname(osys.path.abspath(__file__)),
-                debug:bool=True
-            ):
+    def __init__(
+        self,
+        collection=None,  # pyright: ignore[reportGeneralTypeIssues]
+        path: str = osys.path.dirname(osys.path.abspath(__file__)),
+        debug: bool = True,
+    ):
         """Init the class
 
         Args:
@@ -94,9 +104,8 @@ class funcs:
         z = f"{z[0]} {z[1]}/{z[2]} {z[3]}:{z[4]}:{z[5]}"
         return z
 
-
     # Run a command and get line by line output
-    def run_command(self, command:str, powershell:bool=False) -> str:
+    def run_command(self, command: str, powershell: bool = False) -> str:
         """Just a better os.system
 
         Args:
@@ -129,9 +138,8 @@ class funcs:
             self.dprint(str(err))
             return "Error: " + str(err)
 
-
     # Print but for debugging
-    def dprint(self, *text, override:bool=False, end="\n"):
+    def dprint(self, *text, override: bool = False, end="\n"):
         """Prints a message to the console and the log file
 
         Args:
@@ -146,12 +154,10 @@ class funcs:
             sys.stdout = self.stdout  # redirect stdout
 
     def print(self, *args, **kwargs) -> None:
-        """Prints a message to the console
-        """
-        self.dprint(' '.join(map(str, args)), **kwargs, override=True)
+        """Prints a message to the console"""
+        self.dprint(" ".join(map(str, args)), **kwargs, override=True)
 
-
-    def check(self, host: str, port:str="25565", webhook: str = "") -> list | None:
+    def check(self, host: str, port: str = "25565", webhook: str = "") -> list | None:
         """Checks out a host and adds it to the database if it's not there
 
         Args:
@@ -188,15 +194,17 @@ class funcs:
             except OSError:
                 return None
 
-            cpLST = self.crackedPlayerList(host, str(port)) # cracked player list
+            cpLST = self.crackedPlayerList(host, str(port))  # cracked player list
             cracked = bool(cpLST or cpLST == [])
 
             players = []
             try:
                 if status.players.sample is not None:
                     self.dprint("Getting players from sample")
-                    
-                    for player in list(status.players.sample):  # pyright: ignore [reportOptionalIterable]
+
+                    for player in list(
+                        status.players.sample
+                    ):  # pyright: ignore [reportOptionalIterable]
                         url = f"https://api.mojang.com/users/profiles/minecraft/{player.name}"
                         jsonResp = requests.get(url)
                         if len(jsonResp.text) > 2:
@@ -226,7 +234,9 @@ class funcs:
                     playerlst = cpLST
 
                     for player in playerlst:
-                        jsonResp = requests.get("https://api.mojang.com/users/profiles/minecraft/" + player)
+                        jsonResp = requests.get(
+                            "https://api.mojang.com/users/profiles/minecraft/" + player
+                        )
                         uuid = "---n/a---"
                         if "id" in str(jsonResp.text):
                             uuid = jsonResp.json()["id"]
@@ -287,7 +297,9 @@ class funcs:
                             data["lastOnlinePlayersList"].append(i)
                 except Exception:
                     self.print(
-                        traceback.format_exc(), " \\/ ", host  # pyright: ignore [reportInvalidStringEscapeSequence]
+                        traceback.format_exc(),
+                        " \\/ ",
+                        host,  # pyright: ignore [reportInvalidStringEscapeSequence]
                     )
                     break
 
@@ -303,7 +315,7 @@ class funcs:
 
     def remove_duplicates(self) -> None:
         """Removes duplicate entries from the database
-        
+
         Returns:
             None
         """
@@ -318,7 +330,6 @@ class funcs:
                 self.col.delete_one({"_id": doc["_id"]})
             else:
                 seen.add(value)
-
 
     def verify(self, search: dict, serverList: list):
         """Verifies a search
@@ -406,18 +417,19 @@ class funcs:
 
         # find the server given the parameters
         if search == {}:
-            return [{
-                "host": "Server not found",
-                "lastOnline": 0,
-                "lastOnlinePlayers": -1,
-                "lastOnlineVersion": "Server not found",
-                "lastOnlineDescription": "Server not found",
-                "lastOnlinePing": -1,
-                "lastOnlinePlayersList": [],
-                "lastOnlinePlayersMax": -1,
-                "favicon": "Server not found",
-            }]
-
+            return [
+                {
+                    "host": "Server not found",
+                    "lastOnline": 0,
+                    "lastOnlinePlayers": -1,
+                    "lastOnlineVersion": "Server not found",
+                    "lastOnlineDescription": "Server not found",
+                    "lastOnlinePing": -1,
+                    "lastOnlinePlayersList": [],
+                    "lastOnlinePlayersMax": -1,
+                    "favicon": "Server not found",
+                }
+            ]
 
         search_query = {}
         for key, value in search.items():
@@ -472,20 +484,17 @@ class funcs:
                 ),
             ]
 
-            row = interactions.ActionRow(
-                components=buttons
-            )
+            row = interactions.ActionRow(components=buttons)
 
             return [embed, None, row]
 
         random.shuffle(_serverList)
         info = _serverList[0]
 
-
         if info is None:
-            logging.error("Server not found: "+str(_serverList))
-            
-            self.dprint("Server not found",len(_serverList))
+            logging.error("Server not found: " + str(_serverList))
+
+            self.dprint("Server not found", len(_serverList))
             embed = interactions.Embed(
                 title="Server not found",
                 description="Server not found",
@@ -511,15 +520,13 @@ class funcs:
             )
 
             return [embed, None, row, info]
-        
+
         info2 = self.check(info["host"], _port)
         if info2 is not None:
             info = info2
 
         numServers = len(_serverList)
-        online = (
-            info is not None
-        )
+        online = info is not None
 
         try:
             _serverList.pop(0)
@@ -550,8 +557,12 @@ class funcs:
                 interactions.EmbedField(
                     name="Last Online",
                     value=(
-                        time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(info['lastOnline']))
-                        ) if info['host'] != 'Server not found.' else '0/0/0 0:0:0',
+                        time.strftime(
+                            "%Y/%m/%d %H:%M:%S", time.localtime(info["lastOnline"])
+                        )
+                    )
+                    if info["host"] != "Server not found."
+                    else "0/0/0 0:0:0",
                     inline=True,
                 ),
             ],
@@ -607,7 +618,9 @@ class funcs:
                 label="Show Players",
                 custom_id="show_players",
                 style=interactions.ButtonStyle.PRIMARY,
-                disabled=(len(players) == 0 or not online or info["lastOnlinePlayers"] == 0),
+                disabled=(
+                    len(players) == 0 or not online or info["lastOnlinePlayers"] == 0
+                ),
             ),
             interactions.Button(
                 label="Next Server",
@@ -623,7 +636,7 @@ class funcs:
 
         return embed, _file, row
 
-    def cFilter(self, text: str, trim:bool = True):
+    def cFilter(self, text: str, trim: bool = True):
         """Removes all color bits from a string
 
         Args:
@@ -657,7 +670,9 @@ class funcs:
         else:
             return False
 
-    def crackedPlayerList(self, host:str, port:str = "25565", username:str = "pilot1782") -> list[str] | bool:
+    def crackedPlayerList(
+        self, host: str, port: str = "25565", username: str = "pilot1782"
+    ) -> list[str] | bool:
         """Gets a list of players on a server
 
         Args:
@@ -669,7 +684,8 @@ class funcs:
             list[str] | False: A list of players on the server, or False if the server is not cracked
         """
         import chat as chat2
-        args = [host, '--port', port, '--offline-name', username]
+
+        args = [host, "--port", port, "--offline-name", username]
         tStart = time.time()
         try:
             chat2.main(args)
@@ -708,8 +724,10 @@ class funcs:
             f.write(r.content)
         self.dprint("Player head downloaded")
         return interactions.File(filename="playerhead.png")
-    
-    def get_sorted_versions(self, collection: pymongo.collection.Collection) -> list[dict[str, int]]:
+
+    def get_sorted_versions(
+        self, collection: pymongo.collection.Collection
+    ) -> list[dict[str, int]]:
         """I have no idea how this works, but it does, thanks github copilot
 
         Args:
@@ -721,13 +739,15 @@ class funcs:
         pipeline = [
             {"$match": {"lastOnlineVersion": {"$exists": True}}},
             {"$group": {"_id": "$lastOnlineVersion", "count": {"$sum": 1}}},
-            {"$sort": {"count": -1}}
+            {"$sort": {"count": -1}},
         ]
         result = list(collection.aggregate(pipeline))
         result = [{"version": r["_id"], "count": r["count"]} for r in result]
         return result
-    
-    def get_total_players_online(self, collection: pymongo.collection.Collection) -> int:
+
+    def get_total_players_online(
+        self, collection: pymongo.collection.Collection
+    ) -> int:
         """Gets the total number of players online across all servers via ai voodoo
 
         Args:
@@ -738,7 +758,7 @@ class funcs:
         """
         pipeline = [
             {"$match": {"lastOnlinePlayers": {"$lt": 100000}}},
-            {"$group": {"_id": None, "total_players": {"$sum": "$lastOnlinePlayers"}}}
+            {"$group": {"_id": None, "total_players": {"$sum": "$lastOnlinePlayers"}}},
         ]
         result = list(collection.aggregate(pipeline))
         if len(result) > 0:

@@ -1,14 +1,17 @@
 import os
 
+
 def instPyPackage():
     print("\n------------------\nInstalling python packages...")
     os.system("pip install -r requirements.txt")
+
 
 def checkMasscan():
     print("\n------------------\nChecking for masscan (required for scanning)...")
     if os.name != "nt":
         try:
             import masscan
+
             scanner = masscan.PortScanner()
         except __import__("masscan").PortScannerError:
             print("Masscan not found, installing...")
@@ -21,11 +24,12 @@ def checkMasscan():
     else:
         print("Masscan not supported on Windows, please install manually.")
 
+
 def privVariables():
     print("\n------------------\nCreating privVars.py...")
     if os.name == "nt":
         # create privVars.py
-        os.system('echo # Private Variables > privVars.py')
+        os.system("echo # Private Variables > privVars.py")
         # add variables
         with open("privVars.py", "a") as f:
             f.write('\nDISCORD_WEBHOOK = "" # Not usually required\n')
@@ -33,7 +37,7 @@ def privVariables():
             f.write('MONGO_URL = ""\n')
     elif os.name == "posix":
         # create privVars.py
-        os.system('touch privVars.py')
+        os.system("touch privVars.py")
         # add variables
         with open("privVars.py", "a") as f:
             f.write('\nDISCORD_WEBHOOK = "" # Not usually required\n')
@@ -48,8 +52,13 @@ def main():
     checkMasscan()
     privVariables()
 
+
 if __name__ == "__main__":
     main()
     print("\n------------------\nSetup complete!")
-    print("Please edit privVars.py with your variables and run mongoBot.pyw for the discord bot and scanCore.py for the scanner.")
-    print("Docs can be found here:\nhttps://github.com/Pilot1782/bad_copenheimer/wiki/Installation-(New-Bot)")
+    print(
+        "Please edit privVars.py with your variables and run mongoBot.pyw for the discord bot and scanCore.py for the scanner."
+    )
+    print(
+        "Docs can be found here:\nhttps://github.com/Pilot1782/bad_copenheimer/wiki/Installation-(New-Bot)"
+    )
