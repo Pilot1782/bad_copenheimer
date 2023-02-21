@@ -757,7 +757,7 @@ class funcs:
             int: total number of players online
         """
         pipeline = [
-            {"$match": {"lastOnlinePlayers": {"$lt": 100000}}},
+            {"$match": {"lastOnlinePlayers": {"$gte": 1, "$lt": 100000}}},
             {"$group": {"_id": None, "total_players": {"$sum": "$lastOnlinePlayers"}}},
         ]
         result = list(collection.aggregate(pipeline))
@@ -765,6 +765,7 @@ class funcs:
             return result[0]["total_players"]
         else:
             return 0
+
 
 
 if __name__ == "__main__":
