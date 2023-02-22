@@ -580,7 +580,7 @@ class funcs:
 
         # setup the embed
         embed = interactions.Embed(
-            title=(("🟢 " if online else "🔴 ") if not info["whitelisted"] else "🟠 ") + info["host"],
+            title=(("🟢 "if not info["whitelisted"] else "🟠 ") if online else "🔴 ") + info["host"],
             description="Host name: `"+info["hostname"]+"`\n```\n" + info["lastOnlineDescription"] + "```",
             timestamp=self.timeNow(),
             color=(0x00FF00 if online else 0xFF0000),

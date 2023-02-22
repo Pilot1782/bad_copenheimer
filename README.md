@@ -53,6 +53,10 @@ This will look through your database to find servers that match the provided par
 
 ![showcase](https://raw.githubusercontent.com/Pilot1782/bad_copenheimer/doc-resources/Screenshot_20230111_083824.png)
 
+If the server has a whitelist the dot will be orange if it is online.
+
+![showcase](https://raw.githubusercontent.com/Pilot1782/bad_copenheimer/doc-resources/Screenshot_20230222_034715.png)
+
 `/stats`
 This will show you the stats of the databse.
 
