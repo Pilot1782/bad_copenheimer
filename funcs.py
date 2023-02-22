@@ -4,12 +4,13 @@ import base64
 import random
 import re
 import subprocess
-import json
+import datetime
 import time
-import os as osys
+import os
 import traceback
 import requests
 import sys
+import socket
 import logging
 import pymongo
 
@@ -66,7 +67,7 @@ class funcs:
     def __init__(
         self,
         collection=None,  # pyright: ignore[reportGeneralTypeIssues]
-        path: str = osys.path.dirname(osys.path.abspath(__file__)),
+        path: str = os.path.dirname(os.path.abspath(__file__)),
         debug: bool = True,
     ):
         """Init the class
@@ -76,10 +77,10 @@ class funcs:
         """
 
         self.stdout = out
-        self.path = path + ("\\" if osys.name == "nt" else "/")
+        self.path = path + ("\\" if os.name == "nt" else "/")
         self.col = collection
         self.settings_path = self.path + (
-            r"\settings.json" if osys.name == "nt" else "/settings.json"
+            r"\settings.json" if os.name == "nt" else "/settings.json"
         )
         self.debug = debug
 
@@ -157,14 +158,14 @@ class funcs:
         """Prints a message to the console"""
         self.dprint(" ".join(map(str, args)), **kwargs, override=True)
 
-    def check(self, host: str, port: str = "25565", webhook: str = "") -> list | None:
+    def check(self, host: str, port: str = "25565", webhook: str = "") -> dict | None:
         """Checks out a host and adds it to the database if it's not there
 
         Args:
             host (String): ip of the server
 
         Returns:
-            [list]: {
+            dict: {
                         "host":"ipv4 addr",
                         "lastOnline":"unicode time",
                         "lastOnlinePlayers": int,
@@ -182,6 +183,8 @@ class funcs:
         if self.col is None:
             self.dprint("Collection is None")
             return None
+        
+        # host = self.resolveHost(host)
 
         try:
             server = mcstatus.JavaServer.lookup(host + ":" + str(port))
@@ -468,6 +471,7 @@ class funcs:
                 title="No servers found",
                 description="No servers found",
                 color=0xFF0000,
+                timestamp=datetime.datetime.now(),
             )
             buttons = [
                 interactions.Button(
@@ -537,6 +541,7 @@ class funcs:
         embed = interactions.Embed(
             title=("🟢 " if online else "🔴 ") + info["host"],
             description="```\n" + info["lastOnlineDescription"] + "```",
+            timestamp=datetime.datetime.now(),
             color=(0x00FF00 if online else 0xFF0000),
             type="rich",
             fields=[
@@ -765,6 +770,69 @@ class funcs:
             return result[0]["total_players"]
         else:
             return 0
+        
+    def resolveHost(self, ip: str) -> str:
+        """Resolves a hostname to an IP address into a hostname
+
+        Args:
+            host (str): hostname
+
+        Returns:
+            str: IP address
+        """
+        # test if the ip is an ip address
+        if not re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", ip):
+            self.print("Not an IP address")
+            return ip
+        
+        try:
+            host = socket.gethostbyaddr(ip)[0]
+            # if the hostname is an ip address, return the original ip
+            if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", host):
+                self.print("Hostname is an IP address")
+                return ip
+            else:
+                # check the host is a valid hostname by checking if it has a dot and ping it
+                if "." in host:
+                    if os.name == "nt":
+                        self.dprint("Host: " + host)
+                        
+                        # try pinging the ip first
+                        if subprocess.run(["ping", "-n", "1", ip], capture_output=True).returncode == 0:
+                            self.dprint("The host is online")
+                            # try pinging the hostname
+                            ping = subprocess.run(["ping", "-n", "1", host], capture_output=True)
+                            if ping.returncode == 1:
+                                self.dprint("Hostname is offline")
+                            
+                            return host if ping.returncode == 0 else ip
+                        else:
+                            self.dprint("The host is offline")
+                            return ip
+                    else:
+                        self.dprint("Host: " + host)
+                        
+                        # try pinging the ip first
+                        if subprocess.run(["ping", "-c", "1", ip], capture_output=True).returncode == 0:
+                            self.dprint("The host is online")
+                            # try pinging the hostname
+                            ping = subprocess.run(["ping", "-c", "1", host], capture_output=True)
+                            if ping.returncode == 1:
+                                self.dprint("Hostname is offline")
+                            
+                            return host if ping.returncode == 0 else ip
+                        else:
+                            self.dprint("The host is offline")
+                            return ip
+                else:
+                    self.print("Invalid hostname")
+                    return ip
+        except socket.herror:
+            self.print("Hostname not found")
+            return ip
+        except Exception:
+            self.print(traceback.format_exc())
+            return ip
 
 
 
