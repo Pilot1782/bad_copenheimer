@@ -184,7 +184,34 @@ class funcs:
             self.dprint("Collection is None")
             return None
         
-        # host = self.resolveHost(host)
+        hostname = self.resolveHost(host)
+        ip = self.resolveIP(host)
+        
+        # check the ip and hostname to make sure they arr vaild as a mc server
+        try:
+            server = mcstatus.JavaServer.lookup(ip + ":" + str(port))
+            status = server.status()
+        except BrokenPipeError:
+            ip = host
+        except ConnectionRefusedError:
+            ip = host
+        except OSError:
+            ip = host
+        except Exception:
+            ip = host
+        
+        try:
+            server = mcstatus.JavaServer.lookup(hostname + ":" + str(port))
+            status = server.status()
+        except BrokenPipeError:
+            ip = host
+        except ConnectionRefusedError:
+            ip = host
+        except OSError:
+            ip = host
+        except Exception:
+            ip = host
+        
 
         try:
             server = mcstatus.JavaServer.lookup(host + ":" + str(port))
@@ -256,7 +283,8 @@ class funcs:
             players = [i for n, i in enumerate(players) if i not in players[n + 1 :]]
 
             data = {
-                "host": host,
+                "host": ip,
+                "hostname": hostname,
                 "lastOnline": time.time(),
                 "lastOnlinePlayers": status.players.online,
                 "lastOnlineVersion": self.cFilter(
@@ -540,7 +568,7 @@ class funcs:
         # setup the embed
         embed = interactions.Embed(
             title=("🟢 " if online else "🔴 ") + info["host"],
-            description="```\n" + info["lastOnlineDescription"] + "```",
+            description="Host name: `"+info["hostname"]+"`\n```\n" + info["lastOnlineDescription"] + "```",
             timestamp=datetime.datetime.now(),
             color=(0x00FF00 if online else 0xFF0000),
             type="rich",
@@ -833,6 +861,25 @@ class funcs:
         except Exception:
             self.print(traceback.format_exc())
             return ip
+        
+    def resolveIP(self, host: str) -> str:
+        """Resolves a hostname to an IP address
+
+        Args:
+            host (str): hostname
+
+        Returns:
+            str: IP address
+        """
+        try:
+            ip = socket.gethostbyname(host)
+            return ip
+        except socket.gaierror:
+            self.print("Hostname not found")
+            return host
+        except Exception:
+            self.print(traceback.format_exc())
+            return host
 
 
 
