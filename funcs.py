@@ -612,7 +612,7 @@ class funcs:
                     )
                     if info["host"] != "Server not found."
                     else "0/0/0 0:0:0",
-                    inline=False,
+                    inline=True,
                 ),
             ],
             footer=interactions.EmbedFooter(
