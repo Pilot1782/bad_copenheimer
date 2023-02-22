@@ -287,7 +287,7 @@ async def find(
                 random.shuffle(serverList)
                 numServers = len(serverList)
 
-            fncs.dprint(len(serverList), search, flag)
+            fncs.dprint(f"Servers:{len(serverList)}/|\\Search:{search}/|\\Flag:{flag}")
             await command_send(
                 ctx,
                 embeds=[

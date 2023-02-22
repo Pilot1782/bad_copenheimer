@@ -104,6 +104,16 @@ class funcs:
         y = ":".join(z)
         z = f"{z[0]} {z[1]}/{z[2]} {z[3]}:{z[4]}:{z[5]}"
         return z
+    
+    def timeNow(self) -> str:
+        """Get the current time in a readable format
+
+        Returns:
+            str: time in format: year-month-day hour:minute:second
+        """
+        return datetime.datetime.now(
+            datetime.timezone(datetime.timedelta(hours=0))  # no clue why this is needed but it works now?
+        ).strftime("%Y-%m-%d %H:%M:%S")
 
     # Run a command and get line by line output
     def run_command(self, command: str, powershell: bool = False) -> str:
@@ -224,9 +234,11 @@ class funcs:
             except OSError:
                 return None
 
+            self.dprint("Checking hostname/ip")
             cpLST = self.crackedPlayerList(host, str(port))  # cracked player list
             cracked = bool(cpLST or cpLST == [])
 
+            self.dprint("Getting players")
             players = []
             try:
                 if status.players.sample is not None:
@@ -329,7 +341,7 @@ class funcs:
                 except Exception:
                     self.print(
                         traceback.format_exc(),
-                        " \\/ ",
+                        " --\\/-- ",
                         host,  # pyright: ignore [reportInvalidStringEscapeSequence]
                     )
                     break
@@ -499,7 +511,7 @@ class funcs:
                 title="No servers found",
                 description="No servers found",
                 color=0xFF0000,
-                timestamp=datetime.datetime.now(),
+                timestamp=self.timeNow(),
             )
             buttons = [
                 interactions.Button(
@@ -569,7 +581,7 @@ class funcs:
         embed = interactions.Embed(
             title=("🟢 " if online else "🔴 ") + info["host"],
             description="Host name: `"+info["hostname"]+"`\n```\n" + info["lastOnlineDescription"] + "```",
-            timestamp=datetime.datetime.now(),
+            timestamp=self.timeNow(),
             color=(0x00FF00 if online else 0xFF0000),
             type="rich",
             fields=[
