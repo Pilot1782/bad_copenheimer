@@ -308,6 +308,7 @@ class funcs:
                 "lastOnlinePlayersMax": status.players.max,
                 "lastOnlineVersionProtocol": self.cFilter(str(status.version.protocol)),
                 "cracked": cracked,
+                "whitelisted": self.isWhitelisted(ip, int(port)),
                 "favicon": status.favicon,
             }
 
@@ -579,7 +580,7 @@ class funcs:
 
         # setup the embed
         embed = interactions.Embed(
-            title=("🟢 " if online else "🔴 ") + info["host"],
+            title=(("🟢 " if online else "🔴 ") if not info["whitelisted"] else "🟠 ") + info["host"],
             description="Host name: `"+info["hostname"]+"`\n```\n" + info["lastOnlineDescription"] + "```",
             timestamp=self.timeNow(),
             color=(0x00FF00 if online else 0xFF0000),
@@ -600,6 +601,9 @@ class funcs:
                     name="Cracked", value=f"{info['cracked']}", inline=True
                 ),
                 interactions.EmbedField(
+                    name="Whitelisted", value=f"{info['whitelisted']}", inline=True
+                ),
+                interactions.EmbedField(
                     name="Last Online",
                     value=(
                         time.strftime(
@@ -608,7 +612,7 @@ class funcs:
                     )
                     if info["host"] != "Server not found."
                     else "0/0/0 0:0:0",
-                    inline=True,
+                    inline=False,
                 ),
             ],
             footer=interactions.EmbedFooter(
@@ -892,6 +896,37 @@ class funcs:
         except Exception:
             self.print(traceback.format_exc())
             return host
+        
+    def isWhitelisted(self, ip: str, port: int) -> bool:
+        """
+        Check if a given Minecraft server is whitelisted.
+
+        Args:
+            ip (str): IP address of the Minecraft server.
+            port (int): Port number of the Minecraft server.
+
+        Returns:
+            bool: True if the server is whitelisted, False otherwise.
+        """
+        # connect to the server
+        try:
+            sock = socket.create_connection((ip, port), timeout=5)
+            sock.send(b"\xfe\x01")
+            data = sock.recv(1024)
+            sock.close()
+        except:
+            return False
+
+        try:
+            # check if the server is whitelisted
+            if data[3] == 0:
+                return True
+            else:
+                return False
+        except:
+            # assume the server is not whitelisted
+            return False
+
 
 
 
