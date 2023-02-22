@@ -54,6 +54,12 @@ fncs = funcs(collection=col)
 
 def print(*args, **kwargs):
     fncs.print(" ".join(map(str, args)), **kwargs)
+    
+def timeNow():
+    # return local time
+    return datetime.datetime.now(
+        datetime.timezone(datetime.timedelta(hours=0))  # no clue why this is needed but it works now?
+    ).strftime("%Y-%m-%d %H:%M:%S")
 
 
 # Commands
@@ -197,7 +203,7 @@ async def find(
                         interactions.Embed(
                             title="Error",
                             description="Player not found in minecraft api",
-                            timestamp=datetime.datetime.now(),
+                            timestamp=timeNow(),
                         )
                     ],
                 )
@@ -218,7 +224,7 @@ async def find(
                             title="Error",
                             description="Player not found in minecraft api",
                             color=0xFF6347,
-                            timestamp=datetime.datetime.now(),
+                            timestamp=timeNow(),
                         )
                     ],
                 )
@@ -239,7 +245,7 @@ async def find(
                         title="Error",
                         description="Player not found in database",
                         color=0xFF6347,
-                        timestamp=datetime.datetime.now(),
+                        timestamp=timeNow(),
                     )
                 ],
             )
@@ -252,7 +258,7 @@ async def find(
             title=f"{name} found",
             description=f"Found {name} in {len(serverList)} servers",
             color=0x00FF00,
-            timestamp=datetime.datetime.now(),
+            timestamp=timeNow(),
         )
         embed.set_thumbnail(url="attachment://playerhead.png")
 
@@ -263,7 +269,7 @@ async def find(
             ctx,
             embeds=[
                 interactions.Embed(
-                    title="Error", description="No search parameters given", color=0xFF6347, timestamp=datetime.datetime.now()
+                    title="Error", description="No search parameters given", color=0xFF6347, timestamp=timeNow()
                 )
             ],
         )
@@ -290,7 +296,7 @@ async def find(
                         description="Getting info about a server out of "
                         + str(numServers)
                         + " servers...",
-                        timestamp=datetime.datetime.now(),
+                        timestamp=timeNow(),
                     )
                 ],
             )
@@ -317,7 +323,7 @@ async def find(
                         title="Error",
                         description="An error occured while searching. Please try again later and check the logs for more details.",
                         color=0xFF0000,
-                        timestamp=datetime.datetime.now(),
+                        timestamp=timeNow(),
                     )
                 ],
             )
@@ -351,7 +357,7 @@ async def show_players(ctx: interactions.ComponentContext):
         embed = interactions.Embed(
             title="Players",
             description="{} players logged".format(len(players)),
-            timestamp=datetime.datetime.now(),
+            timestamp=timeNow(),
         )
 
         for player in players:
@@ -386,7 +392,7 @@ async def show_players(ctx: interactions.ComponentContext):
                     title="Error",
                     description="An error occured while searching. Please try again later and check the logs for more details.",
                     color=0xFF0000,
-                    timestamp=datetime.datetime.now(),
+                    timestamp=timeNow(),
                 )
             ],
             ephemeral=True,
@@ -404,7 +410,7 @@ async def rand_select(ctx: interactions.ComponentContext):
                 title="Randomizing...",
                 description="Loading a random server...",
                 color=0x00FF00,
-                timestamp=datetime.datetime.now(),
+                timestamp=timeNow(),
             )
         ],
     )
@@ -434,7 +440,7 @@ async def stats(ctx: interactions.CommandContext):
         """Get stats about the database"""
 
         await ctx.send(
-            embeds=[interactions.Embed(title="Stats", description="Getting stats...", timestamp=datetime.datetime.now())]
+            embeds=[interactions.Embed(title="Stats", description="Getting stats...", timestamp=timeNow())]
         )
 
         fncs.dprint("Getting stats...")
@@ -443,7 +449,7 @@ async def stats(ctx: interactions.CommandContext):
         # add commas to server count
         serverCount = "{:,}".format(serverCount)
         text = f"Total servers: `{serverCount}`\nRough Player Count: `...`\nMost common version:\n`...`"
-        await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text, timestamp=datetime.datetime.now())])
+        await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text, timestamp=timeNow())])
 
         fncs.dprint("Getting versions...")
         versions = fncs.get_sorted_versions(col)
@@ -452,7 +458,7 @@ async def stats(ctx: interactions.CommandContext):
         text = "Total servers: `{}`\nRough Player Count: `...`\nMost common version:```css\n{}\n```".format(
             serverCount, ("\n".join(topTen[:5]))
         )
-        await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text, timestamp=datetime.datetime.now())])
+        await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text, timestamp=timeNow())])
 
         fncs.dprint("Getting player count...")
         players = fncs.get_total_players_online(col)
@@ -468,7 +474,7 @@ async def stats(ctx: interactions.CommandContext):
             serverCount, players, ("\n".join(topTen[:5]))
         )
 
-        await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text, timestamp=datetime.datetime.now())])
+        await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text, timestamp=timeNow())])
     except Exception:
         print(f"====\nError: {traceback.format_exc()}\n====")
         fncs.dprint(traceback.format_exc())
@@ -478,7 +484,7 @@ async def stats(ctx: interactions.CommandContext):
                 interactions.Embed(
                     title="Error",
                     description="Error getting stats, check the console and log for more info.",
-                    timestamp=datetime.datetime.now(),  # local time
+                    timestamp=timeNow(),  # local time
                 )
             ]
         )
@@ -500,7 +506,7 @@ async def help(ctx: interactions.CommandContext):
 
 `/help` - Get help
 """,
-            timestamp=datetime.datetime.now(),  # local time
+            timestamp=timeNow(),  # local time
             )
         ]
     )
