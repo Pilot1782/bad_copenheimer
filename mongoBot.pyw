@@ -2,6 +2,7 @@
 import datetime
 import io
 import json
+from os import times
 import random
 import requests
 import sys
@@ -339,10 +340,19 @@ async def show_players(ctx: interactions.ComponentContext):
 
         # get current message
         msg = ctx.message
+        
+        if msg is None:
+            await ctx.send(
+                interactions.Embed(
+                    title="Error",
+                    description="Message not found",
+                    color=0xFF6347,
+                    timestamp=timeNow(),
+                )
+            )
+            return
 
-        host = msg.embeds[  # pyright: ignore[reportOptionalMemberAccess]
-            0  # content
-        ].title[
+        host = msg.embeds[0].title[
             2:  # exclude the online symbol
         ]
 

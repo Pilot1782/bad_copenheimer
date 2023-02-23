@@ -872,7 +872,7 @@ class funcs:
                     self.print("Invalid hostname")
                     return ip
         except socket.herror:
-            self.print("Hostname not found")
+            self.print("Hostname not found: "+ip)
             return ip
         except Exception:
             self.print(traceback.format_exc())
