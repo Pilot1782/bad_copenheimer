@@ -732,6 +732,8 @@ class funcs:
         Returns:
             list[str] | False: A list of players on the server, or False if the server is not cracked
         """
+        self.dprint("Getting player list for ip: " + host + ":" + port)
+        
         import chat as chat2
 
         args = [host, "--port", port, "--offline-name", username]
@@ -752,9 +754,18 @@ class funcs:
 
         out = [] if self.crackCheckAPI(host, port) else False
 
-        if "kicked: this server has mods that require" in self.stdout.read().lower():
-            self.dprint("Server has mods, assuming not cracked")
-            out = False if out is False else True
+        lines = self.stdout.read().split("\n")
+        lines = lines[::-1]
+        flag = False
+        for line in lines:
+            if "kick" in line.lower():
+                flag = not flag
+            if "Getting player list for ip: "+host in line and flag:
+                return []
+            
+            if "PlayerListProtocol{"+host in line:
+                self.dprint(host+" is an online mode server")
+                return False
 
         return out
 
@@ -899,7 +910,7 @@ class funcs:
         
     def isWhitelisted(self, ip: str, port: int) -> bool:
         """
-        Check if a given Minecraft server is whitelisted.
+        Check if a given Minecraft server is whitelisted through packet magic.
 
         Args:
             ip (str): IP address of the Minecraft server.

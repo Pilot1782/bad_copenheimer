@@ -48,7 +48,6 @@ col = db["servers"]
 serverList = []
 ServerInfo = {}
 _port = "25565"
-stdout = io.StringIO()
 
 fncs = funcs(collection=col)
 
@@ -143,7 +142,17 @@ async def find(
         port (int, optional): The port of the server. Defaults to 25565.
     """
 
-    print("find", _id, host, port, player, version, motd, maxplayers, cracked)
+    print(
+        "find",
+        "id:"+_id,
+        "host:"+host,
+        "port:"+port,
+        "player:"+player,
+        "version:"+version,
+        "motd:"+motd,
+        maxplayers,
+        cracked
+    )
 
     # send as embed
     await ctx.defer()
