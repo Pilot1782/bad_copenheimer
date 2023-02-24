@@ -214,6 +214,7 @@ async def find(
                             timestamp=timeNow(),
                         )
                     ],
+                    ephemeral=True,
                 )
                 return
             else:
@@ -235,6 +236,7 @@ async def find(
                             timestamp=timeNow(),
                         )
                     ],
+                    ephemeral=True,
                 )
                 return
 
@@ -256,6 +258,7 @@ async def find(
                         timestamp=timeNow(),
                     )
                 ],
+                ephemeral=True,
             )
             return
 
@@ -280,6 +283,7 @@ async def find(
                     title="Error", description="No search parameters given", color=0xFF6347, timestamp=timeNow()
                 )
             ],
+            ephemeral=True,
         )
     else:
         try:
@@ -334,6 +338,7 @@ async def find(
                         timestamp=timeNow(),
                     )
                 ],
+                ephemeral=True,
             )
             print(
                 f"----\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n====\n====\n{ServerInfo}\n====\n----"
@@ -479,7 +484,8 @@ async def stats(ctx: interactions.CommandContext):
                     description="Error getting stats, check the console and log for more info.",
                     timestamp=timeNow(),  # local time
                 )
-            ]
+            ],
+            ephemeral=True,
         )
 
 
@@ -501,7 +507,8 @@ async def help(ctx: interactions.CommandContext):
 """,
             timestamp=timeNow(),  # local time
             )
-        ]
+        ],
+        ephemeral=True,
     )
 
 
