@@ -362,7 +362,7 @@ async def show_players(ctx: interactions.ComponentContext):
         
         if embed == []:
             await ctx.send(
-                name="Error",
+                title="Error",
                 description="Embed not found",
                 color=0xFF6347,
                 timestamp=timeNow(),
