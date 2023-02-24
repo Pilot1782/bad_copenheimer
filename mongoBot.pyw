@@ -38,7 +38,7 @@ if TOKEN == "...":
 # Setup
 # ---------------------------------------------
 
-bot = interactions.Client(token=TOKEN)
+bot = interactions.Client(token=TOKEN, intents=interactions.Intents.GUILD_MESSAGE_CONTENT)
 
 client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi("1"))  # type: ignore
 db = client["mc"]
@@ -346,9 +346,7 @@ async def show_players(ctx: interactions.ComponentContext):
         await ctx.defer(ephemeral=True)
 
         # get current message
-        id = ctx.message.id
-        
-        msg = await ctx.channel.get_message(id)
+        msg = ctx.message
 
         host = msg.embeds[0].title[
             2:  # exclude the online symbol
