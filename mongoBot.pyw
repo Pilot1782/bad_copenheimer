@@ -1,5 +1,6 @@
 # pyright: basic, reportGeneralTypeIssues=false, reportOptionalSubscript=false
 import datetime
+from functools import _Descriptor
 import io
 import json
 from os import times
@@ -361,20 +362,18 @@ async def show_players(ctx: interactions.ComponentContext):
             )
             return
 
-        if "embeds=[]" not in str(msg):
-            host = msg.embeds[0].title[
-                2:  # exclude the online symbol
-            ]
-        else:
+        embed = msg.embeds
+        
+        if embed == []:
             await ctx.send(
-                interactions.Embed(
-                    title="Error",
-                    description="Message not found",
-                    color=0xFF6347,
-                    timestamp=timeNow(),
-                )
+                name="Error",
+                description="Embed not found",
+                color=0xFF6347,
+                timestamp=timeNow(),
             )
             return
+        else:
+            host = embed.title.split(" ")[1]
 
         players = fncs.playerList(host)
 
