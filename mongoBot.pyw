@@ -344,7 +344,6 @@ async def find(
 
 @bot.component("show_players")
 async def show_players(ctx: interactions.ComponentContext):
-    msg = None
     try:
         await ctx.defer(ephemeral=True)
 
