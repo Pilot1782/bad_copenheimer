@@ -344,6 +344,7 @@ async def find(
 
 @bot.component("show_players")
 async def show_players(ctx: interactions.ComponentContext):
+    msg = None
     try:
         await ctx.defer(ephemeral=True)
 
@@ -361,9 +362,20 @@ async def show_players(ctx: interactions.ComponentContext):
             )
             return
 
-        host = msg.embeds[0].title[
-            2:  # exclude the online symbol
-        ]
+        if "embeds=[]" not in str(msg):
+            host = msg.embeds[0].title[
+                2:  # exclude the online symbol
+            ]
+        else:
+            await ctx.send(
+                interactions.Embed(
+                    title="Error",
+                    description="Message not found",
+                    color=0xFF6347,
+                    timestamp=timeNow(),
+                )
+            )
+            return
 
         players = fncs.playerList(host)
 
