@@ -343,10 +343,9 @@ async def find(
 @bot.component("show_players")
 async def show_players(ctx: interactions.ComponentContext):
     try:
-        await ctx.defer(ephemeral=True)
-
-        # get current message
         msg = ctx.message
+        
+        await ctx.defer(ephemeral=True)
 
         host = msg.embeds[0].title[
             2:  # exclude the online symbol
