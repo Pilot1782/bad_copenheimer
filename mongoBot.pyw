@@ -1,9 +1,5 @@
 # pyright: basic, reportGeneralTypeIssues=false, reportOptionalSubscript=false
 import datetime
-from functools import _Descriptor
-import io
-import json
-from os import times
 import random
 import requests
 import sys
