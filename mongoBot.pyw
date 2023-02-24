@@ -380,7 +380,7 @@ async def show_players(ctx: interactions.ComponentContext):
 
         await component_send(ctx, embeds=[embed], ephemeral=True)
     except Exception:
-        print(traceback.format_exc())
+        print(traceback.format_exc(), ctx.message)
         await component_send(
             ctx,
             embeds=[
