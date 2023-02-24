@@ -1,4 +1,4 @@
-# pyright: basic, reportGeneralTypeIssues=false, reportOptionalSubscript=false
+# pyright: basic, reportGeneralTypeIssues=false, reportOptionalSubscript=false, reportOptionalMemberAccess=false
 import datetime
 import random
 import requests
@@ -15,6 +15,7 @@ from interactions.ext.files import (
     command_send,
     component_send,
 )
+from interactions.api.models import Message
 
 from funcs import funcs
 
@@ -345,33 +346,13 @@ async def show_players(ctx: interactions.ComponentContext):
         await ctx.defer(ephemeral=True)
 
         # get current message
-        msg = ctx.message
+        id = ctx.message.id
         
-        if msg is None:
-            await ctx.send(
-                interactions.Embed(
-                    title="Error",
-                    description="Message not found",
-                    color=0xFF6347,
-                    timestamp=timeNow(),
-                )
-            )
-            return
+        msg = await ctx.channel.get_message(id)
 
-        embed = msg.embeds
-        
-        if embed == []:
-            await ctx.send(
-                interactions.Embed(
-                    title="Error",
-                    description="Embed not found",
-                    color=0xFF6347,
-                    timestamp=timeNow(),
-                )
-            )
-            return
-        else:
-            host = embed.title.split(" ")[1]
+        host = msg.embeds[0].title[
+            2:  # exclude the online symbol
+        ]
 
         players = fncs.playerList(host)
 
@@ -399,7 +380,7 @@ async def show_players(ctx: interactions.ComponentContext):
 
         await component_send(ctx, embeds=[embed], ephemeral=True)
     except Exception:
-        print(traceback.format_exc(), "\n---\n", msg)
+        print(traceback.format_exc())
         await component_send(
             ctx,
             embeds=[

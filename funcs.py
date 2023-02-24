@@ -998,8 +998,6 @@ class funcs:
         
         names = [p["name"].lower() for p in normal]
         
-        self.dprint(names, normal)
-        
         # loop through normal and if the player is in the players list then set "online" to true
         for player in players:
             player["online"] = player["name"].lower() in names
