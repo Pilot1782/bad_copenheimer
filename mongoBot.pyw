@@ -146,12 +146,12 @@ async def find(
         "find",
         "id:"+_id,
         "host:"+host,
-        "port:"+port,
+        "port:"+str(port),
         "player:"+player,
         "version:"+version,
         "motd:"+motd,
-        maxplayers,
-        cracked
+        "maxplayers:"+str(maxplayers),
+        "cracked:"+str(cracked)
     )
 
     # send as embed
@@ -365,11 +365,7 @@ async def show_players(ctx: interactions.ComponentContext):
             2:  # exclude the online symbol
         ]
 
-        players = col.find_one(
-            {"host": host}
-        )[
-            "lastOnlinePlayersList"
-        ]
+        players = fncs.playerList(host)
 
         random.shuffle(players)  # for servers with more than 25 logged players
 
@@ -381,19 +377,11 @@ async def show_players(ctx: interactions.ComponentContext):
 
         for player in players:
             try:
-                if str(player).startswith("{"):
-                    # player is dict type
-                    player = json.loads(str(player).replace("'", '"'))
-                    embed.add_field(
-                        name=player["name"],
-                        value="`{}`".format(player["uuid"]),
-                        inline=True,
-                    )
-                else:
-                    # player is str type
-                    embed.add_field(
-                        name=player, value="`{}`".format(player), inline=True
-                    )
+                embed.add_field(
+                    name=("🟢 "if player["online"] else "🔴 ")+player["name"],
+                    value="`{}`".format(player["uuid"]),
+                    inline=True,
+                )
             except Exception:
                 print(traceback.format_exc())
                 print(player)

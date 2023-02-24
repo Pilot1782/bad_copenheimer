@@ -149,7 +149,7 @@ def main(argv):
 
     try:
         run(args)
-        reactor.callLater(10, ReactorQuit) # type: ignore
+        reactor.callLater(3, ReactorQuit) # type: ignore
         reactor.run() # type: ignore
     except twisted.internet.error.ReactorNotRestartable: # pyright: ignore[reportGeneralTypeIssues]
         pass

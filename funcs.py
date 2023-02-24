@@ -745,7 +745,7 @@ class funcs:
             return [] if self.crackCheckAPI(host, port) else False
 
         while True:
-            if time.time() - tStart > 15:
+            if time.time() - tStart > 5:
                 break
             if len(chat2.playerArr) > 0:
                 chat2.playerArr.remove(username.lower())
@@ -937,6 +937,74 @@ class funcs:
         except:
             # assume the server is not whitelisted
             return False
+        
+    def playerList(self, host:str, port:int = 25565) -> list[dict]:
+        """Return a list of players on a Minecraft server
+
+        Args:
+            host (str): The hostname/ip of the server
+            port (int, optional): port of the server. Defaults to 25565.
+
+        Returns:
+            list[dict]: list of players in the form of:
+                [
+                    {
+                        "name": "playername",
+                        "uuid": "playeruuid"
+                    }
+                ]
+        """
+        
+        if self.col is None:
+            self.print("Collection not set")
+            return []
+        
+        # get list from database
+        res = self.col.find_one({"host": host})
+        players = res["lastOnlinePlayersList"] if res is not None else []
+        
+        cpLST = self.crackedPlayerList(host, str(port))
+        cracked = bool(cpLST or cpLST == [])
+        
+        if cracked:
+            self.dprint("Cracked server, getting UUIDs")
+            for player in cracked:
+                jsonResp = requests.get(
+                    "https://api.mojang.com/users/profiles/minecraft/" + player
+                )
+                uuid = "---n/a---"
+                if "id" in str(jsonResp.text):
+                    uuid = jsonResp.json()["id"]
+                
+                player = {"name": player, "uuid": uuid}
+        else:
+            cpLST = []
+        
+        normal = []
+        try:
+            self.dprint("Getting player list from server")
+            server = mcstatus.JavaServer.lookup(host+":"+str(port))
+            status = server.status()
+            if status.players.sample is not None:
+                normal = [{"name": p.name, "uuid": p.id} for p in status.players.sample]
+        except Exception:
+            self.print(traceback.format_exc())
+            normal = []
+        
+        if cracked:
+            for player in cpLST:
+                if player not in normal:
+                    normal.append(player)
+        
+        names = [p["name"].lower() for p in normal]
+        
+        self.dprint(names, normal)
+        
+        # loop through normal and if the player is in the players list then set "online" to true
+        for player in players:
+            player["online"] = player["name"].lower() in names
+            
+        return players
 
 
 
