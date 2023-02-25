@@ -15,7 +15,6 @@ import logging
 import pymongo
 
 import interactions
-from mcstatus import JavaServer
 import mcstatus
 
 norm = sys.stdout
@@ -151,7 +150,7 @@ class funcs:
 
     # Print but for debugging
     def dprint(self, *text, override: bool = False, end="\n"):
-        """Prints a message to the console and the log file
+        r"""Prints a message to the console and the log file
 
         Args:
             override (bool, optional): Force print to the console regardless of debugging. Defaults to False.
@@ -324,7 +323,7 @@ class funcs:
             for i in list(self.col.find_one({"host": host})["lastOnlinePlayersList"]):
                 try:
                     if i not in data["lastOnlinePlayersList"]:
-                        if type(i) == str:
+                        if type(i) is str:
                             url = f"https://api.mojang.com/users/profiles/minecraft/{i}"
                             jsonResp = requests.get(url)
                             if len(jsonResp.text) > 2:
@@ -422,8 +421,7 @@ class funcs:
             for _item in _items:
                 key = str(_item[0])
                 value = str(_item[1])
-                if key in server:
-                    if str(value).lower() not in str(server[key]).lower():
+                if key in server and str(value).lower() not in str(server[key]).lower():
                         flag = False
                         break
             if flag:
@@ -930,10 +928,7 @@ class funcs:
 
         try:
             # check if the server is whitelisted
-            if data[3] == 0:
-                return True
-            else:
-                return False
+            return bool(data[3] == 0)
         except:
             # assume the server is not whitelisted
             return False

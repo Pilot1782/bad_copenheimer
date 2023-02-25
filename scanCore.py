@@ -8,6 +8,7 @@ import multiprocessing
 import multiprocessing.pool
 import asyncio
 import funcs
+import sys
 
 useWebHook, pingsPerSec , maxActive = False, 4800, 10
 masscan_search_path = ('masscan',
@@ -56,7 +57,7 @@ def scan(ip_list):
         scanner = msCan.PortScanner(masscan_search_path=masscan_search_path)
     except msCan.PortScannerError:
         print("Masscan not found, please install it")
-        exit(0)
+        sys.exit(0)
 
     try:
         import json
@@ -71,7 +72,7 @@ def scan(ip_list):
 
         return list(result["scan"].keys())
     except OSError:
-        exit(0)
+        sys.exit(0)
     except Exception:
         Eprint(traceback.format_exc())
         return []
@@ -106,7 +107,7 @@ async def threader(ip_range):
             # this is done indiviuallly to prevent your internet from being overloaded
             check(ip)
     except OSError:
-        exit(0)
+        sys.exit(0)
     except Exception:
         Eprint(traceback.format_exc())
 

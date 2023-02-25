@@ -58,8 +58,7 @@ class PlayerListProtocol(ClientProtocol):
                         p_display_name = None
 
                     # 1.19+
-                    if self.protocol_version >= 759:
-                        if buff.unpack('?'):
+                    if self.protocol_version >= 759 and buff.unpack('?'):
                             timestamp = buff.unpack("Q")
                             key_length = buff.unpack_varint()
                             key_bytes = buff.read(key_length)
@@ -105,10 +104,6 @@ class PlayerListProtocol(ClientProtocol):
         for data in self.players.values():
             printable_players.append((data['name'], data['ping']))
             playerArr.append(data['name'].lower())
-            # self.logger.info(data['name'].lower())
-
-        # for display_name, ping in sorted(printable_players):
-            # self.logger.info("%4sms %s" % (ping, display_name))
 
         ReactorQuit()
 
@@ -121,7 +116,6 @@ class PlayerListFactory(ClientFactory):
     except Exception:
         traceback.print_exc()
         print("line 122")
-        pass
 
 
 @defer.inlineCallbacks # pyright: ignore[reportGeneralTypeIssues]
