@@ -1,12 +1,21 @@
-import pymongo # type: ignore
-import mcstatus # type: ignore
+import pymongo
+import masscan as msCan
+import traceback
 import time
 import threading
 import random
 import multiprocessing
 import multiprocessing.pool
 import asyncio
+import funcs
 
+useWebHook, pingsPerSec , maxActive = False, 4800, 10
+masscan_search_path = ('masscan',
+                       '/usr/bin/masscan',
+                       '/usr/local/bin/masscan',
+                       '/sw/bin/masscan',
+                       '/opt/local/bin/masscan'
+                       )
 try:
     from privVars import *
 except ImportError:
@@ -16,69 +25,56 @@ except ImportError:
 # Setup
 # ---------------------------------------------
 
-pingsPerSec = 2400
-maxActive = 5
 DEBUG = True
+
 time_start = time.time()
 upHosts = []
 results = []
-res = []
 threads = []
 pool = multiprocessing.pool.ThreadPool(maxActive)
-c = 0
 
 client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi("1"))  # type: ignore
 db = client["mc"]
 col = db["servers"]
+fncs = funcs.funcs(collection=col)
 
 # Funcs
 # ---------------------------------------------
 
+
+def print(*args, **kwargs):
+    fncs.print(' '.join(map(str, args)), **kwargs)
+
 def check(host):
-    try:
-        import mcstatus # type: ignore
-        import re
-
-        print("\r", end="")
-        server = mcstatus.JavaServer.lookup(host)
-        status = server.status()
-        description = status.description
-        # remove color codes and whitespace
-        description = description = re.sub(r"§\S*[|]*\s*", "", description)
-
-        return host, status, description
-    except Exception:
-        return None
+    if useWebHook:
+        return fncs.check(host, webhook=DSICORD_WEBHOOK)
+    else:
+        return fncs.check(host)
 
 def scan(ip_list):
     try:
-        import masscan # type: ignore
+        scanner = msCan.PortScanner(masscan_search_path=masscan_search_path)
+    except msCan.PortScannerError:
+        print("Masscan not found, please install it")
+        exit(0)
+
+    try:
         import json
 
-        scanner = masscan.PortScanner()
         scanner.scan(
             ip_list,
             ports="25565",
             arguments="--max-rate {}".format(pingsPerSec / maxActive),
             sudo=True,
         )
-        res = json.loads(scanner.scan_result) # type: ignore
-        print(scanner.scan_result)
+        result = json.loads(scanner.scan_result)  # type: ignore
 
-        return list(res["scan"].keys())
-    except Exception as e:
-        Eprint(e)
+        return list(result["scan"].keys())
+    except OSError:
+        exit(0)
+    except Exception:
+        Eprint(traceback.format_exc())
         return []
-
-def dprint(text, end="\r"):
-    """Debugging print
-
-    Args:
-        text (string): text to output
-        end (str, optional): end of print statement. Defaults to "\r".
-    """
-    if DEBUG:
-        print(text, end=end)
 
 def Eprint(text):
     """Error printer
@@ -86,64 +82,33 @@ def Eprint(text):
     Args:
         text (String): Error text
     """
+    text = str(text)
     disLog("Error: "+"".join(str(i) for i in text))
-    dprint("\n"+"".join(str(i) for i in text)+"\n")
+    fncs.dprint("\n"+"".join(str(i) for i in text)+"\n")
 
 
 def disLog(text, end="\r"):
-    try:
-        import requests
-
-        url = DSICORD_WEBHOOK
-        data = {"content": text + end}
-        requests.post(url, data=data)
-    except Exception:
-        Eprint(text)
-        pass
-
-def add(host):
-    if not col.find_one({"host": host}):
+    if useWebHook:
         try:
-            import re
+            import requests
 
-            server = mcstatus.JavaServer.lookup(host)
-
-            description = server.status().description
-            description = re.sub(r"§\S*[|]*\s*", "", description)
-
-            if server.status().players.sample is not None:
-                players = [player.name for player in server.status().players.sample] # type: ignore
-            else:
-                players = []
-
-            data = {
-                "host": host,
-                "lastOnline": time.time(),
-                "lastOnlinePlayers": server.status().players.online,
-                "lastOnlineVersion": str(server.status().version.name),
-                "lastOnlineDescription": str(description),
-                "lastOnlinePing": int(server.status().latency * 10),
-                "lastOnlinePlayersList": players,
-                "lastOnlinePlayersMax": server.status().players.max,
-                "lastOnlineVersionProtocol": str(server.status().version.protocol),
-            }
-
-            col.insert_one(data)
-            print(f"\nadded {host}\n")
-            disLog(f"added {host}")
-        except Exception as e:
-            Eprint(("\r"+e+" | "+host)) # type: ignore
+            url = DSICORD_WEBHOOK
+            data = {"content": text + end}
+            requests.post(url, data=data)
+        except Exception:
+            Eprint(text+'\n'+traceback.format_exc())
 
 async def threader(ip_range):
     try:
         ips = scan(ip_range)
 
         for ip in ips: # type: ignore
-            res = check(ip)
-            if res is not None:
-                add(res[0])
-    except Exception as e:
-        Eprint(e)
+            # this is done indiviuallly to prevent your internet from being overloaded
+            check(ip)
+    except OSError:
+        exit(0)
+    except Exception:
+        Eprint(traceback.format_exc())
 
 def crank(ip_range):
     asyncio.run(threader(ip_range))
@@ -158,14 +123,11 @@ for i in range(255):
         ip_lists.append(f"{i}.{j}.0.0/16")
 random.shuffle(ip_lists)
 
-#ip_lists = ip_lists[:500]  # remove for final version
-print(ip_lists[0:1])
+ip_lists = ip_lists[:1000]  # remove for final version
 time.sleep(0.5)
 
 normal = threading.active_count()
 async def makeThreads():
-    # create threads
-    threads = []
     # Create a thread for each list of IPs
     for ip_list in ip_lists:
         # Create the thread
@@ -176,8 +138,6 @@ async def makeThreads():
         while threading.active_count()-normal >= maxActive:
             await asyncio.sleep(0.1)
         t.start()
-
-        print(f"\rstarted proc for {ip_list} | {threading.active_count()-normal}/{maxActive} active threads, #{ip_lists.index(ip_list)+1} {' '*10}", end="\r")
 
 
 asyncio.run(makeThreads())

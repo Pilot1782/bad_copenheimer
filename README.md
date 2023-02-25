@@ -4,6 +4,8 @@ A Python impelentation of a discord bot that acts as a server scanner.
 
 This is a discord bot that will scan ip adresses to see if they are minecraft servers and will post the results in your channel.
 
+[Discord Server](https://discord.gg/kw3EYRwUkt) for testing a working and setup bot to see if it works for you.
+
 ----
 
 ## Beta Release
@@ -12,7 +14,7 @@ The new bot is now public, you can check it out in the [dev-builds](https://gith
 
 ## Installation
 
-[Installation Page](https://www.github.com/Pilot1782/bad_copenheimer/wiki/Installation)
+[Installation Page](https://github.com/Pilot1782/bad_copenheimer/wiki/Installation-(New-Bot))
 
 [Wiki](https://www.github.com/Pilot1782/bad_copenheimer/wiki)
 
@@ -31,7 +33,7 @@ You can now use the new bot, it is still in beta, but it is much more stable and
 ### Requirements
 
 * Python 3.6 or higher
-* Linux/Docker (for the scanner, the bot will run on windows)
+* Linux/Docker (for the scanner, the discord bot will run on windows)
 * Masscan (for the scanner)
 * requirements.txt (needs to be run with pip3)
 
@@ -52,6 +54,10 @@ This will get information about the requested server, including players online, 
 This will look through your database to find servers that match the provided paramaters. In the new build, there are two more buttons that can be used to either show the player names and uuids of players found on the server or to pick another random server from the list, after pressing it, wait for the message to update.
 
 ![showcase](https://raw.githubusercontent.com/Pilot1782/bad_copenheimer/doc-resources/Screenshot_20230111_083824.png)
+
+If the server has a whitelist the dot will be orange if it is online.
+
+![showcase](https://raw.githubusercontent.com/Pilot1782/bad_copenheimer/doc-resources/Screenshot_20230222_034715.png)
 
 `/stats`
 This will show you the stats of the databse.
