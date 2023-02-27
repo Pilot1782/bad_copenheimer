@@ -925,8 +925,10 @@ class funcs:
             sock.close()
         except:
             return False
-
+        
         try:
+            raise Exception("This is not working correctly so I'm disabling it for now")
+            self.dprint(data[3])
             # check if the server is whitelisted
             return bool(data[3] == 0)
         except:
