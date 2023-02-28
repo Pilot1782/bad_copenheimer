@@ -928,23 +928,24 @@ class funcs:
         Returns:
             bool: True if the server is whitelisted, False otherwise.
         """
-        # connect to the server
-        try:
-            sock = socket.create_connection((ip, port), timeout=5)
-            sock.send(b"\xfe\x01")
-            data = sock.recv(1024)
-            sock.close()
-        except:
-            return False
+        # # connect to the server
+        # try:
+        #     sock = socket.create_connection((ip, port), timeout=5)
+        #     sock.send(b"\xfe\x01")
+        #     data = sock.recv(1024)
+        #     sock.close()
+        # except:
+        #     return False
         
-        try:
-            raise Exception("This is not working correctly so I'm disabling it for now")
-            self.dprint(data[3])
-            # check if the server is whitelisted
-            return bool(data[3] == 0)
-        except:
-            # assume the server is not whitelisted
-            return False
+        # try:
+        #     self.dprint(data[3])
+        #     # check if the server is whitelisted
+        #     return bool(data[3] == 0)
+        # except:
+        #     # assume the server is not whitelisted
+        #     return False
+        
+        return False
         
     def playerList(self, host:str, port:int = 25565) -> list[dict]:
         """Return a list of players on a Minecraft server
