@@ -849,6 +849,9 @@ class funcs:
             self.print("Not an IP address")
             return ip
         
+        if ip == "127.0.0.1" or ip == "localhost":
+            return ip
+        
         try:
             host = socket.gethostbyaddr(ip)[0]
             # if the hostname is an ip address, return the original ip
