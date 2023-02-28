@@ -5,6 +5,7 @@ import requests
 import sys
 import time
 import traceback
+import json
 
 import pymongo
 from bson.objectid import ObjectId
@@ -43,9 +44,6 @@ bot = interactions.Client(token=TOKEN, intents=interactions.Intents.GUILD_MESSAG
 client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi("1"))  # type: ignore
 db = client["mc"]
 col = db["servers"]
-serverList = []
-ServerInfo = {}
-_port = "25565"
 
 fncs = funcs(collection=col)
 
@@ -145,9 +143,9 @@ async def find(
         "id:"+_id,
         "host:"+host,
         "port:"+str(port),
-        "player:"+player,
-        "version:"+version,
-        "motd:"+motd,
+        "player:\""+player+"\"",
+        "version:\""+version+"\"",
+        "motd:\""+motd+"\"",
         "maxplayers:"+str(maxplayers),
         "cracked:"+str(cracked)
     )
@@ -155,13 +153,13 @@ async def find(
     # send as embed
     await ctx.defer()
 
-    global _port, serverList
+    serverList = []
     search = {}
     info = {}
     _port = str(port)
     flag = False
     # if parameters are given, add them to the search
-
+    
     if host:
         serverList = [col.find_one({"host": host})]
 
@@ -298,6 +296,7 @@ async def find(
                 fncs.dprint("Flag is up, setting server info")
                 random.shuffle(serverList)
                 numServers = len(serverList)
+                search = {}
 
             fncs.dprint(f"Servers:{len(serverList)}/|\\Search:{search}/|\\Flag:{flag}")
             await command_send(
@@ -314,7 +313,7 @@ async def find(
             )
 
             # setup the embed
-            embed = fncs.genEmbed(serverList, str(_port))
+            embed = fncs.genEmbed(serverList, search)
             _file = embed[1]
             comps = embed[2]
             embed = embed[0]
@@ -341,7 +340,7 @@ async def find(
                 ephemeral=True,
             )
             print(
-                f"----\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n====\n====\n{ServerInfo}\n====\n----"
+                f"----\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n----"
             )
 
 
@@ -399,33 +398,63 @@ async def show_players(ctx: interactions.ComponentContext):
 
 @bot.component("rand_select")
 async def rand_select(ctx: interactions.ComponentContext):
-    await ctx.defer(edit_origin=True)
+    try:
+        fncs.dprint("Fetching message")
+        msg = ctx.message.embeds[0]
+        fncs.dprint(str(msg))
+        
+        await ctx.defer(edit_origin=True)
+        
+        await component_edit(
+            ctx,
+            embeds=[
+                interactions.Embed(
+                    title="Loading...",
+                    description="Loading the next server...",
+                    color=0x00FF00,
+                    timestamp=timeNow(),
+                )
+            ],
+        )
+        
+        text = msg.footer.text
+        # fncs.dprint("Getting footer: "+text)
+        text = text.split("\n")[2]
+        text = text.split("Key:")[1]
+        text = text.split("/|\\")
+        key = text[0]
+        index = int(text[1])
+        
+        key = json.loads(key) if key != "---n/a---" else {}
 
-    await component_edit(
-        ctx,
-        embeds=[
-            interactions.Embed(
-                title="Randomizing...",
-                description="Loading a random server...",
-                color=0x00FF00,
-                timestamp=timeNow(),
-            )
-        ],
-    )
+        fncs.dprint("ReGenerating list")
+        serverList = fncs._find(key)
+        fncs.dprint("List generated: "+str(len(serverList))+" servers")
 
-    global _serverList
+        embed = fncs.genEmbed(_serverList=serverList, search=key, index=index)
+        _file = embed[1]
+        button = embed[2]
+        embed = embed[0]
 
-    embed = fncs.genEmbed(serverList, _port)
-    _file = embed[1]
-    button = embed[2]
-    embed = embed[0]
+        fncs.dprint("Embed generated", embed, button, _file)
 
-    fncs.dprint("Embed generated", embed, button, _file)
-
-    if _file:
-        await component_edit(ctx, embeds=[embed], files=[_file], components=button)
-    else:
-        await component_edit(ctx, embeds=[embed], components=button)
+        if _file:
+            await component_edit(ctx, embeds=[embed], files=[_file], components=button)
+        else:
+            await component_edit(ctx, embeds=[embed], components=button)
+    except Exception:
+        await component_send(
+            ctx,
+            embeds=[
+                interactions.Embed(
+                    title="Error",
+                    description="An error occured while searching. Please try again later and check the logs for more details.",
+                    color=0xFF0000,
+                    timestamp=timeNow(),
+                )
+            ],
+            ephemeral=True,
+        )
 
 
 @bot.command(

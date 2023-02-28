@@ -13,6 +13,7 @@ import sys
 import socket
 import logging
 import pymongo
+import zlib
 
 import interactions
 import mcstatus
@@ -196,29 +197,44 @@ class funcs:
         hostname = self.resolveHost(host)
         ip = self.resolveIP(host)
         
+        # check if the host is online
+        try:
+            mcstatus.JavaServer.lookup(host + ":" + str(port)).status()
+        except Exception:
+            self.dprint("Server is offline")
+            return None
+        
         # check the ip and hostname to make sure they arr vaild as a mc server
         try:
             server = mcstatus.JavaServer.lookup(ip + ":" + str(port))
             status = server.status()
         except BrokenPipeError:
+            self.dprint("BrokenPipeError")
             ip = host
         except ConnectionRefusedError:
+            self.dprint("ConnectionRefusedError")
             ip = host
         except OSError:
+            self.dprint("OSError")
             ip = host
         except Exception:
+            self.dprint("Exception")
             ip = host
         
         try:
             server = mcstatus.JavaServer.lookup(hostname + ":" + str(port))
             status = server.status()
         except BrokenPipeError:
+            self.dprint("BrokenPipeError")
             ip = host
         except ConnectionRefusedError:
+            self.dprint("ConnectionRefusedError")
             ip = host
         except OSError:
+            self.dprint("OSError")
             ip = host
         except Exception:
+            self.dprint("Exception")
             ip = host
         
 
@@ -481,7 +497,7 @@ class funcs:
                 search_query[key] = value
         return list(self.col.find(search_query))
 
-    def genEmbed(self, _serverList: list[dict], _port: str = "25565"):
+    def genEmbed(self, _serverList: list[dict], search:dict, index:int = -1):
         """Generates an embed for the server list
 
         Args:
@@ -531,8 +547,8 @@ class funcs:
 
             return [embed, None, row]
 
-        random.shuffle(_serverList)
-        info = _serverList[0]
+        index = (index + 1) if index < len(_serverList) - 1 else 0
+        info = _serverList[index]
 
         if info is None:
             logging.error("Server not found: " + str(_serverList))
@@ -564,22 +580,29 @@ class funcs:
 
             return [embed, None, row, info]
 
-        info2 = self.check(info["host"], _port)
+        info2 = self.check(info["host"])
         if info2 is not None:
             info = info2
+            online = True
+        else:
+            self.dprint("Server offline", info["host"])
+            online = False
+        
 
         numServers = len(_serverList)
-        online = info is not None
 
         try:
             _serverList.pop(0)
         except IndexError:
             pass
+        
+        hostname = info['hostname'] if 'hostname' in info else info['host']
+        whitelisted = info['whitelisted'] if 'whitelisted' in info else False
 
         # setup the embed
         embed = interactions.Embed(
-            title=(("🟢 "if not info["whitelisted"] else "🟠 ") if online else "🔴 ") + info["host"],
-            description="Host name: `"+info["hostname"]+"`\n```\n" + info["lastOnlineDescription"] + "```",
+            title=(("🟢 "if not whitelisted else "🟠 ") if online else "🔴 ") + info["host"],
+            description="Host name: `"+hostname+"`\n```\n" + info["lastOnlineDescription"] + "```",
             timestamp=self.timeNow(),
             color=(0x00FF00 if online else 0xFF0000),
             type="rich",
@@ -599,7 +622,7 @@ class funcs:
                     name="Cracked", value=f"{info['cracked']}", inline=True
                 ),
                 interactions.EmbedField(
-                    name="Whitelisted", value=f"{info['whitelisted']}", inline=True
+                    name="Whitelisted", value=f"{whitelisted}", inline=True
                 ),
                 interactions.EmbedField(
                     name="Last Online",
@@ -620,8 +643,10 @@ class funcs:
                     if info["host"] != "Server not found."
                     else "-1"
                 )
-                + "\nOut of {} servers".format(numServers)
-            ),  # pyright: ignore [reportOptionalSubscript]
+                + "\nOut of {} servers\n".format(numServers)
+                + "Key:" + (str(search).replace("'", '"') if search != {} else "---n/a---")+"/|\\"+str(index)
+                + "\n",
+            ),
         )
 
         try:  # this adds the favicon in the most overcomplicated way possible
@@ -871,10 +896,11 @@ class funcs:
                             ping = subprocess.run(["ping", "-n", "1", host], capture_output=True)
                             if ping.returncode == 1:
                                 self.dprint("Hostname is offline")
-                            
-                            return host if ping.returncode == 0 else ip
+                                return ip
+                            else:
+                                return host
                         else:
-                            self.dprint("The host is offline")
+                            self.dprint("The ip is offline")
                             return ip
                     else:
                         self.dprint("Host: " + host)
@@ -886,10 +912,11 @@ class funcs:
                             ping = subprocess.run(["ping", "-c", "1", host], capture_output=True)
                             if ping.returncode == 1:
                                 self.dprint("Hostname is offline")
-                            
-                            return host if ping.returncode == 0 else ip
+                                return ip
+                            else:
+                                return host
                         else:
-                            self.dprint("The host is offline")
+                            self.dprint("The ip is offline")
                             return ip
                 else:
                     self.print("Invalid hostname")
@@ -919,6 +946,23 @@ class funcs:
         except Exception:
             self.print(traceback.format_exc())
             return host
+        
+    def compStr(self, value:str) -> bytes:
+        """Compreses a string to a byte array
+
+        Args:
+            value (str): The string to compress
+        """
+        
+        return zlib.compress(value.encode("utf-8"))
+
+    def decompStr(self, value:bytes) -> str:
+        """Decompresses a byte array to a string
+
+        Args:
+            value (bytes): The byte array to decompress
+        """
+        return zlib.decompress(value).decode("utf-8")
         
     def isWhitelisted(self, ip: str, port: int) -> bool:
         """
