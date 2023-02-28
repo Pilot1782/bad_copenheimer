@@ -824,6 +824,17 @@ class funcs:
         else:
             return 0
         
+    def getPlayersLogged(self, collection: pymongo.collection.Collection):
+        pipeline = [
+            {"$project": {"numPlayers": {"$size": "$lastOnlinePlayersList"}}},
+            {"$group": {"_id": None, "totalPlayers": {"$sum": "$numPlayers"}}}
+        ]
+        result = collection.aggregate(pipeline)
+        total_players = 0
+        for r in result:
+            total_players = r["totalPlayers"]
+        return total_players
+        
     def resolveHost(self, ip: str) -> str:
         """Resolves a hostname to an IP address into a hostname
 

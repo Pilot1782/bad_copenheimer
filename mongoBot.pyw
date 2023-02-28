@@ -446,7 +446,7 @@ async def stats(ctx: interactions.CommandContext):
         serverCount = col.count_documents({})
         # add commas to server count
         serverCount = "{:,}".format(serverCount)
-        text = f"Total servers: `{serverCount}`\nRough Player Count: `...`\nMost common version:\n`...`"
+        text = f"Total servers: `{serverCount}`\nPlayer Count: `...`\nPlayers logged: `...`\nMost common version:\n`...`"
         await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text, timestamp=timeNow())])
 
         fncs.dprint("Getting versions...")
@@ -462,14 +462,16 @@ async def stats(ctx: interactions.CommandContext):
         players = fncs.get_total_players_online(col)
         # add commas to player count
         players = "{:,}".format(players)
-
-        print(
-            f"Total servers: {serverCount}\nRough Player Count: {players}\nMost common versions: {topTen}"
+        
+        fncs.dprint("Getting players logged...")
+        pLogged = fncs.getPlayersLogged(col)
+        pLogged = "{:,}".format(pLogged)
+        text = "Total servers: `{}`\nRough Player Count: `{}`\nPlayers logged: `{}`\nMost common version:```css\n{}\n```".format(
+            serverCount, players, pLogged, ("\n".join(topTen[:5]))
         )
 
-        # edit the message
-        text = "Total servers: `{}`\nRough Player Count: `{}`\nMost common version:```css\n{}\n```".format(
-            serverCount, players, ("\n".join(topTen[:5]))
+        print(
+            f"Total servers: {serverCount}\nRough Player Count: {pLogged}/{players}\nMost common versions: {topTen}"
         )
 
         await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text, timestamp=timeNow())])
