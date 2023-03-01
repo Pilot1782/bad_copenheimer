@@ -580,8 +580,8 @@ class funcs:
 
             return [embed, None, row, info]
 
-        info2 = self.check(info["host"])
-        if info2 is not None:
+        # info2 = self.check(info["host"])
+        if (info2 := self.check(info["host"])) is not None:
             info = info2
             online = True
         else:
@@ -1057,6 +1057,13 @@ class funcs:
         # loop through normal and if the player is in the players list then set "online" to true
         for player in players:
             player["online"] = player["name"].lower() in names
+            (names.pop(names.index(player["name"].lower()))) if player["name"].lower() in names else None
+            
+        # loop through normal and if the player is not in the players list then add them
+        for player in normal:
+            if player["name"].lower() in names:
+                player["online"] = True
+                players.append(player)
             
         return players
 
