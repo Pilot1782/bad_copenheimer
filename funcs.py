@@ -584,8 +584,8 @@ class funcs:
 
             return [embed, None, row, info]
 
-        # info2 = self.check(info["host"])
-        if (info2 := self.check(info["host"])) is not None:
+        info2 = self.check(info["host"])
+        if info2 is not None:
             info = info2
             online = True
         else:
@@ -681,11 +681,7 @@ class funcs:
 
         players = info
         if players is not None:
-            players = (
-                players["lastOnlinePlayersList"]
-                if "lastOnlinePlayersList" in players
-                else []
-            )
+            players = self.playerList(host=info["host"])
         else:
             players = []
 
