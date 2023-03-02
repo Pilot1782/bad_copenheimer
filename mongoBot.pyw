@@ -272,6 +272,8 @@ async def find(
         embed.set_thumbnail(url="attachment://playerhead.png")
 
         await command_send(ctx, embeds=[embed], files=[face])
+        
+        search = {"lastOnlinePlayersList": {"$elemMatch": {"uuid": player}}}  # search for player
 
     if search == {} and not flag:
         await command_send(
@@ -296,7 +298,6 @@ async def find(
                 fncs.dprint("Flag is up, setting server info")
                 random.shuffle(serverList)
                 numServers = len(serverList)
-                search = {}
 
             fncs.dprint(f"Servers:{len(serverList)}/|\\Search:{search}/|\\Flag:{flag}")
             await command_send(
