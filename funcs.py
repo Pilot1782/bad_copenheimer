@@ -335,8 +335,12 @@ class funcs:
                         webhook,
                         json={"content": f"New server added to database: {host}"},
                     )
+            else:
+                # update whitelisted to the database value
+                dbVal = self.col.find_one({"host": host})["whitelisted"]
+                data["whitelisted"] = dbVal if bool(dbVal is not None or dbVal) else False
 
-            for i in list(self.col.find_one({"host": host})["lastOnlinePlayersList"]):
+            for i in self.col.find_one({"host": host})["lastOnlinePlayersList"]:
                 try:
                     if i not in data["lastOnlinePlayersList"]:
                         if type(i) is str:
@@ -691,7 +695,7 @@ class funcs:
                 custom_id="show_players",
                 style=interactions.ButtonStyle.PRIMARY,
                 disabled=(
-                    len(players) == 0 or not online or info["lastOnlinePlayers"] == 0
+                    len(players) == 0
                 ),
             ),
             interactions.Button(
