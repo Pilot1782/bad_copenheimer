@@ -4,7 +4,7 @@ A Python impelentation of a discord bot that acts as a server scanner.
 
 This is a discord bot that will scan ip adresses to see if they are minecraft servers and will post the results in your channel.
 
-[Discord Server](https://discord.gg/kw3EYRwUkt) for testing a working and setup bot to see if it works for you.
+[Discord Server](https://discord.gg/kw3EYRwUkt) if you want to test or play around with a premade bot.
 
 ----
 
