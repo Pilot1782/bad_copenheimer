@@ -290,6 +290,7 @@ class funcs:
                         )
             except Exception:
                 self.dprint("Error getting player list", traceback.format_exc())
+                logging.error(traceback.format_exc())
 
             # remove duplicates from player list
             players = [i for n, i in enumerate(players) if i not in players[n + 1 :]]
@@ -351,6 +352,7 @@ class funcs:
                         " --\\/-- ",
                         host,  # pyright: ignore [reportInvalidStringEscapeSequence]
                     )
+                    logging.error(traceback.format_exc())
                     break
 
             self.col.update_one({"host": host}, {"$set": data})
@@ -671,6 +673,7 @@ class funcs:
                 _file = None
         except Exception:
             self.print(traceback.format_exc(), info)
+            logging.error(traceback.format_exc())
             _file = None
 
         players = info
@@ -757,6 +760,7 @@ class funcs:
             chat2.main(args)
         except Exception:
             self.print(traceback.format_exc())
+            logging.error(traceback.format_exc())
             return [] if self.crackCheckAPI(host, port) else False
 
         while True:
@@ -932,6 +936,7 @@ class funcs:
             return ip
         except Exception:
             self.print(traceback.format_exc())
+            logging.error(traceback.format_exc())
             return ip
 
     def resolveIP(self, host: str) -> str:
@@ -951,6 +956,7 @@ class funcs:
             return host
         except Exception:
             self.print(traceback.format_exc())
+            logging.error(traceback.format_exc())
             return host
 
     def compStr(self, value: str) -> bytes:
@@ -1087,6 +1093,7 @@ class funcs:
                 normal = [{"name": p.name, "uuid": p.id} for p in status.players.sample]
         except Exception:
             self.print(traceback.format_exc())
+            logging.error(traceback.format_exc())
             normal = []
 
         if cracked:
