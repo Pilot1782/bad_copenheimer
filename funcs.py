@@ -973,63 +973,68 @@ class funcs:
     def join(
         self, ip: str, port: int, player_username: str, version: int = -1
     ) -> ServerType:
-        # get info on the server
-        server = mcstatus.JavaServer.lookup(ip, port)
-        version = server.status().version.protocol if version == -1 else version
+        try:
+            # get info on the server
+            server = mcstatus.JavaServer.lookup(ip, port)
+            version = server.status().version.protocol if version == -1 else version
 
-        uuidURL = "https://api.mojang.com/users/profiles/minecraft/" + player_username
-        resp = requests.get(uuidURL)
-        if "error" not in resp.text and resp.text != "":
-            uuid = resp.json()["id"]
-        else:
-            uuid = "00000000-0000-0000-0000-000000000000"
+            uuidURL = "https://api.mojang.com/users/profiles/minecraft/" + player_username
+            resp = requests.get(uuidURL)
+            if "error" not in resp.text and resp.text != "":
+                uuid = resp.json()["id"]
+            else:
+                uuid = "00000000-0000-0000-0000-000000000000"
 
-        connection = TCPSocketConnection((ip, port))
+            connection = TCPSocketConnection((ip, port))
 
-        # Send handshake packet: ID, protocol version, server address, server port, intention to login
-        # THis does not change between versions
-        handshake = Connection()
+            # Send handshake packet: ID, protocol version, server address, server port, intention to login
+            # THis does not change between versions
+            handshake = Connection()
 
-        handshake.write_varint(0)  # Packet ID
-        handshake.write_varint(version)  # Protocol version
-        handshake.write_utf(ip)  # Server address
-        handshake.write_ushort(port)  # Server port
-        handshake.write_varint(2)  # Intention to login
+            handshake.write_varint(0)  # Packet ID
+            handshake.write_varint(version)  # Protocol version
+            handshake.write_utf(ip)  # Server address
+            handshake.write_ushort(port)  # Server port
+            handshake.write_varint(2)  # Intention to login
 
-        connection.write_buffer(handshake)
+            connection.write_buffer(handshake)
 
-        # Send login start packet: ID, username, include sig data, has uuid, uuid
-        loginStart = Connection()
+            # Send login start packet: ID, username, include sig data, has uuid, uuid
+            loginStart = Connection()
 
-        if version > 760:
-            loginStart.write_varint(0)  # Packet ID
-            loginStart.write_utf(player_username)  # Username
-        else:
-            loginStart.write_varint(0)  # Packet ID
-            loginStart.write_utf(player_username)  # Username
-        connection.write_buffer(loginStart)
+            if version > 760:
+                loginStart.write_varint(0)  # Packet ID
+                loginStart.write_utf(player_username)  # Username
+            else:
+                loginStart.write_varint(0)  # Packet ID
+                loginStart.write_utf(player_username)  # Username
+            connection.write_buffer(loginStart)
 
-        # Read response
-        response = connection.read_buffer()
-        id: int = response.read_varint()
-        if id == 2:
-            print("Logged in successfully")
-            return ServerType(ip, version, "CRACKED")
-        elif id == 0:
-            print("Failed to login")
-            print(response.readChat())
-            return ServerType(ip, version, "UNKNOW")
-        elif id == 1:
-            return ServerType(ip, version, "PREMIUM")
-        else:
-            print("Unknown response: " + str(id))
-            try:
-                reason = response.readChat()
-            except:
-                reason = "Unknown"
+            # Read response
+            response = connection.read_buffer()
+            id: int = response.read_varint()
+            if id == 2:
+                print("Logged in successfully")
+                return ServerType(ip, version, "CRACKED")
+            elif id == 0:
+                print("Failed to login")
+                print(response.readChat())
+                return ServerType(ip, version, "UNKNOW")
+            elif id == 1:
+                return ServerType(ip, version, "PREMIUM")
+            else:
+                print("Unknown response: " + str(id))
+                try:
+                    reason = response.readChat()
+                except:
+                    reason = "Unknown"
 
-            print("Reason: " + reason)
-            return ServerType(ip, version, "UNKNOW")
+                print("Reason: " + reason)
+                return ServerType(ip, version, "UNKNOW")
+        except Exception:
+            self.print(traceback.format_exc())
+            logging.error(traceback.format_exc())
+            return ServerType(ip, version, "OFFLINE")
 
     def playerList(self, host: str, port: int = 25565) -> list[dict]:
         """Return a list of players on a Minecraft server
