@@ -582,7 +582,7 @@ class funcs:
                 components=buttons  # pyright: ignore [reportGeneralTypeIssues]
             )
 
-            return [embed, None, row, info]
+            return [embed, None, row]
 
         info2 = self.check(info["host"])
         if info2 is not None:

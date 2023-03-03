@@ -188,63 +188,41 @@ async def find(
     if player:
         search = {}
         flag = True
-        url = "https://api.mojang.com/users/profiles/minecraft/"
         name = ""
-
-        # check if player is valid or if the input is a uuid
-        resp = requests.get(url + player)
-        print(resp.text)
-
-        if resp.status_code == 204 and resp.text == "":
-            resp = requests.get(
-                "https://sessionserver.mojang.com/session/minecraft/profile/"
-                + player.replace("-", "")
-            )
-            jresp = resp.json()
-            if "error" in resp.text or resp.text == "":
-                fncs.dprint("Player not found in minecraft api")
-                await command_send(
-                    ctx,
-                    embeds=[
-                        interactions.Embed(
-                            title="Error",
-                            description="Player not found in minecraft api",
-                            timestamp=timeNow(),
-                        )
-                    ],
-                    ephemeral=True,
-                )
-                return
-            else:
-                player = jresp["id"]
-                name = jresp["name"]
+        uuid = ""
+        isID = len(player) > 16
+        
+        if isID:
+            url = "https://sessionserver.mojang.com/session/minecraft/profile/"+player.replace("-", "")
         else:
-            try:
-                player = resp.json()["id"]
-                name = resp.json()["name"]
-            except Exception:
-                fncs.dprint("Player not found in minecraft api")
-                await command_send(
-                    ctx,
-                    embeds=[
-                        interactions.Embed(
-                            title="Error",
-                            description="Player not found in minecraft api",
-                            color=0xFF6347,
-                            timestamp=timeNow(),
-                        )
-                    ],
-                    ephemeral=True,
-                )
-                return
+            url = "https://api.mojang.com/users/profiles/minecraft/"+player
 
-        serverList = list(
-            col.find({"lastOnlinePlayersList": {"$elemMatch": {"uuid": player}}})
-        )
+        resp = requests.get(url)
+        jresp = resp.json()
+        
+        if "error" in resp.text or resp.text == "":  # if the player is not found
+            fncs.dprint("UUID not found in minecraft api")
+            await command_send(
+                ctx,
+                embeds=[
+                    interactions.Embed(
+                        title="Error",
+                        description="UUID not found in minecraft api",
+                        timestamp=timeNow(),
+                    )
+                ],
+                ephemeral=True,
+            )
+            return
+        else:
+            uuid = jresp["id"]
+            name = jresp["name"]
+
+        serverList = list(col.find({"lastOnlinePlayersList": {"$elemMatch": {"uuid": uuid}}}))
 
         fncs.dprint("Finding player", player)
 
-        if not serverList:
+        if serverList is None:
             fncs.dprint("Player not found in database")
             await command_send(
                 ctx,
@@ -262,10 +240,11 @@ async def find(
 
         # get player head
         face = fncs.playerHead(name)
+        numServers = len(serverList)
 
         embed = interactions.Embed(
             title=f"{name} found",
-            description=f"Found {name} in {len(serverList)} servers",
+            description=f"Found {name} in {numServers} servers",
             color=0x00FF00,
             timestamp=timeNow(),
         )
@@ -273,7 +252,7 @@ async def find(
 
         await command_send(ctx, embeds=[embed], files=[face])
         
-        search = {"lastOnlinePlayersList": {"$elemMatch": {"uuid": player}}}  # search for player
+        search = {"lastOnlinePlayersList": {"$elemMatch": {"uuid": uuid}}}  # search for player
 
     if search == {} and not flag:
         await command_send(
@@ -296,10 +275,9 @@ async def find(
                 numServers = len(serverList)
             else:
                 fncs.dprint("Flag is up, setting server info")
-                random.shuffle(serverList)
                 numServers = len(serverList)
 
-            fncs.dprint(f"Servers:{len(serverList)}/|\\Search:{search}/|\\Flag:{flag}")
+            fncs.dprint(f"Servers:{len(serverList)}|Search:{search}|Flag:{flag}")
             await command_send(
                 ctx,
                 embeds=[
