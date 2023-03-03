@@ -221,25 +221,23 @@ async def find(
         serverList = list(col.find({"lastOnlinePlayersList": {"$elemMatch": {"uuid": uuid}}}))
 
         fncs.dprint("Finding player", player)
+        face = fncs.playerHead(name)
 
-        if serverList is None:
+        if serverList is None or len(serverList) == 0:
             fncs.dprint("Player not found in database")
-            await command_send(
-                ctx,
-                embeds=[
+            embeds = [
                     interactions.Embed(
                         title="Error",
                         description="Player not found in database",
                         color=0xFF6347,
                         timestamp=timeNow(),
                     )
-                ],
-                ephemeral=True,
-            )
+                ]
+            embeds[0].set_thumbnail(url="attachment://playerhead.png")
+            
+            await command_send(ctx, embeds=embeds, files=[face], ephemeral=True)
             return
-
-        # get player head
-        face = fncs.playerHead(name)
+        
         numServers = len(serverList)
 
         embed = interactions.Embed(
