@@ -916,7 +916,7 @@ class funcs:
         return zlib.decompress(value).decode("utf-8")
 
 
-    # Player functions
+# Player functions
     def crackCheckAPI(self, host: str, port: str = "25565") -> bool:
         """Checks if a server is cracked using the mcstatus.io API
 
@@ -1080,7 +1080,7 @@ class funcs:
         return players
 
 
-    # Database stats
+# Database stats
     def get_sorted_versions(
         self, collection: pymongo.collection.Collection
     ) -> list[dict[str, int]]:
@@ -1124,14 +1124,27 @@ class funcs:
 
     def getPlayersLogged(self, collection: pymongo.collection.Collection) -> int:
         pipeline = [
-            {"$project": {"numPlayers": {"$size": "$lastOnlinePlayersList"}}},
-            {"$group": {"_id": None, "totalPlayers": {"$sum": "$numPlayers"}}},
+            {
+                '$unwind': '$lastOnlinePlayersList'
+            }, {
+                '$group': {
+                    '_id': '$lastOnlinePlayersList.uuid'
+                }
+            }, {
+                '$group': {
+                    '_id': None,
+                    'count': {
+                        '$sum': 1
+                    }
+                }
+            }
         ]
         result = collection.aggregate(pipeline)
-        total_players = 0
-        for r in result:
-            total_players = r["totalPlayers"]
-        return total_players
+        try:
+            return result.next()['count']
+        except StopIteration:
+            return 0
+
 
 
 if __name__ == "__main__":
