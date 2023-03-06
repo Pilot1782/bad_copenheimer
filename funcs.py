@@ -328,7 +328,11 @@ class funcs:
                     )
             else:
                 # update whitelisted to the database value
-                dbVal = self.col.find_one({"host": host})["whitelisted"]
+                dbVal = self.col.find_one({"host": host})
+                if dbVal is not None and "whitelisted" in str(dbVal):
+                    dbVal = dbVal["whitelisted"]
+                else:
+                    dbVal = False
                 data["whitelisted"] = (
                     dbVal if bool(dbVal is not None or dbVal) else False
                 )
@@ -732,7 +736,7 @@ class funcs:
             handshake.write_varint(0)  # Packet ID
             handshake.write_varint(version)  # Protocol version
             handshake.write_utf(ip)  # Server address
-            handshake.write_ushort(port)  # Server port
+            handshake.write_ushort(int(port))  # Server port
             handshake.write_varint(2)  # Intention to login
 
             connection.write_buffer(handshake)
