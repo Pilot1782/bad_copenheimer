@@ -21,7 +21,6 @@ from mcstatus.protocol.connection import Connection, TCPSocketConnection
 
 norm = sys.stdout
 
-
 class StreamToLogger(object):
     """
     Fake file-like stream object that redirects writes to a logger instance.

@@ -9,6 +9,7 @@ import json
 
 import pymongo
 from bson.objectid import ObjectId
+from bson.errors import InvalidId
 import interactions
 from interactions.ext.files import (
     command_edit,
@@ -182,11 +183,33 @@ async def find(
         search["cracked"] = cracked
     if _id:
         search = {}
-        serverList = [col.find_one({"_id": ObjectId(_id)})]
-        flag = True
-        fncs.dprint("Finding id", _id)
         
-        if len(serverList) == 0 or serverList[0] == None:
+        # check that _id is vaild
+        if len(_id) != 12 and len(_id) != 24:
+            fncs.dprint("Invalid ID: "+str(len(_id)))
+            await command_send(
+                ctx,
+                embeds=[interactions.Embed(title="Error", description="Invalid ID", timestamp=timeNow())],
+                ephemeral=True,
+            )
+            return
+        else:
+            fncs.dprint("Valid ID: "+_id)
+        
+        try:
+            res = col.find_one({"_id": ObjectId(_id)})
+        except InvalidId:
+            fncs.dprint("Invalid ID for ObjectID: "+_id)
+            await command_send(
+                ctx,
+                embeds=[interactions.Embed(title="Error", description="Invalid ID", timestamp=timeNow())],
+                ephemeral=True,
+            )
+            return
+        fncs.dprint(res)
+        flag = True
+        
+        if res is None:
             fncs.dprint("Server not found")
             await command_send(
                 ctx,
@@ -200,6 +223,9 @@ async def find(
                 ephemeral=True,
             )
             return
+        else:
+            fncs.dprint("Server found")
+            serverList = [res]
     if player:
         search = {}
         flag = True
