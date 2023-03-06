@@ -74,7 +74,7 @@ class funcs:
     Once this file was made, no proper docs on the methods have been made except those that I sometimes remember.
 
     """
-
+# Constructor
     def __init__(
         self,
         collection=None,  # pyright: ignore[reportGeneralTypeIssues]
@@ -99,9 +99,9 @@ class funcs:
         with open(self.path + "log.log", "w") as f:
             f.write("")
 
-    # ------------------ #
     # Functions getting defeined
 
+# Time Functions
     def ptime(self) -> str:
         """Get the current time in a readable format
 
@@ -127,6 +127,28 @@ class funcs:
                 datetime.timedelta(hours=0)
             )  # no clue why this is needed but it works now?
         ).strftime("%Y-%m-%d %H:%M:%S")
+
+
+# Printing functions
+    # Print but for debugging
+    def dprint(self, *text, override: bool = False, end="\n") -> None:
+        r"""Prints a message to the console and the log file
+
+        Args:
+            override (bool, optional): Force print to the console regardless of debugging. Defaults to False.
+            end (str, optional): end of the string. Defaults to "\n".
+        """
+        print(" ".join((str(i) for i in text)), end=end)
+
+        if self.debug or override:
+            sys.stdout = norm  # reset stdout
+            print(" ".join((str(i) for i in text)))
+            sys.stdout = self.stdout  # redirect stdout
+
+    def print(self, *args, **kwargs) -> None:
+        """Prints a message to the console"""
+        self.dprint(" ".join(map(str, args)), **kwargs, override=True)
+
 
     # Run a command and get line by line output
     def run_command(self, command: str, powershell: bool = False) -> str:
@@ -162,25 +184,8 @@ class funcs:
             self.dprint(str(err))
             return "Error: " + str(err)
 
-    # Print but for debugging
-    def dprint(self, *text, override: bool = False, end="\n"):
-        r"""Prints a message to the console and the log file
 
-        Args:
-            override (bool, optional): Force print to the console regardless of debugging. Defaults to False.
-            end (str, optional): end of the string. Defaults to "\n".
-        """
-        print(" ".join((str(i) for i in text)), end=end)
-
-        if self.debug or override:
-            sys.stdout = norm  # reset stdout
-            print(" ".join((str(i) for i in text)))
-            sys.stdout = self.stdout  # redirect stdout
-
-    def print(self, *args, **kwargs) -> None:
-        """Prints a message to the console"""
-        self.dprint(" ".join(map(str, args)), **kwargs, override=True)
-
+# Finding functions
     def check(self, host: str, port: str = "25565", webhook: str = "") -> dict | None:
         """Checks out a host and adds it to the database if it's not there
 
@@ -237,6 +242,7 @@ class funcs:
             status = server.status()
 
             cpLST = self.crackedPlayerList(host, str(port))  # cracked player list
+            cracked = bool((cpLST is not None and type(cpLST) is not bool) and not cracked)
 
             self.dprint("Getting players")
             players = []
@@ -383,7 +389,7 @@ class funcs:
             else:
                 seen.add(value)
 
-    def verify(self, search: dict, serverList: list):
+    def verify(self, search: dict, serverList: list) -> list:
         """Verifies a search
 
         Args:
@@ -490,7 +496,7 @@ class funcs:
                 search_query[key] = value
         return list(self.col.find(search_query))
 
-    def genEmbed(self, _serverList: list[dict], search: dict, index: int = -1):
+    def genEmbed(self, _serverList: list[dict], search: dict, index: int = -1) -> list:
         """Generates an embed for the server list
 
         Args:
@@ -703,7 +709,75 @@ class funcs:
 
         return embed, _file, row
 
-    def cFilter(self, text: str, trim: bool = True):
+    def join(
+        self, ip: str, port: int, player_username: str, version: int = -1
+    ) -> ServerType:
+        try:
+            # get info on the server
+            server = mcstatus.JavaServer.lookup(ip+":"+str(port))
+            version = server.status().version.protocol if version == -1 else version
+
+            uuidURL = "https://api.mojang.com/users/profiles/minecraft/" + player_username
+            resp = requests.get(uuidURL)
+            if "error" not in resp.text and resp.text != "":
+                uuid = resp.json()["id"]
+            else:
+                uuid = "00000000-0000-0000-0000-000000000000"
+
+            connection = TCPSocketConnection((ip, port))
+
+            # Send handshake packet: ID, protocol version, server address, server port, intention to login
+            # THis does not change between versions
+            handshake = Connection()
+
+            handshake.write_varint(0)  # Packet ID
+            handshake.write_varint(version)  # Protocol version
+            handshake.write_utf(ip)  # Server address
+            handshake.write_ushort(port)  # Server port
+            handshake.write_varint(2)  # Intention to login
+
+            connection.write_buffer(handshake)
+
+            # Send login start packet: ID, username, include sig data, has uuid, uuid
+            loginStart = Connection()
+
+            if version > 760:
+                loginStart.write_varint(0)  # Packet ID
+                loginStart.write_utf(player_username)  # Username
+            else:
+                loginStart.write_varint(0)  # Packet ID
+                loginStart.write_utf(player_username)  # Username
+            connection.write_buffer(loginStart)
+
+            # Read response
+            response = connection.read_buffer()
+            id: int = response.read_varint()
+            if id == 2:
+                print("Logged in successfully")
+                return ServerType(ip, version, "CRACKED")
+            elif id == 0:
+                print("Failed to login")
+                print(response.readChat())
+                return ServerType(ip, version, "UNKNOW")
+            elif id == 1:
+                return ServerType(ip, version, "PREMIUM")
+            else:
+                print("Unknown response: " + str(id))
+                try:
+                    reason = response.readChat()
+                except:
+                    reason = "Unknown"
+
+                print("Reason: " + reason)
+                return ServerType(ip, version, "UNKNOW")
+        except Exception:
+            self.print(traceback.format_exc())
+            logging.error(traceback.format_exc())
+            return ServerType(ip, version, "OFFLINE")
+
+
+# Text manipulation
+    def cFilter(self, text: str, trim: bool = True) -> str:
         """Removes all color bits from a string
 
         Args:
@@ -717,145 +791,7 @@ class funcs:
         if trim:
             text = text.strip()
         return text
-
-    def crackCheckAPI(self, host: str, port: str = "25565") -> bool:
-        """Checks if a server is cracked using the mcstatus.io API
-
-        Args:
-            host (str): the host of the server
-            port (str, optional): port of the server. Defaults to "25565".
-
-        Returns:
-            bool: True if the server is cracked, False if not
-        """
-        url = "https://api.mcstatus.io/v2/status/java/" + host + ":" + str(port)
-
-        resp = requests.get(url)
-        if resp.status_code == 200:
-            self.print("Fetching from API")
-            return resp.json()["eula_blocked"]
-        else:
-            return False
-
-    def crackedPlayerList(
-        self, host: str, port: str = "25565", username: str = "pilot1782"
-    ) -> list[str] | bool:
-        """Gets a list of players on a server
-
-        Args:
-            host (str): the host of the server
-            port (str, optional): the port of the server. Defaults to "25565".
-            username (str, optional): Username to join with. Defaults to "pilot1782".
-
-        Returns:
-            list[str] | False: A list of players on the server, or False if the server is not cracked
-        """
-        self.dprint("Getting player list for ip: " + host + ":" + port)
-
-        import chat as chat2
-
-        args = [host, "--port", port, "--offline-name", username]
-        tStart = time.time()
-        try:
-            chat2.main(args)
-        except Exception:
-            self.print(traceback.format_exc())
-            logging.error(traceback.format_exc())
-            return [] if self.crackCheckAPI(host, port) else False
-
-        while True:
-            if time.time() - tStart > 5:
-                break
-            if len(chat2.playerArr) > 0:
-                chat2.playerArr.remove(username.lower())
-                return chat2.playerArr
-            time.sleep(0.2)
-
-        out = [] if self.crackCheckAPI(host, port) else False
-
-        lines = self.stdout.read().split("\n")
-        lines = lines[::-1]
-        flag = False
-        for line in lines:
-            if "kick" in line.lower():
-                flag = not flag
-            if "Getting player list for ip: " + host in line and flag:
-                return []
-
-            if "PlayerListProtocol{" + host in line:
-                self.dprint(host + " is an online mode server")
-                return False
-
-        return out
-
-    def playerHead(self, name: str) -> interactions.File | None:
-        """Downloads a player head from minotar.net
-
-        Args:
-            name (str): player name
-
-        Returns:
-            interactions.file | None: file object of the player head
-        """
-        url = "https://minotar.net/avatar/" + name
-        r = requests.get(url)
-        with open("playerhead.png", "wb") as f:
-            f.write(r.content)
-        self.dprint("Player head downloaded")
-        return interactions.File(filename="playerhead.png")
-
-    def get_sorted_versions(
-        self, collection: pymongo.collection.Collection
-    ) -> list[dict[str, int]]:
-        """I have no idea how this works, but it does, thanks github copilot
-
-        Args:
-            collection (pymongo.collection.Collection): server collection
-
-        Returns:
-            list[dict[str, int]]: sorted list of versions by frequency
-        """
-        pipeline = [
-            {"$match": {"lastOnlineVersion": {"$exists": True}}},
-            {"$group": {"_id": "$lastOnlineVersion", "count": {"$sum": 1}}},
-            {"$sort": {"count": -1}},
-        ]
-        result = list(collection.aggregate(pipeline))
-        result = [{"version": r["_id"], "count": r["count"]} for r in result]
-        return result
-
-    def get_total_players_online(
-        self, collection: pymongo.collection.Collection
-    ) -> int:
-        """Gets the total number of players online across all servers via ai voodoo
-
-        Args:
-            collection (pymongo.collection.Collection): server collection
-
-        Returns:
-            int: total number of players online
-        """
-        pipeline = [
-            {"$match": {"lastOnlinePlayers": {"$gte": 1, "$lt": 100000}}},
-            {"$group": {"_id": None, "total_players": {"$sum": "$lastOnlinePlayers"}}},
-        ]
-        result = list(collection.aggregate(pipeline))
-        if len(result) > 0:
-            return result[0]["total_players"]
-        else:
-            return 0
-
-    def getPlayersLogged(self, collection: pymongo.collection.Collection):
-        pipeline = [
-            {"$project": {"numPlayers": {"$size": "$lastOnlinePlayersList"}}},
-            {"$group": {"_id": None, "totalPlayers": {"$sum": "$numPlayers"}}},
-        ]
-        result = collection.aggregate(pipeline)
-        total_players = 0
-        for r in result:
-            total_players = r["totalPlayers"]
-        return total_players
-
+    
     def resolveHost(self, ip: str) -> str:
         """Resolves a hostname to an IP address into a hostname
 
@@ -976,71 +912,93 @@ class funcs:
         """
         return zlib.decompress(value).decode("utf-8")
 
-    def join(
-        self, ip: str, port: int, player_username: str, version: int = -1
-    ) -> ServerType:
+
+    # Player functions
+    def crackCheckAPI(self, host: str, port: str = "25565") -> bool:
+        """Checks if a server is cracked using the mcstatus.io API
+
+        Args:
+            host (str): the host of the server
+            port (str, optional): port of the server. Defaults to "25565".
+
+        Returns:
+            bool: True if the server is cracked, False if not
+        """
+        url = "https://api.mcstatus.io/v2/status/java/" + host + ":" + str(port)
+
+        resp = requests.get(url)
+        if resp.status_code == 200:
+            self.print("Fetching from API")
+            return resp.json()["eula_blocked"]
+        else:
+            return False
+
+    def crackedPlayerList(
+        self, host: str, port: str = "25565", username: str = "pilot1782"
+    ) -> list[str] | bool:
+        """Gets a list of players on a server
+
+        Args:
+            host (str): the host of the server
+            port (str, optional): the port of the server. Defaults to "25565".
+            username (str, optional): Username to join with. Defaults to "pilot1782".
+
+        Returns:
+            list[str] | False: A list of players on the server, or False if the server is not cracked
+        """
+        self.dprint("Getting player list for ip: " + host + ":" + port)
+
+        import chat as chat2
+
+        args = [host, "--port", port, "--offline-name", username]
+        tStart = time.time()
         try:
-            # get info on the server
-            server = mcstatus.JavaServer.lookup(ip, port)
-            version = server.status().version.protocol if version == -1 else version
-
-            uuidURL = "https://api.mojang.com/users/profiles/minecraft/" + player_username
-            resp = requests.get(uuidURL)
-            if "error" not in resp.text and resp.text != "":
-                uuid = resp.json()["id"]
-            else:
-                uuid = "00000000-0000-0000-0000-000000000000"
-
-            connection = TCPSocketConnection((ip, port))
-
-            # Send handshake packet: ID, protocol version, server address, server port, intention to login
-            # THis does not change between versions
-            handshake = Connection()
-
-            handshake.write_varint(0)  # Packet ID
-            handshake.write_varint(version)  # Protocol version
-            handshake.write_utf(ip)  # Server address
-            handshake.write_ushort(port)  # Server port
-            handshake.write_varint(2)  # Intention to login
-
-            connection.write_buffer(handshake)
-
-            # Send login start packet: ID, username, include sig data, has uuid, uuid
-            loginStart = Connection()
-
-            if version > 760:
-                loginStart.write_varint(0)  # Packet ID
-                loginStart.write_utf(player_username)  # Username
-            else:
-                loginStart.write_varint(0)  # Packet ID
-                loginStart.write_utf(player_username)  # Username
-            connection.write_buffer(loginStart)
-
-            # Read response
-            response = connection.read_buffer()
-            id: int = response.read_varint()
-            if id == 2:
-                print("Logged in successfully")
-                return ServerType(ip, version, "CRACKED")
-            elif id == 0:
-                print("Failed to login")
-                print(response.readChat())
-                return ServerType(ip, version, "UNKNOW")
-            elif id == 1:
-                return ServerType(ip, version, "PREMIUM")
-            else:
-                print("Unknown response: " + str(id))
-                try:
-                    reason = response.readChat()
-                except:
-                    reason = "Unknown"
-
-                print("Reason: " + reason)
-                return ServerType(ip, version, "UNKNOW")
+            chat2.main(args)
         except Exception:
             self.print(traceback.format_exc())
             logging.error(traceback.format_exc())
-            return ServerType(ip, version, "OFFLINE")
+            return [] if self.crackCheckAPI(host, port) else False
+
+        while True:
+            if time.time() - tStart > 5:
+                break
+            if len(chat2.playerArr) > 0:
+                chat2.playerArr.remove(username.lower())
+                return chat2.playerArr
+            time.sleep(0.2)
+
+        out = [] if self.crackCheckAPI(host, port) else False
+
+        lines = self.stdout.read().split("\n")
+        lines = lines[::-1]
+        flag = False
+        for line in lines:
+            if "kick" in line.lower():
+                flag = not flag
+            if "Getting player list for ip: " + host in line and flag:
+                return []
+
+            if "PlayerListProtocol{" + host in line:
+                self.dprint(host + " is an online mode server")
+                return False
+
+        return out
+
+    def playerHead(self, name: str) -> interactions.File | None:
+        """Downloads a player head from minotar.net
+
+        Args:
+            name (str): player name
+
+        Returns:
+            interactions.file | None: file object of the player head
+        """
+        url = "https://minotar.net/avatar/" + name
+        r = requests.get(url)
+        with open("playerhead.png", "wb") as f:
+            f.write(r.content)
+        self.dprint("Player head downloaded")
+        return interactions.File(filename="playerhead.png")
 
     def playerList(self, host: str, port: int = 25565) -> list[dict]:
         """Return a list of players on a Minecraft server
@@ -1117,6 +1075,60 @@ class funcs:
                 players.append(player)
 
         return players
+
+
+    # Database stats
+    def get_sorted_versions(
+        self, collection: pymongo.collection.Collection
+    ) -> list[dict[str, int]]:
+        """I have no idea how this works, but it does, thanks github copilot
+
+        Args:
+            collection (pymongo.collection.Collection): server collection
+
+        Returns:
+            list[dict[str, int]]: sorted list of versions by frequency
+        """
+        pipeline = [
+            {"$match": {"lastOnlineVersion": {"$exists": True}}},
+            {"$group": {"_id": "$lastOnlineVersion", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}},
+        ]
+        result = list(collection.aggregate(pipeline))
+        result = [{"version": r["_id"], "count": r["count"]} for r in result]
+        return result
+
+    def get_total_players_online(
+        self, collection: pymongo.collection.Collection
+    ) -> int:
+        """Gets the total number of players online across all servers via ai voodoo
+
+        Args:
+            collection (pymongo.collection.Collection): server collection
+
+        Returns:
+            int: total number of players online
+        """
+        pipeline = [
+            {"$match": {"lastOnlinePlayers": {"$gte": 1, "$lt": 100000}}},
+            {"$group": {"_id": None, "total_players": {"$sum": "$lastOnlinePlayers"}}},
+        ]
+        result = list(collection.aggregate(pipeline))
+        if len(result) > 0:
+            return result[0]["total_players"]
+        else:
+            return 0
+
+    def getPlayersLogged(self, collection: pymongo.collection.Collection) -> int:
+        pipeline = [
+            {"$project": {"numPlayers": {"$size": "$lastOnlinePlayersList"}}},
+            {"$group": {"_id": None, "totalPlayers": {"$sum": "$numPlayers"}}},
+        ]
+        result = collection.aggregate(pipeline)
+        total_players = 0
+        for r in result:
+            total_players = r["totalPlayers"]
+        return total_players
 
 
 if __name__ == "__main__":

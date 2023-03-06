@@ -185,6 +185,21 @@ async def find(
         serverList = [col.find_one({"_id": ObjectId(_id)})]
         flag = True
         fncs.dprint("Finding id", _id)
+        
+        if len(serverList) == 0 or serverList[0] == None:
+            fncs.dprint("Server not found")
+            await command_send(
+                ctx,
+                embeds=[
+                    interactions.Embed(
+                        title="Error",
+                        description="Server not found",
+                        timestamp=timeNow(),
+                    )
+                ],
+                ephemeral=True,
+            )
+            return
     if player:
         search = {}
         flag = True
