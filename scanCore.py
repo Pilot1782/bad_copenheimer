@@ -23,14 +23,22 @@ except ImportError:
     MONGO_URL = "mongodb+srv://..."
     DSICORD_WEBHOOK = "discord.api.com/..."
 
+
+if MONGO_URL == "mongodb+srv://...":
+    print("Please add your mongo url to privVars.py")
+    input()
+    sys.exit()
+if useWebHook and DSICORD_WEBHOOK == "discord.api.com/...":
+    print("Please add your discord webhook to privVars.py")
+    input()
+    sys.exit()
+
 # Setup
 # ---------------------------------------------
 
 DEBUG = True
 
 time_start = time.time()
-upHosts = []
-results = []
 threads = []
 pool = multiprocessing.pool.ThreadPool(maxActive)
 
@@ -57,7 +65,7 @@ def scan(ip_list):
         scanner = msCan.PortScanner(masscan_search_path=masscan_search_path)
     except msCan.PortScannerError:
         print("Masscan not found, please install it")
-        sys.exit(0)
+        return []
 
     try:
         import json
@@ -84,7 +92,7 @@ def Eprint(text):
         text (String): Error text
     """
     text = str(text)
-    disLog("Error: "+"".join(str(i) for i in text))
+    (disLog("Error: "+"".join(str(i) for i in text))) if useWebHook else None
     fncs.dprint("\n"+"".join(str(i) for i in text)+"\n")
 
 
@@ -102,10 +110,10 @@ def disLog(text, end="\r"):
 async def threader(ip_range):
     try:
         ips = scan(ip_range)
-
-        for ip in ips: # type: ignore
-            # this is done indiviuallly to prevent your internet from being overloaded
-            check(ip)
+        
+        if len(ips) > 0:
+            pool = multiprocessing.pool.ThreadPool(maxActive//2)
+            pool.map(check, ips)
     except OSError:
         sys.exit(0)
     except Exception:
@@ -127,10 +135,16 @@ random.shuffle(ip_lists)
 ip_lists = ip_lists[:1000]  # remove for final version
 time.sleep(0.5)
 
+tStart = time.time()
 normal = threading.active_count()
 async def makeThreads():
     # Create a thread for each list of IPs
     for ip_list in ip_lists:
+        # check to make sure that more than 2*maxActive threads haven't been created in the last 1 second
+        if len(threads) >= maxActive*2 and time.time()-tStart <= 1:
+            await asyncio.sleep(0.5)
+            Eprint("Too many threads spawned to quickly, exiting\nPlease check the console and logs for more details")
+            sys.exit()
         # Create the thread
         t = threading.Thread(target=crank, args=(ip_list,),name=f"Scan func thread: {ip_list}")
         # Add the thread to the list of threads
@@ -143,5 +157,3 @@ async def makeThreads():
 
 asyncio.run(makeThreads())
 
-# print results
-print(f"\nfinished in {round(time.time() - time_start, 2)}s")
