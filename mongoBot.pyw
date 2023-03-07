@@ -460,6 +460,7 @@ async def rand_select(ctx: interactions.ComponentContext):
         text = text.split("\n")[2]
         text = text.split("Key:")[1]
         text = text.split("/|\\")
+
         key = text[0]
         index = int(text[1])
 
@@ -468,6 +469,19 @@ async def rand_select(ctx: interactions.ComponentContext):
         fncs.dprint("ReGenerating list")
         serverList = fncs._find(key)
         fncs.dprint("List generated: " + str(len(serverList)) + " servers")
+        index = (index + 1) if (index < len(serverList)) else 0
+
+        await component_edit(
+            ctx,
+            embeds=[
+                interactions.Embed(
+                    title="Loading...",
+                    description="Loading {}...".format(serverList[index]["host"]),
+                    color=0x00FF00,
+                    timestamp=timeNow(),
+                ),
+            ],
+        )
 
         embed = fncs.genEmbed(_serverList=serverList, search=key, index=index)
         _file = embed[1]

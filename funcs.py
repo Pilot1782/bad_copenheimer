@@ -500,7 +500,7 @@ class funcs:
                 search_query[key] = value
         return list(self.col.find(search_query))
 
-    def genEmbed(self, _serverList: list[dict], search: dict, index: int = -1) -> list:
+    def genEmbed(self, _serverList: list[dict], search: dict, index: int = 0) -> list:
         """Generates an embed for the server list
 
         Args:
@@ -550,7 +550,6 @@ class funcs:
 
             return [embed, None, row]
 
-        index = (index + 1) if index < len(_serverList) - 1 else 0
         info = _serverList[index]
 
         if info is None:
@@ -586,7 +585,7 @@ class funcs:
         info2 = self.check(info["host"])
         if info2 is not None:
             info = info2
-        
+
         try:
             mcstatus.JavaServer.lookup(info["host"]).status()
             online = True
@@ -783,6 +782,10 @@ class funcs:
             self.print("Server timed out")
             logging.error("Server timed out")
             return ServerType(ip, version, "OFFLINE")
+        except OSError:
+            self.print("Server did not respond")
+            logging.error("Server did not respond")
+            return ServerType(ip, version, "UNKNOW")
         except Exception:
             self.print(traceback.format_exc())
             logging.error(traceback.format_exc())
