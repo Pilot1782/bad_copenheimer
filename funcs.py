@@ -1041,7 +1041,7 @@ class funcs:
 
         if cracked:
             self.dprint("Cracked server, getting UUIDs")
-            for player in cracked:
+            for player in cpLST:
                 jsonResp = requests.get(
                     "https://api.mojang.com/users/profiles/minecraft/" + player
                 )
