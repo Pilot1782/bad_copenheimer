@@ -441,8 +441,30 @@ async def rand_select(ctx: interactions.ComponentContext):
         fncs.dprint("Fetching message")
         msg = ctx.message.embeds[0]
         fncs.dprint(str(msg))
+        
+        if "---n/a---" in msg.footer.text:
+            return
 
         await ctx.defer(edit_origin=True)
+        
+        buttons = [
+            interactions.Button(
+                label="Show Players",
+                custom_id="show_players",
+                style=interactions.ButtonStyle.PRIMARY,
+                disabled=True,
+            ),
+            interactions.Button(
+                label="Next Server",
+                custom_id="rand_select",
+                style=interactions.ButtonStyle.PRIMARY,
+                disabled=True,
+            ),
+        ]
+
+        row = interactions.ActionRow(
+            components=buttons  # pyright: ignore [reportGeneralTypeIssues]
+        )
 
         await component_edit(
             ctx,
@@ -452,8 +474,12 @@ async def rand_select(ctx: interactions.ComponentContext):
                     description="Loading the next server...",
                     color=0x00FF00,
                     timestamp=timeNow(),
+                    footer=interactions.EmbedFooter(
+                        text="Key:---n/a---/|\\0"
+                    ),  # key and index
                 )
             ],
+            components=[row],
         )
 
         text = msg.footer.text
@@ -465,11 +491,13 @@ async def rand_select(ctx: interactions.ComponentContext):
         index = int(text[1])
 
         key = json.loads(key) if key != "---n/a---" else {}
+        if key == {}:  # if the key is empty, return
+            return
 
         fncs.dprint("ReGenerating list")
         serverList = fncs._find(key)
         fncs.dprint("List generated: " + str(len(serverList)) + " servers")
-        index = (index + 1) if (index < len(serverList)) else 0
+        index = (index + 1) if (index+1 < len(serverList)) else 0
 
         await component_edit(
             ctx,
@@ -479,8 +507,14 @@ async def rand_select(ctx: interactions.ComponentContext):
                     description="Loading {}...".format(serverList[index]["host"]),
                     color=0x00FF00,
                     timestamp=timeNow(),
+                    footer=interactions.EmbedFooter(
+                        text="Key:---n/a---/|\\{}".format(
+                            index
+                        )
+                    )
                 ),
             ],
+            components=[row],
         )
 
         embed = fncs.genEmbed(_serverList=serverList, search=key, index=index)
