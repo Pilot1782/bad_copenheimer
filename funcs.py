@@ -21,6 +21,7 @@ from mcstatus.protocol.connection import Connection, TCPSocketConnection
 
 norm = sys.stdout
 
+
 class StreamToLogger(object):
     """
     Fake file-like stream object that redirects writes to a logger instance.
@@ -73,7 +74,8 @@ class funcs:
     Once this file was made, no proper docs on the methods have been made except those that I sometimes remember.
 
     """
-# Constructor
+
+    # Constructor
     def __init__(
         self,
         collection=None,  # pyright: ignore[reportGeneralTypeIssues]
@@ -100,7 +102,7 @@ class funcs:
 
     # Functions getting defeined
 
-# Time Functions
+    # Time Functions
     def ptime(self) -> str:
         """Get the current time in a readable format
 
@@ -127,8 +129,7 @@ class funcs:
             )  # no clue why this is needed but it works now?
         ).strftime("%Y-%m-%d %H:%M:%S")
 
-
-# Printing functions
+    # Printing functions
     # Print but for debugging
     def dprint(self, *text, override: bool = False, end="\n") -> None:
         r"""Prints a message to the console and the log file
@@ -147,7 +148,6 @@ class funcs:
     def print(self, *args, **kwargs) -> None:
         """Prints a message to the console"""
         self.dprint(" ".join(map(str, args)), **kwargs, override=True)
-
 
     # Run a command and get line by line output
     def run_command(self, command: str, powershell: bool = False) -> str:
@@ -183,8 +183,7 @@ class funcs:
             self.dprint(str(err))
             return "Error: " + str(err)
 
-
-# Finding functions
+    # Finding functions
     def check(self, host: str, port: str = "25565", webhook: str = "") -> dict | None:
         """Checks out a host and adds it to the database if it's not there
 
@@ -241,7 +240,9 @@ class funcs:
             status = server.status()
 
             cpLST = self.crackedPlayerList(host, str(port))  # cracked player list
-            cracked = bool((cpLST is not None and type(cpLST) is not bool) and not cracked)
+            cracked = bool(
+                (cpLST is not None and type(cpLST) is not bool) and not cracked
+            )
 
             self.dprint("Getting players")
             players = []
@@ -717,10 +718,12 @@ class funcs:
     ) -> ServerType:
         try:
             # get info on the server
-            server = mcstatus.JavaServer.lookup(ip+":"+str(port))
+            server = mcstatus.JavaServer.lookup(ip + ":" + str(port))
             version = server.status().version.protocol if version == -1 else version
 
-            uuidURL = "https://api.mojang.com/users/profiles/minecraft/" + player_username
+            uuidURL = (
+                "https://api.mojang.com/users/profiles/minecraft/" + player_username
+            )
             resp = requests.get(uuidURL)
             if "error" not in resp.text and resp.text != "":
                 uuid = resp.json()["id"]
@@ -760,14 +763,14 @@ class funcs:
                 return ServerType(ip, version, "CRACKED")
             elif id == 0:
                 print("Failed to login")
-                print(response.readChat())
+                print(response.read_utf())
                 return ServerType(ip, version, "UNKNOW")
             elif id == 1:
                 return ServerType(ip, version, "PREMIUM")
             else:
                 print("Unknown response: " + str(id))
                 try:
-                    reason = response.readChat()
+                    reason = response.read_utf()
                 except:
                     reason = "Unknown"
 
@@ -778,8 +781,7 @@ class funcs:
             logging.error(traceback.format_exc())
             return ServerType(ip, version, "OFFLINE")
 
-
-# Text manipulation
+    # Text manipulation
     def cFilter(self, text: str, trim: bool = True) -> str:
         """Removes all color bits from a string
 
@@ -794,7 +796,7 @@ class funcs:
         if trim:
             text = text.strip()
         return text
-    
+
     def resolveHost(self, ip: str) -> str:
         """Resolves a hostname to an IP address into a hostname
 
@@ -915,8 +917,7 @@ class funcs:
         """
         return zlib.decompress(value).decode("utf-8")
 
-
-# Player functions
+    # Player functions
     def crackCheckAPI(self, host: str, port: str = "25565") -> bool:
         """Checks if a server is cracked using the mcstatus.io API
 
@@ -1079,8 +1080,7 @@ class funcs:
 
         return players
 
-
-# Database stats
+    # Database stats
     def get_sorted_versions(
         self, collection: pymongo.collection.Collection
     ) -> list[dict[str, int]]:
@@ -1124,27 +1124,15 @@ class funcs:
 
     def getPlayersLogged(self, collection: pymongo.collection.Collection) -> int:
         pipeline = [
-            {
-                '$unwind': '$lastOnlinePlayersList'
-            }, {
-                '$group': {
-                    '_id': '$lastOnlinePlayersList.uuid'
-                }
-            }, {
-                '$group': {
-                    '_id': None,
-                    'count': {
-                        '$sum': 1
-                    }
-                }
-            }
+            {"$unwind": "$lastOnlinePlayersList"},
+            {"$group": {"_id": "$lastOnlinePlayersList.uuid"}},
+            {"$group": {"_id": None, "count": {"$sum": 1}}},
         ]
         result = collection.aggregate(pipeline)
         try:
-            return result.next()['count']
+            return result.next()["count"]
         except StopIteration:
             return 0
-
 
 
 if __name__ == "__main__":
