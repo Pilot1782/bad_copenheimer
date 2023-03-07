@@ -586,10 +586,13 @@ class funcs:
         info2 = self.check(info["host"])
         if info2 is not None:
             info = info2
+        
+        try:
+            mcstatus.JavaServer.lookup(info["host"]).status()
             online = True
-        else:
-            self.dprint("Server offline", info["host"])
+        except:
             online = False
+            self.dprint("Server offline", info["host"])
 
         numServers = len(_serverList)
 
@@ -776,6 +779,10 @@ class funcs:
 
                 print("Reason: " + reason)
                 return ServerType(ip, version, "UNKNOW")
+        except TimeoutError:
+            self.print("Server timed out")
+            logging.error("Server timed out")
+            return ServerType(ip, version, "OFFLINE")
         except Exception:
             self.print(traceback.format_exc())
             logging.error(traceback.format_exc())
@@ -1053,6 +1060,9 @@ class funcs:
             status = server.status()
             if status.players.sample is not None:
                 normal = [{"name": p.name, "uuid": p.id} for p in status.players.sample]
+        except TimeoutError:
+            logging.error("Timeout error")
+            normal = []
         except Exception:
             self.print(traceback.format_exc())
             logging.error(traceback.format_exc())
