@@ -1,21 +1,19 @@
 # pyright: basic, reportGeneralTypeIssues=false, reportOptionalSubscript=false, reportOptionalMemberAccess=false
 import datetime
+import json
 import random
-import requests
 import sys
 import time
 import traceback
 
-import pymongo
-from bson.objectid import ObjectId
 import interactions
-from interactions.ext.files import (
-    command_edit,
-    component_edit,
-    command_send,
-    component_send,
-)
+import pymongo
+import requests
+from bson.errors import InvalidId
+from bson.objectid import ObjectId
 from interactions.api.models import Message
+from interactions.ext.files import (command_edit, command_send, component_edit,
+                                    component_send)
 
 from funcs import funcs
 
@@ -38,25 +36,27 @@ if TOKEN == "...":
 # Setup
 # ---------------------------------------------
 
-bot = interactions.Client(token=TOKEN, intents=interactions.Intents.GUILD_MESSAGE_CONTENT)
+bot = interactions.Client(
+    token=TOKEN, intents=interactions.Intents.GUILD_MESSAGE_CONTENT
+)
 
 client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi("1"))  # type: ignore
 db = client["mc"]
 col = db["servers"]
-serverList = []
-ServerInfo = {}
-_port = "25565"
 
 fncs = funcs(collection=col)
 
 
 def print(*args, **kwargs):
     fncs.print(" ".join(map(str, args)), **kwargs)
-    
+
+
 def timeNow():
     # return local time
     return datetime.datetime.now(
-        datetime.timezone(datetime.timedelta(hours=0))  # no clue why this is needed but it works now?
+        datetime.timezone(
+            datetime.timedelta(hours=0)  # no clue why this is needed but it works now?
+        )
     ).strftime("%Y-%m-%d %H:%M:%S")
 
 
@@ -142,20 +142,20 @@ async def find(
 
     print(
         "find",
-        "id:"+_id,
-        "host:"+host,
-        "port:"+str(port),
-        "player:"+player,
-        "version:"+version,
-        "motd:"+motd,
-        "maxplayers:"+str(maxplayers),
-        "cracked:"+str(cracked)
+        "id:" + _id,
+        "host:" + host,
+        "port:" + str(port),
+        'player:"' + player + '"',
+        'version:"' + version + '"',
+        'motd:"' + motd + '"',
+        "maxplayers:" + str(maxplayers),
+        "cracked:" + str(cracked),
     )
 
     # send as embed
     await ctx.defer()
 
-    global _port, serverList
+    serverList = []
     search = {}
     info = {}
     _port = str(port)
@@ -184,90 +184,120 @@ async def find(
         search["cracked"] = cracked
     if _id:
         search = {}
-        serverList = [col.find_one({"_id": ObjectId(_id)})]
-        flag = True
-        fncs.dprint("Finding id", _id)
-    if player:
-        search = {}
-        flag = True
-        url = "https://api.mojang.com/users/profiles/minecraft/"
-        name = ""
 
-        # check if player is valid or if the input is a uuid
-        resp = requests.get(url + player)
-        print(resp.text)
-
-        if resp.status_code == 204 and resp.text == "":
-            resp = requests.get(
-                "https://sessionserver.mojang.com/session/minecraft/profile/"
-                + player.replace("-", "")
+        # check that _id is vaild
+        if len(_id) != 12 and len(_id) != 24:
+            fncs.dprint("Invalid ID: " + str(len(_id)))
+            await command_send(
+                ctx,
+                embeds=[
+                    interactions.Embed(
+                        title="Error", description="Invalid ID", timestamp=timeNow()
+                    )
+                ],
+                ephemeral=True,
             )
-            jresp = resp.json()
-            if "error" in resp.text or resp.text == "":
-                fncs.dprint("Player not found in minecraft api")
-                await command_send(
-                    ctx,
-                    embeds=[
-                        interactions.Embed(
-                            title="Error",
-                            description="Player not found in minecraft api",
-                            timestamp=timeNow(),
-                        )
-                    ],
-                    ephemeral=True,
-                )
-                return
-            else:
-                player = jresp["id"]
-                name = jresp["name"]
+            return
         else:
-            try:
-                player = resp.json()["id"]
-                name = resp.json()["name"]
-            except Exception:
-                fncs.dprint("Player not found in minecraft api")
-                await command_send(
-                    ctx,
-                    embeds=[
-                        interactions.Embed(
-                            title="Error",
-                            description="Player not found in minecraft api",
-                            color=0xFF6347,
-                            timestamp=timeNow(),
-                        )
-                    ],
-                    ephemeral=True,
-                )
-                return
+            fncs.dprint("Valid ID: " + _id)
 
-        serverList = list(
-            col.find({"lastOnlinePlayersList": {"$elemMatch": {"uuid": player}}})
-        )
+        try:
+            res = col.find_one({"_id": ObjectId(_id)})
+        except InvalidId:
+            fncs.dprint("Invalid ID for ObjectID: " + _id)
+            await command_send(
+                ctx,
+                embeds=[
+                    interactions.Embed(
+                        title="Error", description="Invalid ID", timestamp=timeNow()
+                    )
+                ],
+                ephemeral=True,
+            )
+            return
+        fncs.dprint(res)
+        flag = True
 
-        fncs.dprint("Finding player", player)
-
-        if not serverList:
-            fncs.dprint("Player not found in database")
+        if res is None:
+            fncs.dprint("Server not found")
             await command_send(
                 ctx,
                 embeds=[
                     interactions.Embed(
                         title="Error",
-                        description="Player not found in database",
-                        color=0xFF6347,
+                        description="Server not found",
                         timestamp=timeNow(),
                     )
                 ],
                 ephemeral=True,
             )
             return
+        else:
+            fncs.dprint("Server found")
+            serverList = [res]
+    if player:
+        search = {}
+        flag = True
+        name = ""
+        uuid = ""
+        isID = len(player) > 16
 
-        # get player head
+        if isID:
+            url = (
+                "https://sessionserver.mojang.com/session/minecraft/profile/"
+                + player.replace("-", "")
+            )
+        else:
+            url = "https://api.mojang.com/users/profiles/minecraft/" + player
+
+        resp = requests.get(url)
+        jresp = resp.json()
+
+        if "error" in resp.text or resp.text == "":  # if the player is not found
+            fncs.dprint("UUID not found in minecraft api")
+            await command_send(
+                ctx,
+                embeds=[
+                    interactions.Embed(
+                        title="Error",
+                        description="UUID not found in minecraft api",
+                        timestamp=timeNow(),
+                    )
+                ],
+                ephemeral=True,
+            )
+            return
+        else:
+            uuid = jresp["id"]
+            name = jresp["name"]
+
+        serverList = list(
+            col.find({"lastOnlinePlayersList": {"$elemMatch": {"uuid": uuid}}})
+        )
+
+        fncs.dprint("Finding player", player)
         face = fncs.playerHead(name)
+
+        if serverList is None or len(serverList) == 0:
+            fncs.dprint("Player not found in database")
+            embeds = [
+                interactions.Embed(
+                    title="Error",
+                    description="Player not found in database",
+                    color=0xFF6347,
+                    timestamp=timeNow(),
+                )
+            ]
+            embeds[0].set_thumbnail(url="attachment://playerhead.png")
+
+            await command_send(ctx, embeds=embeds, files=[face], ephemeral=True)
+            return
+
+        numServers = len(serverList)
 
         embed = interactions.Embed(
             title=f"{name} found",
-            description=f"Found {name} in {len(serverList)} servers",
+            description=f"Found {name} in {numServers} servers",
             color=0x00FF00,
             timestamp=timeNow(),
         )
@@ -275,12 +305,19 @@ async def find(
 
         await command_send(ctx, embeds=[embed], files=[face])
 
+        search = {
+            "lastOnlinePlayersList": {"$elemMatch": {"uuid": uuid}}
+        }  # search for player
+
     if search == {} and not flag:
         await command_send(
             ctx,
             embeds=[
                 interactions.Embed(
-                    title="Error", description="No search parameters given", color=0xFF6347, timestamp=timeNow()
+                    title="Error",
+                    description="No search parameters given",
+                    color=0xFF6347,
+                    timestamp=timeNow(),
                 )
             ],
             ephemeral=True,
@@ -296,10 +333,9 @@ async def find(
                 numServers = len(serverList)
             else:
                 fncs.dprint("Flag is up, setting server info")
-                random.shuffle(serverList)
                 numServers = len(serverList)
 
-            fncs.dprint(f"Servers:{len(serverList)}/|\\Search:{search}/|\\Flag:{flag}")
+            fncs.dprint(f"Servers:{len(serverList)}|Search:{search}|Flag:{flag}")
             await command_send(
                 ctx,
                 embeds=[
@@ -314,7 +350,7 @@ async def find(
             )
 
             # setup the embed
-            embed = fncs.genEmbed(serverList, str(_port))
+            embed = fncs.genEmbed(serverList, search)
             _file = embed[1]
             comps = embed[2]
             embed = embed[0]
@@ -341,7 +377,7 @@ async def find(
                 ephemeral=True,
             )
             print(
-                f"----\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n====\n====\n{ServerInfo}\n====\n----"
+                f"----\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n----"
             )
 
 
@@ -349,12 +385,10 @@ async def find(
 async def show_players(ctx: interactions.ComponentContext):
     try:
         msg = ctx.message
-        
+
         await ctx.defer(ephemeral=True)
 
-        host = msg.embeds[0].title[
-            2:  # exclude the online symbol
-        ]
+        host = msg.embeds[0].title[2:]  # exclude the online symbol
 
         players = fncs.playerList(host)
 
@@ -369,7 +403,7 @@ async def show_players(ctx: interactions.ComponentContext):
         for player in players:
             try:
                 embed.add_field(
-                    name=("🟢 "if player["online"] else "🔴 ")+player["name"],
+                    name=("🟢 " if player["online"] else "🔴 ") + player["name"],
                     value="`{}`".format(player["uuid"]),
                     inline=True,
                 )
@@ -399,33 +433,108 @@ async def show_players(ctx: interactions.ComponentContext):
 
 @bot.component("rand_select")
 async def rand_select(ctx: interactions.ComponentContext):
-    await ctx.defer(edit_origin=True)
+    try:
+        fncs.dprint("Fetching message")
+        msg = ctx.message.embeds[0]
+        fncs.dprint(str(msg))
 
-    await component_edit(
-        ctx,
-        embeds=[
-            interactions.Embed(
-                title="Randomizing...",
-                description="Loading a random server...",
-                color=0x00FF00,
-                timestamp=timeNow(),
-            )
-        ],
-    )
+        if "---n/a---" in msg.footer.text:
+            return
 
-    global _serverList
+        await ctx.defer(edit_origin=True)
 
-    embed = fncs.genEmbed(serverList, _port)
-    _file = embed[1]
-    button = embed[2]
-    embed = embed[0]
+        buttons = [
+            interactions.Button(
+                label="Show Players",
+                custom_id="show_players",
+                style=interactions.ButtonStyle.PRIMARY,
+                disabled=True,
+            ),
+            interactions.Button(
+                label="Next Server",
+                custom_id="rand_select",
+                style=interactions.ButtonStyle.PRIMARY,
+                disabled=True,
+            ),
+        ]
 
-    fncs.dprint("Embed generated", embed, button, _file)
+        row = interactions.ActionRow(
+            components=buttons  # pyright: ignore [reportGeneralTypeIssues]
+        )
 
-    if _file:
-        await component_edit(ctx, embeds=[embed], files=[_file], components=button)
-    else:
-        await component_edit(ctx, embeds=[embed], components=button)
+        await component_edit(
+            ctx,
+            embeds=[
+                interactions.Embed(
+                    title="Loading...",
+                    description="Loading the next server...",
+                    color=0x00FF00,
+                    timestamp=timeNow(),
+                    footer=interactions.EmbedFooter(
+                        text="Key:---n/a---/|\\0"
+                    ),  # key and index
+                )
+            ],
+            components=[row],
+        )
+
+        text = msg.footer.text
+        text = text.split("\n")[2]
+        text = text.split("Key:")[1]
+        text = text.split("/|\\")
+
+        key = text[0]
+        index = int(text[1])
+
+        key = json.loads(key) if key != "---n/a---" else {}
+        if key == {}:  # if the key is empty, return
+            return
+
+        fncs.dprint("ReGenerating list")
+        serverList = fncs._find(key)
+        fncs.dprint("List generated: " + str(len(serverList)) + " servers")
+        index = (index + 1) if (index + 1 < len(serverList)) else 0
+
+        await component_edit(
+            ctx,
+            embeds=[
+                interactions.Embed(
+                    title="Loading...",
+                    description="Loading {}...".format(serverList[index]["host"]),
+                    color=0x00FF00,
+                    timestamp=timeNow(),
+                    footer=interactions.EmbedFooter(
+                        text="Key:---n/a---/|\\{}".format(index)
+                    ),
+                ),
+            ],
+            components=[row],
+        )
+
+        embed = fncs.genEmbed(_serverList=serverList, search=key, index=index)
+        _file = embed[1]
+        button = embed[2]
+        embed = embed[0]
+
+        fncs.dprint("Embed generated", embed, button, _file)
+
+        if _file:
+            await component_edit(ctx, embeds=[embed], files=[_file], components=button)
+        else:
+            await component_edit(ctx, embeds=[embed], components=button)
+    except Exception:
+        await component_send(
+            ctx,
+            embeds=[
+                interactions.Embed(
+                    title="Error",
+                    description="An error occured while searching. Please try again later and check the logs for more details.",
+                    color=0xFF0000,
+                    timestamp=timeNow(),
+                )
+            ],
+            ephemeral=True,
+        )
 
 
 @bot.command(
@@ -438,7 +547,11 @@ async def stats(ctx: interactions.CommandContext):
         """Get stats about the database"""
 
         await ctx.send(
-            embeds=[interactions.Embed(title="Stats", description="Getting stats...", timestamp=timeNow())]
+            embeds=[
+                interactions.Embed(
+                    title="Stats", description="Getting stats...", timestamp=timeNow()
+                )
+            ]
         )
 
         fncs.dprint("Getting stats...")
@@ -446,8 +559,12 @@ async def stats(ctx: interactions.CommandContext):
         serverCount = col.count_documents({})
         # add commas to server count
         serverCount = "{:,}".format(serverCount)
-        text = f"Total servers: `{serverCount}`\nRough Player Count: `...`\nMost common version:\n`...`"
-        await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text, timestamp=timeNow())])
+        text = f"Total servers: `{serverCount}`\nPlayer Count: `...`\nPlayers logged: `...`\nMost common version:\n`...`"
+        await ctx.edit(
+            embeds=[
+                interactions.Embed(title="Stats", description=text, timestamp=timeNow())
+            ]
+        )
 
         fncs.dprint("Getting versions...")
         versions = fncs.get_sorted_versions(col)
@@ -456,23 +573,33 @@ async def stats(ctx: interactions.CommandContext):
         text = "Total servers: `{}`\nRough Player Count: `...`\nMost common version:```css\n{}\n```".format(
             serverCount, ("\n".join(topTen[:5]))
         )
-        await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text, timestamp=timeNow())])
+        await ctx.edit(
+            embeds=[
+                interactions.Embed(title="Stats", description=text, timestamp=timeNow())
+            ]
+        )
 
         fncs.dprint("Getting player count...")
         players = fncs.get_total_players_online(col)
         # add commas to player count
         players = "{:,}".format(players)
 
+        fncs.dprint("Getting players logged...")
+        pLogged = fncs.getPlayersLogged(col)
+        pLogged = "{:,}".format(pLogged)
+        text = "Total servers: `{}`\nRough Player Count: `{}`\nPlayers logged: `{}`\nMost common version:```css\n{}\n```".format(
+            serverCount, players, pLogged, ("\n".join(topTen[:5]))
+        )
+
         print(
-            f"Total servers: {serverCount}\nRough Player Count: {players}\nMost common versions: {topTen}"
+            f"Total servers: {serverCount}\nRough Player Count: {pLogged}/{players}\nMost common versions: {topTen}"
         )
 
-        # edit the message
-        text = "Total servers: `{}`\nRough Player Count: `{}`\nMost common version:```css\n{}\n```".format(
-            serverCount, players, ("\n".join(topTen[:5]))
+        await ctx.edit(
+            embeds=[
+                interactions.Embed(title="Stats", description=text, timestamp=timeNow())
+            ]
         )
-
-        await ctx.edit(embeds=[interactions.Embed(title="Stats", description=text, timestamp=timeNow())])
     except Exception:
         print(f"====\nError: {traceback.format_exc()}\n====")
         fncs.dprint(traceback.format_exc())
@@ -498,14 +625,35 @@ async def help(ctx: interactions.CommandContext):
                 title="Help",
                 description="""Commands:
 `/find` - Find a server
+    *Arguments:*
+        `host` - The host of the server
+            `port` - The port of the server
+
+        `player` - The name or uuid of a player
+
+        `_id` - The id of the server in the database
+
+        `version` - The version of the server
+        `players` - The max amount of players on the server
+        `motd` - The description of the server
+        `cracked` - If the server is cracked or not
     *Returns:*
-        `(desc, db _id, players, version, ping, players online, last online (y/m/d h:m:s))`
-        
+        A list of servers that match the search
+        `hostname` - The hostname of the server (optional)
+        `motd` - The description of the server
+        `version` - The version of the server
+        `players` - The amount of players on the server
+        `maxPlayers` - The max amount of players on the server
+        `cracked` - If the server is cracked or not
+        `whitelisted` - If the server is whitelisted or not
+        `ping` - The ping of the server
+        `lastOnline` - The last time the server was online
+
 `/stats` - Get stats about the database
 
-`/help` - Get help
+`/help` - This message
 """,
-            timestamp=timeNow(),  # local time
+                timestamp=timeNow(),  # local time
             )
         ],
         ephemeral=True,

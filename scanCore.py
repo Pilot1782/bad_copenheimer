@@ -8,19 +8,31 @@ import multiprocessing
 import multiprocessing.pool
 import asyncio
 import funcs
+import sys
 
-useWebHook, pingsPerSec , maxActive = False, 4800, 10
-masscan_search_path = ('masscan',
-                       '/usr/bin/masscan',
-                       '/usr/local/bin/masscan',
-                       '/sw/bin/masscan',
-                       '/opt/local/bin/masscan'
-                       )
+useWebHook, pingsPerSec, maxActive = False, 4800, 10
+masscan_search_path = (
+    "masscan",
+    "/usr/bin/masscan",
+    "/usr/local/bin/masscan",
+    "/sw/bin/masscan",
+    "/opt/local/bin/masscan",
+)
 try:
     from privVars import *
 except ImportError:
     MONGO_URL = "mongodb+srv://..."
     DSICORD_WEBHOOK = "discord.api.com/..."
+
+
+if MONGO_URL == "mongodb+srv://...":
+    print("Please add your mongo url to privVars.py")
+    input()
+    sys.exit()
+if useWebHook and DSICORD_WEBHOOK == "discord.api.com/...":
+    print("Please add your discord webhook to privVars.py")
+    input()
+    sys.exit()
 
 # Setup
 # ---------------------------------------------
@@ -28,8 +40,6 @@ except ImportError:
 DEBUG = True
 
 time_start = time.time()
-upHosts = []
-results = []
 threads = []
 pool = multiprocessing.pool.ThreadPool(maxActive)
 
@@ -43,7 +53,8 @@ fncs = funcs.funcs(collection=col)
 
 
 def print(*args, **kwargs):
-    fncs.print(' '.join(map(str, args)), **kwargs)
+    fncs.print(" ".join(map(str, args)), **kwargs)
+
 
 def check(host):
     if useWebHook:
@@ -51,12 +62,13 @@ def check(host):
     else:
         return fncs.check(host)
 
+
 def scan(ip_list):
     try:
         scanner = msCan.PortScanner(masscan_search_path=masscan_search_path)
     except msCan.PortScannerError:
         print("Masscan not found, please install it")
-        exit(0)
+        return []
 
     try:
         import json
@@ -71,10 +83,11 @@ def scan(ip_list):
 
         return list(result["scan"].keys())
     except OSError:
-        exit(0)
+        sys.exit(0)
     except Exception:
         Eprint(traceback.format_exc())
         return []
+
 
 def Eprint(text):
     """Error printer
@@ -83,8 +96,8 @@ def Eprint(text):
         text (String): Error text
     """
     text = str(text)
-    disLog("Error: "+"".join(str(i) for i in text))
-    fncs.dprint("\n"+"".join(str(i) for i in text)+"\n")
+    (disLog("Error: " + "".join(str(i) for i in text))) if useWebHook else None
+    fncs.dprint("\n" + "".join(str(i) for i in text) + "\n")
 
 
 def disLog(text, end="\r"):
@@ -96,22 +109,25 @@ def disLog(text, end="\r"):
             data = {"content": text + end}
             requests.post(url, data=data)
         except Exception:
-            Eprint(text+'\n'+traceback.format_exc())
+            Eprint(text + "\n" + traceback.format_exc())
+
 
 async def threader(ip_range):
     try:
         ips = scan(ip_range)
 
-        for ip in ips: # type: ignore
-            # this is done indiviuallly to prevent your internet from being overloaded
-            check(ip)
+        if len(ips) > 0:
+            pool = multiprocessing.pool.ThreadPool(maxActive // 2)
+            pool.map(check, ips)
     except OSError:
-        exit(0)
+        sys.exit(0)
     except Exception:
         Eprint(traceback.format_exc())
 
+
 def crank(ip_range):
     asyncio.run(threader(ip_range))
+
 
 # Main
 # ---------------------------------------------
@@ -126,21 +142,34 @@ random.shuffle(ip_lists)
 ip_lists = ip_lists[:1000]  # remove for final version
 time.sleep(0.5)
 
+tStart = time.time()
 normal = threading.active_count()
+
+
 async def makeThreads():
     # Create a thread for each list of IPs
     for ip_list in ip_lists:
-        # Create the thread
-        t = threading.Thread(target=crank, args=(ip_list,),name=f"Scan func thread: {ip_list}")
-        # Add the thread to the list of threads
+        # check to make sure that more than 2*maxActive threads haven't been created in the last 1 second
+        if len(threads) >= maxActive * 2 and time.time() - tStart <= 1:
+            await asyncio.sleep(0.5)
+            Eprint(
+                "Too many threads spawned to quickly, exiting\nPlease check the console and logs for more details"
+            )
+            sys.exit()
+
+        t = threading.Thread(
+            target=crank,
+            args=(ip_list,),
+            name=f"Scan func thread: {ip_list}"
+        )
+
         threads.append(t)
+
         # If the number of active threads is greater than the max, sleep for 0.1 seconds
-        while threading.active_count()-normal >= maxActive:
+        while threading.active_count() - normal >= maxActive:
             await asyncio.sleep(0.1)
         t.start()
 
 
-asyncio.run(makeThreads())
-
-# print results
-print(f"\nfinished in {round(time.time() - time_start, 2)}s")
+if __name__ == "__main__":
+    asyncio.run(makeThreads())

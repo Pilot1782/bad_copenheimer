@@ -13,10 +13,11 @@ import sys
 import socket
 import logging
 import pymongo
+import zlib
 
 import interactions
-from mcstatus import JavaServer
 import mcstatus
+from mcstatus.protocol.connection import Connection, TCPSocketConnection
 
 norm = sys.stdout
 
@@ -55,6 +56,16 @@ sys.stdout = out
 sys.stderr = StreamToLogger(log, logging.ERROR)
 
 
+class ServerType:
+    def __init__(self, host: str, protocol: int, joinability: str = "unknown"):
+        self.host = host
+        self.protocol = protocol
+        self.joinability = joinability
+
+    def __str__(self):
+        return f"ServerType({self.host}, {self.protocol}, {self.joinability})"
+
+
 class funcs:
     """Cursed code that I don't want to touch. It works, but it's not pretty.
     # STOP HERE
@@ -64,6 +75,7 @@ class funcs:
 
     """
 
+    # Constructor
     def __init__(
         self,
         collection=None,  # pyright: ignore[reportGeneralTypeIssues]
@@ -88,9 +100,9 @@ class funcs:
         with open(self.path + "log.log", "w") as f:
             f.write("")
 
-    # ------------------ #
     # Functions getting defeined
 
+    # Time Functions
     def ptime(self) -> str:
         """Get the current time in a readable format
 
@@ -104,7 +116,7 @@ class funcs:
         y = ":".join(z)
         z = f"{z[0]} {z[1]}/{z[2]} {z[3]}:{z[4]}:{z[5]}"
         return z
-    
+
     def timeNow(self) -> str:
         """Get the current time in a readable format
 
@@ -112,8 +124,30 @@ class funcs:
             str: time in format: year-month-day hour:minute:second
         """
         return datetime.datetime.now(
-            datetime.timezone(datetime.timedelta(hours=0))  # no clue why this is needed but it works now?
+            datetime.timezone(
+                datetime.timedelta(hours=0)
+            )  # no clue why this is needed but it works now?
         ).strftime("%Y-%m-%d %H:%M:%S")
+
+    # Printing functions
+    # Print but for debugging
+    def dprint(self, *text, override: bool = False, end="\n") -> None:
+        r"""Prints a message to the console and the log file
+
+        Args:
+            override (bool, optional): Force print to the console regardless of debugging. Defaults to False.
+            end (str, optional): end of the string. Defaults to "\n".
+        """
+        print(" ".join((str(i) for i in text)), end=end)
+
+        if self.debug or override:
+            sys.stdout = norm  # reset stdout
+            print(" ".join((str(i) for i in text)))
+            sys.stdout = self.stdout  # redirect stdout
+
+    def print(self, *args, **kwargs) -> None:
+        """Prints a message to the console"""
+        self.dprint(" ".join(map(str, args)), **kwargs, override=True)
 
     # Run a command and get line by line output
     def run_command(self, command: str, powershell: bool = False) -> str:
@@ -149,25 +183,7 @@ class funcs:
             self.dprint(str(err))
             return "Error: " + str(err)
 
-    # Print but for debugging
-    def dprint(self, *text, override: bool = False, end="\n"):
-        """Prints a message to the console and the log file
-
-        Args:
-            override (bool, optional): Force print to the console regardless of debugging. Defaults to False.
-            end (str, optional): end of the string. Defaults to "\n".
-        """
-        print(" ".join((str(i) for i in text)), end=end)
-
-        if self.debug or override:
-            sys.stdout = norm  # reset stdout
-            print(" ".join((str(i) for i in text)))
-            sys.stdout = self.stdout  # redirect stdout
-
-    def print(self, *args, **kwargs) -> None:
-        """Prints a message to the console"""
-        self.dprint(" ".join(map(str, args)), **kwargs, override=True)
-
+    # Finding functions
     def check(self, host: str, port: str = "25565", webhook: str = "") -> dict | None:
         """Checks out a host and adds it to the database if it's not there
 
@@ -193,50 +209,40 @@ class funcs:
         if self.col is None:
             self.dprint("Collection is None")
             return None
-        
+
         hostname = self.resolveHost(host)
         ip = self.resolveIP(host)
-        
+
+        # check if the host is online
+        try:
+            mcstatus.JavaServer.lookup(host + ":" + str(port)).status()
+        except Exception:
+            self.dprint("Server is offline")
+            return None
+
         # check the ip and hostname to make sure they arr vaild as a mc server
         try:
             server = mcstatus.JavaServer.lookup(ip + ":" + str(port))
             status = server.status()
-        except BrokenPipeError:
-            ip = host
-        except ConnectionRefusedError:
-            ip = host
-        except OSError:
-            ip = host
         except Exception:
             ip = host
-        
         try:
             server = mcstatus.JavaServer.lookup(hostname + ":" + str(port))
             status = server.status()
-        except BrokenPipeError:
-            ip = host
-        except ConnectionRefusedError:
-            ip = host
-        except OSError:
-            ip = host
         except Exception:
             ip = host
-        
+
+        joinability = self.join(ip, port, "Pilot1782").joinability
+        cracked = bool(joinability == "CRACKED")
 
         try:
             server = mcstatus.JavaServer.lookup(host + ":" + str(port))
-            try:
-                status = server.status()
-            except BrokenPipeError:
-                return None
-            except ConnectionRefusedError:
-                return None
-            except OSError:
-                return None
+            status = server.status()
 
-            self.dprint("Checking hostname/ip")
             cpLST = self.crackedPlayerList(host, str(port))  # cracked player list
-            cracked = bool(cpLST or cpLST == [])
+            cracked = bool(
+                (cpLST is not None and type(cpLST) is not bool) and not cracked
+            )
 
             self.dprint("Getting players")
             players = []
@@ -290,6 +296,7 @@ class funcs:
                         )
             except Exception:
                 self.dprint("Error getting player list", traceback.format_exc())
+                logging.error(traceback.format_exc())
 
             # remove duplicates from player list
             players = [i for n, i in enumerate(players) if i not in players[n + 1 :]]
@@ -308,7 +315,7 @@ class funcs:
                 "lastOnlinePlayersMax": status.players.max,
                 "lastOnlineVersionProtocol": self.cFilter(str(status.version.protocol)),
                 "cracked": cracked,
-                "whitelisted": self.isWhitelisted(ip, int(port)),
+                "whitelisted": joinability == "WHITELISTED",
                 "favicon": status.favicon,
             }
 
@@ -320,11 +327,21 @@ class funcs:
                         webhook,
                         json={"content": f"New server added to database: {host}"},
                     )
+            else:
+                # update whitelisted to the database value
+                dbVal = self.col.find_one({"host": host})
+                if dbVal is not None and "whitelisted" in str(dbVal):
+                    dbVal = dbVal["whitelisted"]
+                else:
+                    dbVal = False
+                data["whitelisted"] = (
+                    dbVal if bool(dbVal is not None or dbVal) else False
+                )
 
-            for i in list(self.col.find_one({"host": host})["lastOnlinePlayersList"]):
+            for i in self.col.find_one({"host": host})["lastOnlinePlayersList"]:
                 try:
                     if i not in data["lastOnlinePlayersList"]:
-                        if type(i) == str:
+                        if type(i) is str:
                             url = f"https://api.mojang.com/users/profiles/minecraft/{i}"
                             jsonResp = requests.get(url)
                             if len(jsonResp.text) > 2:
@@ -345,6 +362,7 @@ class funcs:
                         " --\\/-- ",
                         host,  # pyright: ignore [reportInvalidStringEscapeSequence]
                     )
+                    logging.error(traceback.format_exc())
                     break
 
             self.col.update_one({"host": host}, {"$set": data})
@@ -354,7 +372,7 @@ class funcs:
             self.dprint("Timeout Error")
             return None
         except Exception:
-            self.print(traceback.format_exc(), " | ", host)
+            logging.error(traceback.format_exc())
             return None
 
     def remove_duplicates(self) -> None:
@@ -375,7 +393,7 @@ class funcs:
             else:
                 seen.add(value)
 
-    def verify(self, search: dict, serverList: list):
+    def verify(self, search: dict, serverList: list) -> list:
         """Verifies a search
 
         Args:
@@ -422,10 +440,9 @@ class funcs:
             for _item in _items:
                 key = str(_item[0])
                 value = str(_item[1])
-                if key in server:
-                    if str(value).lower() not in str(server[key]).lower():
-                        flag = False
-                        break
+                if key in server and str(value).lower() not in str(server[key]).lower():
+                    flag = False
+                    break
             if flag:
                 out.append(server)
 
@@ -483,7 +500,7 @@ class funcs:
                 search_query[key] = value
         return list(self.col.find(search_query))
 
-    def genEmbed(self, _serverList: list[dict], _port: str = "25565"):
+    def genEmbed(self, _serverList: list[dict], search: dict, index: int = 0) -> list:
         """Generates an embed for the server list
 
         Args:
@@ -533,8 +550,7 @@ class funcs:
 
             return [embed, None, row]
 
-        random.shuffle(_serverList)
-        info = _serverList[0]
+        info = _serverList[index]
 
         if info is None:
             logging.error("Server not found: " + str(_serverList))
@@ -564,24 +580,38 @@ class funcs:
                 components=buttons  # pyright: ignore [reportGeneralTypeIssues]
             )
 
-            return [embed, None, row, info]
+            return [embed, None, row]
 
-        info2 = self.check(info["host"], _port)
+        info2 = self.check(info["host"])
         if info2 is not None:
             info = info2
 
+        try:
+            mcstatus.JavaServer.lookup(info["host"]).status()
+            online = True
+        except:
+            online = False
+            self.dprint("Server offline", info["host"])
+
         numServers = len(_serverList)
-        online = info is not None
 
         try:
             _serverList.pop(0)
         except IndexError:
             pass
 
+        hostname = info["hostname"] if "hostname" in info else info["host"]
+        whitelisted = info["whitelisted"] if "whitelisted" in info else False
+
         # setup the embed
         embed = interactions.Embed(
-            title=(("🟢 "if not info["whitelisted"] else "🟠 ") if online else "🔴 ") + info["host"],
-            description="Host name: `"+info["hostname"]+"`\n```\n" + info["lastOnlineDescription"] + "```",
+            title=(("🟢 " if not whitelisted else "🟠 ") if online else "🔴 ")
+            + info["host"],
+            description="Host name: `"
+            + hostname
+            + "`\n```\n"
+            + info["lastOnlineDescription"]
+            + "```",
             timestamp=self.timeNow(),
             color=(0x00FF00 if online else 0xFF0000),
             type="rich",
@@ -601,7 +631,7 @@ class funcs:
                     name="Cracked", value=f"{info['cracked']}", inline=True
                 ),
                 interactions.EmbedField(
-                    name="Whitelisted", value=f"{info['whitelisted']}", inline=True
+                    name="Whitelisted", value=f"{whitelisted}", inline=True
                 ),
                 interactions.EmbedField(
                     name="Last Online",
@@ -622,8 +652,13 @@ class funcs:
                     if info["host"] != "Server not found."
                     else "-1"
                 )
-                + "\nOut of {} servers".format(numServers)
-            ),  # pyright: ignore [reportOptionalSubscript]
+                + "\nOut of {} servers\n".format(numServers)
+                + "Key:"
+                + (str(search).replace("'", '"') if search != {} else "---n/a---")
+                + "/|\\"
+                + str(index)
+                + "\n",
+            ),
         )
 
         try:  # this adds the favicon in the most overcomplicated way possible
@@ -650,15 +685,12 @@ class funcs:
                 _file = None
         except Exception:
             self.print(traceback.format_exc(), info)
+            logging.error(traceback.format_exc())
             _file = None
 
         players = info
         if players is not None:
-            players = (
-                players["lastOnlinePlayersList"]
-                if "lastOnlinePlayersList" in players
-                else []
-            )
+            players = self.playerList(host=info["host"])
         else:
             players = []
 
@@ -667,9 +699,7 @@ class funcs:
                 label="Show Players",
                 custom_id="show_players",
                 style=interactions.ButtonStyle.PRIMARY,
-                disabled=(
-                    len(players) == 0 or not online or info["lastOnlinePlayers"] == 0
-                ),
+                disabled=(len(players) == 0),
             ),
             interactions.Button(
                 label="Next Server",
@@ -685,7 +715,84 @@ class funcs:
 
         return embed, _file, row
 
-    def cFilter(self, text: str, trim: bool = True):
+    def join(
+        self, ip: str, port: int, player_username: str, version: int = -1
+    ) -> ServerType:
+        try:
+            # get info on the server
+            server = mcstatus.JavaServer.lookup(ip + ":" + str(port))
+            version = server.status().version.protocol if version == -1 else version
+
+            uuidURL = (
+                "https://api.mojang.com/users/profiles/minecraft/" + player_username
+            )
+            resp = requests.get(uuidURL)
+            if "error" not in resp.text and resp.text != "":
+                uuid = resp.json()["id"]
+            else:
+                uuid = "00000000-0000-0000-0000-000000000000"
+
+            connection = TCPSocketConnection((ip, port))
+
+            # Send handshake packet: ID, protocol version, server address, server port, intention to login
+            # THis does not change between versions
+            handshake = Connection()
+
+            handshake.write_varint(0)  # Packet ID
+            handshake.write_varint(version)  # Protocol version
+            handshake.write_utf(ip)  # Server address
+            handshake.write_ushort(int(port))  # Server port
+            handshake.write_varint(2)  # Intention to login
+
+            connection.write_buffer(handshake)
+
+            # Send login start packet: ID, username, include sig data, has uuid, uuid
+            loginStart = Connection()
+
+            if version > 760:
+                loginStart.write_varint(0)  # Packet ID
+                loginStart.write_utf(player_username)  # Username
+            else:
+                loginStart.write_varint(0)  # Packet ID
+                loginStart.write_utf(player_username)  # Username
+            connection.write_buffer(loginStart)
+
+            # Read response
+            response = connection.read_buffer()
+            id: int = response.read_varint()
+            if id == 2:
+                print("Logged in successfully")
+                return ServerType(ip, version, "CRACKED")
+            elif id == 0:
+                print("Failed to login")
+                print(response.read_utf())
+                return ServerType(ip, version, "UNKNOW")
+            elif id == 1:
+                return ServerType(ip, version, "PREMIUM")
+            else:
+                print("Unknown response: " + str(id))
+                try:
+                    reason = response.read_utf()
+                except:
+                    reason = "Unknown"
+
+                print("Reason: " + reason)
+                return ServerType(ip, version, "UNKNOW")
+        except TimeoutError:
+            self.print("Server timed out")
+            logging.error("Server timed out")
+            return ServerType(ip, version, "OFFLINE")
+        except OSError:
+            self.print("Server did not respond")
+            logging.error("Server did not respond")
+            return ServerType(ip, version, "UNKNOW")
+        except Exception:
+            self.print(traceback.format_exc())
+            logging.error(traceback.format_exc())
+            return ServerType(ip, version, "OFFLINE")
+
+    # Text manipulation
+    def cFilter(self, text: str, trim: bool = True) -> str:
         """Removes all color bits from a string
 
         Args:
@@ -700,6 +807,127 @@ class funcs:
             text = text.strip()
         return text
 
+    def resolveHost(self, ip: str) -> str:
+        """Resolves a hostname to an IP address into a hostname
+
+        Args:
+            host (str): hostname
+
+        Returns:
+            str: IP address
+        """
+        # test if the ip is an ip address
+        if not re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", ip):
+            self.print("Not an IP address")
+            return ip
+
+        if ip == "127.0.0.1" or ip == "localhost":
+            return ip
+
+        try:
+            host = socket.gethostbyaddr(ip)[0]
+            # if the hostname is an ip address, return the original ip
+            if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", host):
+                self.print("Hostname is an IP address")
+                return ip
+            else:
+                # check the host is a valid hostname by checking if it has a dot and ping it
+                if "." in host:
+                    if os.name == "nt":
+                        self.dprint("Host: " + host)
+
+                        # try pinging the ip first
+                        if (
+                            subprocess.run(
+                                ["ping", "-n", "1", ip], capture_output=True
+                            ).returncode
+                            == 0
+                        ):
+                            self.dprint("The host is online")
+                            # try pinging the hostname
+                            ping = subprocess.run(
+                                ["ping", "-n", "1", host], capture_output=True
+                            )
+                            if ping.returncode == 1:
+                                self.dprint("Hostname is offline")
+                                return ip
+                            else:
+                                return host
+                        else:
+                            self.dprint("The ip is offline")
+                            return ip
+                    else:
+                        self.dprint("Host: " + host)
+
+                        # try pinging the ip first
+                        if (
+                            subprocess.run(
+                                ["ping", "-c", "1", ip], capture_output=True
+                            ).returncode
+                            == 0
+                        ):
+                            self.dprint("The host is online")
+                            # try pinging the hostname
+                            ping = subprocess.run(
+                                ["ping", "-c", "1", host], capture_output=True
+                            )
+                            if ping.returncode == 1:
+                                self.dprint("Hostname is offline")
+                                return ip
+                            else:
+                                return host
+                        else:
+                            self.dprint("The ip is offline")
+                            return ip
+                else:
+                    self.print("Invalid hostname")
+                    return ip
+        except socket.herror:
+            self.print("Hostname not found: " + ip)
+            return ip
+        except Exception:
+            self.print(traceback.format_exc())
+            logging.error(traceback.format_exc())
+            return ip
+
+    def resolveIP(self, host: str) -> str:
+        """Resolves a hostname to an IP address
+
+        Args:
+            host (str): hostname
+
+        Returns:
+            str: IP address
+        """
+        try:
+            ip = socket.gethostbyname(host)
+            return ip
+        except socket.gaierror:
+            self.print("Hostname not found")
+            return host
+        except Exception:
+            self.print(traceback.format_exc())
+            logging.error(traceback.format_exc())
+            return host
+
+    def compStr(self, value: str) -> bytes:
+        """Compreses a string to a byte array
+
+        Args:
+            value (str): The string to compress
+        """
+
+        return zlib.compress(value.encode("utf-8"))
+
+    def decompStr(self, value: bytes) -> str:
+        """Decompresses a byte array to a string
+
+        Args:
+            value (bytes): The byte array to decompress
+        """
+        return zlib.decompress(value).decode("utf-8")
+
+    # Player functions
     def crackCheckAPI(self, host: str, port: str = "25565") -> bool:
         """Checks if a server is cracked using the mcstatus.io API
 
@@ -733,7 +961,7 @@ class funcs:
             list[str] | False: A list of players on the server, or False if the server is not cracked
         """
         self.dprint("Getting player list for ip: " + host + ":" + port)
-        
+
         import chat as chat2
 
         args = [host, "--port", port, "--offline-name", username]
@@ -742,6 +970,7 @@ class funcs:
             chat2.main(args)
         except Exception:
             self.print(traceback.format_exc())
+            logging.error(traceback.format_exc())
             return [] if self.crackCheckAPI(host, port) else False
 
         while True:
@@ -760,11 +989,11 @@ class funcs:
         for line in lines:
             if "kick" in line.lower():
                 flag = not flag
-            if "Getting player list for ip: "+host in line and flag:
+            if "Getting player list for ip: " + host in line and flag:
                 return []
-            
-            if "PlayerListProtocol{"+host in line:
-                self.dprint(host+" is an online mode server")
+
+            if "PlayerListProtocol{" + host in line:
+                self.dprint(host + " is an online mode server")
                 return False
 
         return out
@@ -785,6 +1014,86 @@ class funcs:
         self.dprint("Player head downloaded")
         return interactions.File(filename="playerhead.png")
 
+    def playerList(self, host: str, port: int = 25565) -> list[dict]:
+        """Return a list of players on a Minecraft server
+
+        Args:
+            host (str): The hostname/ip of the server
+            port (int, optional): port of the server. Defaults to 25565.
+
+        Returns:
+            list[dict]: list of players in the form of:
+                [
+                    {
+                        "name": "playername",
+                        "uuid": "playeruuid"
+                    }
+                ]
+        """
+
+        if self.col is None:
+            self.print("Collection not set")
+            return []
+
+        # get list from database
+        res = self.col.find_one({"host": host})
+        players = res["lastOnlinePlayersList"] if res is not None else []
+
+        cpLST = self.crackedPlayerList(host, str(port))
+        cracked = bool(cpLST or cpLST == [])
+
+        if cracked:
+            self.dprint("Cracked server, getting UUIDs")
+            for player in cpLST:
+                jsonResp = requests.get(
+                    "https://api.mojang.com/users/profiles/minecraft/" + player
+                )
+                uuid = "---n/a---"
+                if "id" in str(jsonResp.text):
+                    uuid = jsonResp.json()["id"]
+
+                player = {"name": player, "uuid": uuid}
+        else:
+            cpLST = []
+
+        normal = []
+        try:
+            self.dprint("Getting player list from server")
+            server = mcstatus.JavaServer.lookup(host + ":" + str(port))
+            status = server.status()
+            if status.players.sample is not None:
+                normal = [{"name": p.name, "uuid": p.id} for p in status.players.sample]
+        except TimeoutError:
+            logging.error("Timeout error")
+            normal = []
+        except Exception:
+            self.print(traceback.format_exc())
+            logging.error(traceback.format_exc())
+            normal = []
+
+        if cracked:
+            for player in cpLST:
+                if player not in normal:
+                    normal.append(player)
+
+        names = [p["name"].lower() for p in normal]
+
+        # loop through normal and if the player is in the players list then set "online" to true
+        for player in players:
+            player["online"] = player["name"].lower() in names
+            (names.pop(names.index(player["name"].lower()))) if player[
+                "name"
+            ].lower() in names else None
+
+        # loop through normal and if the player is not in the players list then add them
+        for player in normal:
+            if player["name"].lower() in names:
+                player["online"] = True
+                players.append(player)
+
+        return players
+
+    # Database stats
     def get_sorted_versions(
         self, collection: pymongo.collection.Collection
     ) -> list[dict[str, int]]:
@@ -825,186 +1134,18 @@ class funcs:
             return result[0]["total_players"]
         else:
             return 0
-        
-    def resolveHost(self, ip: str) -> str:
-        """Resolves a hostname to an IP address into a hostname
 
-        Args:
-            host (str): hostname
-
-        Returns:
-            str: IP address
-        """
-        # test if the ip is an ip address
-        if not re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", ip):
-            self.print("Not an IP address")
-            return ip
-        
+    def getPlayersLogged(self, collection: pymongo.collection.Collection) -> int:
+        pipeline = [
+            {"$unwind": "$lastOnlinePlayersList"},
+            {"$group": {"_id": "$lastOnlinePlayersList.uuid"}},
+            {"$group": {"_id": None, "count": {"$sum": 1}}},
+        ]
+        result = collection.aggregate(pipeline)
         try:
-            host = socket.gethostbyaddr(ip)[0]
-            # if the hostname is an ip address, return the original ip
-            if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", host):
-                self.print("Hostname is an IP address")
-                return ip
-            else:
-                # check the host is a valid hostname by checking if it has a dot and ping it
-                if "." in host:
-                    if os.name == "nt":
-                        self.dprint("Host: " + host)
-                        
-                        # try pinging the ip first
-                        if subprocess.run(["ping", "-n", "1", ip], capture_output=True).returncode == 0:
-                            self.dprint("The host is online")
-                            # try pinging the hostname
-                            ping = subprocess.run(["ping", "-n", "1", host], capture_output=True)
-                            if ping.returncode == 1:
-                                self.dprint("Hostname is offline")
-                            
-                            return host if ping.returncode == 0 else ip
-                        else:
-                            self.dprint("The host is offline")
-                            return ip
-                    else:
-                        self.dprint("Host: " + host)
-                        
-                        # try pinging the ip first
-                        if subprocess.run(["ping", "-c", "1", ip], capture_output=True).returncode == 0:
-                            self.dprint("The host is online")
-                            # try pinging the hostname
-                            ping = subprocess.run(["ping", "-c", "1", host], capture_output=True)
-                            if ping.returncode == 1:
-                                self.dprint("Hostname is offline")
-                            
-                            return host if ping.returncode == 0 else ip
-                        else:
-                            self.dprint("The host is offline")
-                            return ip
-                else:
-                    self.print("Invalid hostname")
-                    return ip
-        except socket.herror:
-            self.print("Hostname not found: "+ip)
-            return ip
-        except Exception:
-            self.print(traceback.format_exc())
-            return ip
-        
-    def resolveIP(self, host: str) -> str:
-        """Resolves a hostname to an IP address
-
-        Args:
-            host (str): hostname
-
-        Returns:
-            str: IP address
-        """
-        try:
-            ip = socket.gethostbyname(host)
-            return ip
-        except socket.gaierror:
-            self.print("Hostname not found")
-            return host
-        except Exception:
-            self.print(traceback.format_exc())
-            return host
-        
-    def isWhitelisted(self, ip: str, port: int) -> bool:
-        """
-        Check if a given Minecraft server is whitelisted through packet magic.
-
-        Args:
-            ip (str): IP address of the Minecraft server.
-            port (int): Port number of the Minecraft server.
-
-        Returns:
-            bool: True if the server is whitelisted, False otherwise.
-        """
-        # connect to the server
-        try:
-            sock = socket.create_connection((ip, port), timeout=5)
-            sock.send(b"\xfe\x01")
-            data = sock.recv(1024)
-            sock.close()
-        except:
-            return False
-
-        try:
-            # check if the server is whitelisted
-            if data[3] == 0:
-                return True
-            else:
-                return False
-        except:
-            # assume the server is not whitelisted
-            return False
-        
-    def playerList(self, host:str, port:int = 25565) -> list[dict]:
-        """Return a list of players on a Minecraft server
-
-        Args:
-            host (str): The hostname/ip of the server
-            port (int, optional): port of the server. Defaults to 25565.
-
-        Returns:
-            list[dict]: list of players in the form of:
-                [
-                    {
-                        "name": "playername",
-                        "uuid": "playeruuid"
-                    }
-                ]
-        """
-        
-        if self.col is None:
-            self.print("Collection not set")
-            return []
-        
-        # get list from database
-        res = self.col.find_one({"host": host})
-        players = res["lastOnlinePlayersList"] if res is not None else []
-        
-        cpLST = self.crackedPlayerList(host, str(port))
-        cracked = bool(cpLST or cpLST == [])
-        
-        if cracked:
-            self.dprint("Cracked server, getting UUIDs")
-            for player in cracked:
-                jsonResp = requests.get(
-                    "https://api.mojang.com/users/profiles/minecraft/" + player
-                )
-                uuid = "---n/a---"
-                if "id" in str(jsonResp.text):
-                    uuid = jsonResp.json()["id"]
-                
-                player = {"name": player, "uuid": uuid}
-        else:
-            cpLST = []
-        
-        normal = []
-        try:
-            self.dprint("Getting player list from server")
-            server = mcstatus.JavaServer.lookup(host+":"+str(port))
-            status = server.status()
-            if status.players.sample is not None:
-                normal = [{"name": p.name, "uuid": p.id} for p in status.players.sample]
-        except Exception:
-            self.print(traceback.format_exc())
-            normal = []
-        
-        if cracked:
-            for player in cpLST:
-                if player not in normal:
-                    normal.append(player)
-        
-        names = [p["name"].lower() for p in normal]
-        
-        # loop through normal and if the player is in the players list then set "online" to true
-        for player in players:
-            player["online"] = player["name"].lower() in names
-            
-        return players
-
-
+            return result.next()["count"]
+        except StopIteration:
+            return 0
 
 
 if __name__ == "__main__":
