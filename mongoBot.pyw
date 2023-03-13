@@ -1,23 +1,19 @@
 # pyright: basic, reportGeneralTypeIssues=false, reportOptionalSubscript=false, reportOptionalMemberAccess=false
 import datetime
+import json
 import random
-import requests
 import sys
 import time
 import traceback
-import json
 
-import pymongo
-from bson.objectid import ObjectId
-from bson.errors import InvalidId
 import interactions
-from interactions.ext.files import (
-    command_edit,
-    component_edit,
-    command_send,
-    component_send,
-)
+import pymongo
+import requests
+from bson.errors import InvalidId
+from bson.objectid import ObjectId
 from interactions.api.models import Message
+from interactions.ext.files import (command_edit, command_send, component_edit,
+                                    component_send)
 
 from funcs import funcs
 
@@ -441,12 +437,12 @@ async def rand_select(ctx: interactions.ComponentContext):
         fncs.dprint("Fetching message")
         msg = ctx.message.embeds[0]
         fncs.dprint(str(msg))
-        
+
         if "---n/a---" in msg.footer.text:
             return
 
         await ctx.defer(edit_origin=True)
-        
+
         buttons = [
             interactions.Button(
                 label="Show Players",
@@ -497,7 +493,7 @@ async def rand_select(ctx: interactions.ComponentContext):
         fncs.dprint("ReGenerating list")
         serverList = fncs._find(key)
         fncs.dprint("List generated: " + str(len(serverList)) + " servers")
-        index = (index + 1) if (index+1 < len(serverList)) else 0
+        index = (index + 1) if (index + 1 < len(serverList)) else 0
 
         await component_edit(
             ctx,
@@ -508,10 +504,8 @@ async def rand_select(ctx: interactions.ComponentContext):
                     color=0x00FF00,
                     timestamp=timeNow(),
                     footer=interactions.EmbedFooter(
-                        text="Key:---n/a---/|\\{}".format(
-                            index
-                        )
-                    )
+                        text="Key:---n/a---/|\\{}".format(index)
+                    ),
                 ),
             ],
             components=[row],
