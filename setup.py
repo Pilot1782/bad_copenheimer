@@ -1,9 +1,21 @@
+import logging
 import os
+
+from funcs import funcs
+
+fncs = funcs()
+def print(*args, **kwargs):
+    fncs.print(" ".join(map(str, args)), **kwargs)
 
 
 def instPyPackage():
     print("\n------------------\nInstalling python packages...")
-    os.system("pip install -r requirements.txt")
+    # check to make sure that requirements.txt exists
+    if not os.path.isfile("requirements.txt"):
+        fncs.logging.error("requirements.txt not found in current directory.")
+        print("requirements.txt not found in current directory.")
+    else:
+        os.system("pip install -r requirements.txt")
 
 
 def checkMasscan():
@@ -32,9 +44,9 @@ def privVariables():
         os.system("echo # Private Variables > privVars.py")
         # add variables
         with open("privVars.py", "a") as f:
-            f.write('\nDISCORD_WEBHOOK = "" # Not usually required\n')
-            f.write('TOKEN = ""\n')
-            f.write('MONGO_URL = ""\n')
+            f.write('\nDISCORD_WEBHOOK = ""  # Not usually required\n')
+            f.write('TOKEN = ""  # Discord bot token\n')
+            f.write('MONGO_URL = ""  # URL from the mongo db setup guide\n')
     elif os.name == "posix":
         # create privVars.py
         os.system("touch privVars.py")
