@@ -1,6 +1,7 @@
 # pyright: reportGeneralTypeIssues=false
 
 import base64
+from json import JSONDecodeError
 import random
 import re
 import subprocess
@@ -256,17 +257,24 @@ class funcs:
                         url = f"https://api.mojang.com/users/profiles/minecraft/{player.name}"
                         jsonResp = requests.get(url)
                         if len(jsonResp.text) > 2:
-                            jsonResp = jsonResp.json()
+                            try:
+                                jsonResp = jsonResp.json()
 
-                            if jsonResp:
-                                players.append(
-                                    {
-                                        "name": self.cFilter(
-                                            jsonResp["name"]
-                                        ).lower(),  # pyright: ignore [reportGeneralTypeIssues]
-                                        "uuid": jsonResp["id"],
-                                    }
-                                )
+                                if jsonResp:
+                                    players.append(
+                                        {
+                                            "name": self.cFilter(
+                                                jsonResp["name"]
+                                            ).lower(),  # pyright: ignore [reportGeneralTypeIssues]
+                                            "uuid": jsonResp["id"],
+                                        }
+                                    )
+                            except JSONDecodeError:
+                                self.dprint("Error getting player list, bad json response")
+                                continue
+                            except KeyError:
+                                self.dprint("Error getting player list, bad json response")
+                                continue
                         else:
                             uuid = "---n/a---"
                             if "id" in str(jsonResp.text):
