@@ -1,7 +1,6 @@
 # pyright: reportGeneralTypeIssues=false
 
-"""This file is the discord bot for your database.
-   Make sure you have a databse setup and all of the settings in privVars.py are correct.
+"""This file is a general library for the discord bot and the scanner.
 """
 
 import base64

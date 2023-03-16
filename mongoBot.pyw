@@ -1,4 +1,7 @@
+"""This is the discord bot for the mongoDB server list
+"""
 # pyright: basic, reportGeneralTypeIssues=false, reportOptionalSubscript=false, reportOptionalMemberAccess=false
+
 import datetime
 import json
 import random
