@@ -254,13 +254,13 @@ async def find(
         jresp = resp.json()
 
         if "error" in resp.text or resp.text == "":  # if the player is not found
-            fncs.dprint("UUID not found in minecraft api")
+            fncs.dprint("Player not found in minecraft api")
             await command_send(
                 ctx,
                 embeds=[
                     interactions.Embed(
                         title="Error",
-                        description="UUID not found in minecraft api",
+                        description=f"{player} not found in minecraft api",
                         timestamp=timeNow(),
                     )
                 ],
@@ -283,7 +283,7 @@ async def find(
             embeds = [
                 interactions.Embed(
                     title="Error",
-                    description="Player not found in database",
+                    description=f"{player} not found in database",
                     color=0xFF6347,
                     timestamp=timeNow(),
                 )

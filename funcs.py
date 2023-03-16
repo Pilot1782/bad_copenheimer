@@ -1,23 +1,27 @@
 # pyright: reportGeneralTypeIssues=false
 
+"""This file is the discord bot for your database.
+   Make sure you have a databse setup and all of the settings in privVars.py are correct.
+"""
+
 import base64
-from json import JSONDecodeError
+import datetime
+import logging
+import os
 import random
 import re
-import subprocess
-import datetime
-import time
-import os
-import traceback
-import requests
-import sys
 import socket
-import logging
-import pymongo
+import subprocess
+import sys
+import time
+import traceback
 import zlib
+from json import JSONDecodeError
 
 import interactions
 import mcstatus
+import pymongo
+import requests
 from mcstatus.protocol.connection import Connection, TCPSocketConnection
 
 norm = sys.stdout
@@ -185,7 +189,7 @@ class funcs:
             return "Error: " + str(err)
 
     # Finding functions
-    def check(self, host: str, port: str = "25565", webhook: str = "") -> dict | None:
+    def check(self, host: str, port: str = "25565", webhook: str = "", *args) -> dict | None:
         """Checks out a host and adds it to the database if it's not there
 
         Args:
