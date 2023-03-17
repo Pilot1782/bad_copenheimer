@@ -4,6 +4,8 @@ import os
 from funcs import funcs
 
 fncs = funcs()
+
+
 def print(*args, **kwargs):
     fncs.print(" ".join(map(str, args)), **kwargs)
 

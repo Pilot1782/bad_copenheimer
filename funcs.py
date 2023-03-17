@@ -188,7 +188,9 @@ class funcs:
             return "Error: " + str(err)
 
     # Finding functions
-    def check(self, host: str, port: str = "25565", webhook: str = "", *args) -> dict | None:
+    def check(
+        self, host: str, port: str = "25565", webhook: str = "", *args
+    ) -> dict | None:
         """Checks out a host and adds it to the database if it's not there
 
         Args:
@@ -243,7 +245,8 @@ class funcs:
             server = mcstatus.JavaServer.lookup(host + ":" + str(port))
             status = server.status()
 
-            cpLST = self.crackedPlayerList(host, str(port))  # cracked player list
+            cpLST = self.crackedPlayerList(
+                host, str(port))  # cracked player list
             cracked = bool(
                 (cpLST is not None and type(cpLST) is not bool) and not cracked
             )
@@ -273,10 +276,14 @@ class funcs:
                                         }
                                     )
                             except JSONDecodeError:
-                                self.dprint("Error getting player list, bad json response")
+                                self.dprint(
+                                    "Error getting player list, bad json response"
+                                )
                                 continue
                             except KeyError:
-                                self.dprint("Error getting player list, bad json response")
+                                self.dprint(
+                                    "Error getting player list, bad json response"
+                                )
                                 continue
                         else:
                             uuid = "---n/a---"
@@ -306,11 +313,13 @@ class funcs:
                             }
                         )
             except Exception:
-                self.dprint("Error getting player list", traceback.format_exc())
+                self.dprint("Error getting player list",
+                            traceback.format_exc())
                 logging.error(traceback.format_exc())
 
             # remove duplicates from player list
-            players = [i for n, i in enumerate(players) if i not in players[n + 1 :]]
+            players = [i for n, i in enumerate(
+                players) if i not in players[n + 1:]]
 
             data = {
                 "host": ip,
@@ -371,7 +380,8 @@ class funcs:
                     self.print(
                         traceback.format_exc(),
                         " --\\/-- ",
-                        host,  # pyright: ignore [reportInvalidStringEscapeSequence]
+                        # pyright: ignore [reportInvalidStringEscapeSequence]
+                        host,
                     )
                     logging.error(traceback.format_exc())
                     break
@@ -648,7 +658,8 @@ class funcs:
                     name="Last Online",
                     value=(
                         time.strftime(
-                            "%Y/%m/%d %H:%M:%S", time.localtime(info["lastOnline"])
+                            "%Y/%m/%d %H:%M:%S", time.localtime(
+                                info["lastOnline"])
                         )
                     )
                     if info["host"] != "Server not found."
@@ -949,7 +960,8 @@ class funcs:
         Returns:
             bool: True if the server is cracked, False if not
         """
-        url = "https://api.mcstatus.io/v2/status/java/" + host + ":" + str(port)
+        url = "https://api.mcstatus.io/v2/status/java/" + \
+            host + ":" + str(port)
 
         resp = requests.get(url)
         if resp.status_code == 200:
@@ -1073,7 +1085,8 @@ class funcs:
             server = mcstatus.JavaServer.lookup(host + ":" + str(port))
             status = server.status()
             if status.players.sample is not None:
-                normal = [{"name": p.name, "uuid": p.id} for p in status.players.sample]
+                normal = [{"name": p.name, "uuid": p.id}
+                          for p in status.players.sample]
         except TimeoutError:
             logging.error("Timeout error")
             normal = []

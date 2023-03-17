@@ -1,14 +1,16 @@
-import pymongo
-import masscan as msCan
-import traceback
-import time
-import threading
-import random
+import asyncio
 import multiprocessing
 import multiprocessing.pool
-import asyncio
-import funcs
+import random
 import sys
+import threading
+import time
+import traceback
+
+import masscan as msCan
+import pymongo
+
+import funcs
 
 useWebHook, pingsPerSec, maxActive = False, 4800, 10
 masscan_search_path = (
@@ -43,7 +45,9 @@ time_start = time.time()
 threads = []
 pool = multiprocessing.pool.ThreadPool(maxActive)
 
-client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi("1"))  # type: ignore
+client = pymongo.MongoClient(
+    MONGO_URL, server_api=pymongo.server_api.ServerApi("1")
+)  # type: ignore
 db = client["mc"]
 col = db["servers"]
 fncs = funcs.funcs(collection=col)
@@ -158,9 +162,7 @@ async def makeThreads():
             sys.exit()
 
         t = threading.Thread(
-            target=crank,
-            args=(ip_list,),
-            name=f"Scan func thread: {ip_list}"
+            target=crank, args=(ip_list,), name=f"Scan func thread: {ip_list}"
         )
 
         threads.append(t)
