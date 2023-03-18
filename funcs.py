@@ -1105,7 +1105,7 @@ class funcs:
         return players
 
     # Database stats
-    def get_sorted_versions(
+    async def get_sorted_versions(
         self, collection: pymongo.collection.Collection
     ) -> list[dict[str, int]]:
         """I have no idea how this works, but it does, thanks github copilot
@@ -1125,7 +1125,7 @@ class funcs:
         result = [{"version": r["_id"], "count": r["count"]} for r in result]
         return result
 
-    def get_total_players_online(
+    async def get_total_players_online(
         self, collection: pymongo.collection.Collection
     ) -> int:
         """Gets the total number of players online across all servers via ai voodoo
@@ -1146,7 +1146,7 @@ class funcs:
         else:
             return 0
 
-    def getPlayersLogged(self, collection: pymongo.collection.Collection) -> int:
+    async def getPlayersLogged(self, collection: pymongo.collection.Collection) -> int:
         pipeline = [
             {"$unwind": "$lastOnlinePlayersList"},
             {"$group": {"_id": "$lastOnlinePlayersList.uuid"}},

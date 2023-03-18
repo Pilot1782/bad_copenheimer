@@ -2,6 +2,7 @@
 """
 # pyright: basic, reportGeneralTypeIssues=false, reportOptionalSubscript=false, reportOptionalMemberAccess=false
 
+import asyncio
 import datetime
 import json
 import random
@@ -570,7 +571,7 @@ async def stats(ctx: interactions.CommandContext):
         )
 
         fncs.dprint("Getting versions...")
-        versions = fncs.get_sorted_versions(col)
+        versions = await fncs.get_sorted_versions(col)
         topTen = [x["version"] for x in versions[:10]]
 
         text = "Total servers: `{}`\nRough Player Count: `...`\nMost common version:```css\n{}\n```".format(
@@ -583,12 +584,12 @@ async def stats(ctx: interactions.CommandContext):
         )
 
         fncs.dprint("Getting player count...")
-        players = fncs.get_total_players_online(col)
+        players = await fncs.get_total_players_online(col)
         # add commas to player count
         players = "{:,}".format(players)
 
         fncs.dprint("Getting players logged...")
-        pLogged = fncs.getPlayersLogged(col)
+        pLogged = await fncs.getPlayersLogged(col)
         pLogged = "{:,}".format(pLogged)
         text = "Total servers: `{}`\nRough Player Count: `{}`\nPlayers logged: `{}`\nMost common version:```css\n{}\n```".format(
             serverCount, players, pLogged, ("\n".join(topTen[:5]))
