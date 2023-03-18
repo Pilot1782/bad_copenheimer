@@ -2,7 +2,6 @@
 """
 # pyright: basic, reportGeneralTypeIssues=false, reportOptionalSubscript=false, reportOptionalMemberAccess=false
 
-import asyncio
 import datetime
 import json
 import random
