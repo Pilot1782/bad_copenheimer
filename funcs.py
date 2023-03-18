@@ -188,7 +188,9 @@ class funcs:
             return "Error: " + str(err)
 
     # Finding functions
-    def check(self, host: str, port: str = "25565", webhook: str = "", *args) -> dict | None:
+    def check(
+        self, host: str, port: str = "25565", webhook: str = "", *args
+    ) -> dict | None:
         """Checks out a host and adds it to the database if it's not there
 
         Args:
@@ -273,10 +275,14 @@ class funcs:
                                         }
                                     )
                             except JSONDecodeError:
-                                self.dprint("Error getting player list, bad json response")
+                                self.dprint(
+                                    "Error getting player list, bad json response"
+                                )
                                 continue
                             except KeyError:
-                                self.dprint("Error getting player list, bad json response")
+                                self.dprint(
+                                    "Error getting player list, bad json response"
+                                )
                                 continue
                         else:
                             uuid = "---n/a---"
@@ -593,15 +599,17 @@ class funcs:
 
             return [embed, None, row]
 
+        online = False
         info2 = self.check(info["host"])
         if info2 is not None:
             info = info2
+            online = True
 
         try:
             mcstatus.JavaServer.lookup(info["host"]).status()
             online = True
         except:
-            online = False
+            online = False if not online else online
             self.dprint("Server offline", info["host"])
 
         numServers = len(_serverList)
@@ -1048,7 +1056,7 @@ class funcs:
 
         # get list from database
         res = self.col.find_one({"host": host})
-        players = res["lastOnlinePlayersList"] if res is not None else []
+        DBplayers = res["lastOnlinePlayersList"] if res is not None else []
 
         cpLST = self.crackedPlayerList(host, str(port))
         cracked = bool(cpLST or cpLST == [])
@@ -1089,8 +1097,8 @@ class funcs:
 
         names = [p["name"].lower() for p in normal]
 
-        # loop through normal and if the player is in the players list then set "online" to true
-        for player in players:
+        # loop through normal and if the player is in the database player list then set "online" to true
+        for player in DBplayers:
             player["online"] = player["name"].lower() in names
             (names.pop(names.index(player["name"].lower()))) if player[
                 "name"
@@ -1100,9 +1108,9 @@ class funcs:
         for player in normal:
             if player["name"].lower() in names:
                 player["online"] = True
-                players.append(player)
+                DBplayers.append(player)
 
-        return players
+        return DBplayers
 
     # Database stats
     async def get_sorted_versions(
