@@ -675,6 +675,10 @@ class funcs:
                         else time.strftime(  # give the last online time if the server is offline
                             "%Y/%m/%d %H:%M:%S", time.localtime(time.time())
                         )
+                        if not online
+                        else time.strftime(  # give the last online time if the server is offline
+                            "%Y/%m/%d %H:%M:%S", time.localtime(time.time())
+                        )
                     )
                     if info["host"] != "Server not found."
                     else "0/0/0 0:0:0",
