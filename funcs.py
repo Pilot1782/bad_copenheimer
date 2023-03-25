@@ -7,6 +7,7 @@ import base64
 import datetime
 import logging
 import os
+from os.path import join
 import random
 import re
 import socket
@@ -275,6 +276,8 @@ class funcs:
                                             "uuid": jsonResp["id"],
                                         }
                                     )
+                                else:
+                                    joinability = "CRACKED"
                             except JSONDecodeError:
                                 self.dprint(
                                     "Error getting player list, bad json response"
@@ -326,6 +329,8 @@ class funcs:
             # remove duplicates from player list
             players = [i for n, i in enumerate(
                 players) if i not in players[n + 1:]]
+            
+            cracked = bool(joinability == "CRACKED")
 
             data = {
                 "host": ip,
@@ -345,7 +350,7 @@ class funcs:
                 "favicon": status.favicon,
             }
 
-            if not self.col.find_one({"host": host}):
+            if not self.col.find_one({"host": host}) and not self.col.find_one({"hostname": host}):
                 self.print("{} not in database, adding...".format(host))
                 self.col.insert_one(data)
                 if webhook != "":

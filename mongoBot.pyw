@@ -10,6 +10,7 @@ import time
 import traceback
 
 import interactions
+from mcstatus import server
 import pymongo
 import requests
 from bson.errors import InvalidId
@@ -166,7 +167,11 @@ async def find(
     # if parameters are given, add them to the search
 
     if host:
+        isIP = host.replace(".", "").isdigit()
         serverList = [col.find_one({"host": host})]
+
+        if serverList[0] is None and not isIP:
+            serverList = col.find({"hostname": host})
 
         if not serverList[0]:
             fncs.dprint("Server not in database")
