@@ -675,9 +675,10 @@ class funcs:
                         time.strftime(
                             "%Y/%m/%d %H:%M:%S", time.localtime(
                                 info["lastOnline"])
-                        ) if not online else time.strftime( # give the last online time if the server is offline
-                            "%Y/%m/%d %H:%M:%S", time.localtime(
-                                time.time())
+                        )
+                        if not online
+                        else time.strftime(  # give the last online time if the server is offline
+                            "%Y/%m/%d %H:%M:%S", time.localtime(time.time())
                         )
                     )
                     if info["host"] != "Server not found."
@@ -832,9 +833,9 @@ class funcs:
             logging.error(traceback.format_exc())
             return ServerType(ip, version, "OFFLINE")
 
-    def update(self, server:dict) -> None:
+    def update(self, server: dict) -> None:
         """Spawns a thread to update a server
-        
+
         Args:
             server (dict): The server to update
         """
