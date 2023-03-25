@@ -7,7 +7,6 @@ import base64
 import datetime
 import logging
 import os
-from os.path import join
 import random
 import re
 import socket
