@@ -12,6 +12,7 @@ import re
 import socket
 import subprocess
 import sys
+import threading
 import time
 import traceback
 import zlib
@@ -674,6 +675,9 @@ class funcs:
                         time.strftime(
                             "%Y/%m/%d %H:%M:%S", time.localtime(
                                 info["lastOnline"])
+                        ) if not online else time.strftime( # give the last online time if the server is offline
+                            "%Y/%m/%d %H:%M:%S", time.localtime(
+                                time.time())
                         )
                     )
                     if info["host"] != "Server not found."
@@ -749,6 +753,7 @@ class funcs:
             components=buttons  # pyright: ignore [reportGeneralTypeIssues]
         )
 
+        self.update(info)
         return embed, _file, row
 
     def join(
@@ -826,6 +831,14 @@ class funcs:
             self.print(traceback.format_exc())
             logging.error(traceback.format_exc())
             return ServerType(ip, version, "OFFLINE")
+
+    def update(self, server:dict) -> None:
+        """Spawns a thread to update a server
+        
+        Args:
+            server (dict): The server to update
+        """
+        threading.Thread(target=self.check, args=(server["host"],)).start()
 
     # Text manipulation
     def cFilter(self, text: str, trim: bool = True) -> str:
