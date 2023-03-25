@@ -172,6 +172,10 @@ async def find(
             serverList = [col.find_one({"host": host})]
             if serverList[0] is None:
                 serverList = [col.find_one({"hostname": host})]
+        else:
+            serverList = [col.find_one({"hostname": host})]
+            if serverList[0] is None:
+                serverList = [col.find_one({"host": host})]
 
         if serverList[0] is None:
             fncs.dprint("Server not in database")

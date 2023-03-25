@@ -360,7 +360,7 @@ class funcs:
                     )
             else:
                 # update whitelisted to the database value
-                dbVal = self.col.find_one({"host": host})
+                dbVal = self.col.find_one({"host": ip})
                 if dbVal is not None and "whitelisted" in str(dbVal):
                     dbVal = dbVal["whitelisted"]
                 else:
@@ -369,7 +369,7 @@ class funcs:
                     dbVal if bool(dbVal is not None or dbVal) else False
                 )
 
-            dbInfo = self.col.find_one({"host": host})
+            dbInfo = self.col.find_one({"host": ip})
 
             dbInfo = dbInfo if dbInfo is not None else {
                 "lastOnlinePlayersList": []}
@@ -402,7 +402,7 @@ class funcs:
                     logging.error(traceback.format_exc())
                     break
 
-            self.col.update_one({"host": host}, {"$set": data})
+            self.col.update_one({"host": ip}, {"$set": data})
 
             return data
         except TimeoutError:
@@ -620,11 +620,6 @@ class funcs:
             return [embed, None, row]
 
         online = False
-        info2 = self.check(info["host"])
-        if info2 is not None:
-            info = info2
-            online = True
-
         try:
             mcstatus.JavaServer.lookup(info["host"]).status()
             online = True
@@ -729,8 +724,8 @@ class funcs:
             _file = None
 
         players = info
-        if players is not None:
-            players = self.playerList(host=info["host"])
+        if players is not None and "lastOnlinePlayersList" in players:
+            players = players["lastOnlinePlayersList"]
         else:
             players = []
 
