@@ -7,7 +7,6 @@ import base64
 import datetime
 import logging
 import os
-from os.path import join
 import random
 import re
 import socket
@@ -17,6 +16,7 @@ import time
 import traceback
 import zlib
 from json import JSONDecodeError
+from os.path import join
 
 import interactions
 import mcstatus
@@ -329,7 +329,7 @@ class funcs:
             # remove duplicates from player list
             players = [i for n, i in enumerate(
                 players) if i not in players[n + 1:]]
-            
+
             cracked = bool(joinability == "CRACKED")
 
             data = {
@@ -350,7 +350,9 @@ class funcs:
                 "favicon": status.favicon,
             }
 
-            if not self.col.find_one({"host": host}) and not self.col.find_one({"hostname": host}):
+            if not self.col.find_one({"host": host}) and not self.col.find_one(
+                {"hostname": host}
+            ):
                 self.print("{} not in database, adding...".format(host))
                 self.col.insert_one(data)
                 if webhook != "":
