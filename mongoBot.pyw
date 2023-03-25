@@ -167,13 +167,13 @@ async def find(
     # if parameters are given, add them to the search
 
     if host:
-        isIP = host.replace(".", "").isdigit()
-        serverList = [col.find_one({"host": host})]
+        serverList = [None]
+        if host.replace(".", "").isdigit():
+            serverList = [col.find_one({"host": host})]
+            if serverList[0] is None:
+                serverList = [col.find_one({"hostname": host})]
 
-        if serverList[0] is None and not isIP:
-            serverList = col.find({"hostname": host})
-
-        if not serverList[0]:
+        if serverList[0] is None:
             fncs.dprint("Server not in database")
             # try to get the server info from check
             info = fncs.check(host, port)

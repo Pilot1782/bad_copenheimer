@@ -350,7 +350,7 @@ class funcs:
                 "favicon": status.favicon,
             }
 
-            if not self.col.find_one({"host": host}) and not self.col.find_one({"hostname": host}):
+            if not self.col.find_one({"host": ip}) and not self.col.find_one({"hostname": hostname}):
                 self.print("{} not in database, adding...".format(host))
                 self.col.insert_one(data)
                 if webhook != "":
