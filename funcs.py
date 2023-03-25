@@ -363,10 +363,11 @@ class funcs:
                 data["whitelisted"] = (
                     dbVal if bool(dbVal is not None or dbVal) else False
                 )
-            
+
             dbInfo = self.col.find_one({"host": host})
-            
-            dbInfo = dbInfo if dbInfo is not None else {"lastOnlinePlayersList": []}
+
+            dbInfo = dbInfo if dbInfo is not None else {
+                "lastOnlinePlayersList": []}
 
             for i in dbInfo["lastOnlinePlayersList"]:
                 try:
