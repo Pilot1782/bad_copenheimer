@@ -328,7 +328,7 @@ class funcs:
             # remove duplicates from player list
             players = [i for n, i in enumerate(
                 players) if i not in players[n + 1:]]
-            
+
             cracked = bool(joinability == "CRACKED")
 
             data = {
@@ -349,7 +349,9 @@ class funcs:
                 "favicon": status.favicon,
             }
 
-            if not self.col.find_one({"host": ip}) and not self.col.find_one({"hostname": hostname}):
+            if not self.col.find_one({"host": ip}) and not self.col.find_one(
+                {"hostname": hostname}
+            ):
                 self.print("{} not in database, adding...".format(host))
                 self.col.insert_one(data)
                 if webhook != "":
