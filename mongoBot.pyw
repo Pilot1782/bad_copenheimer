@@ -169,11 +169,26 @@ async def find(
         serverList = [col.find_one({"host": host})]
 
         if not serverList[0]:
+            fncs.dprint("Server not in database")
             # try to get the server info from check
             info = fncs.check(host, port)
 
-            if not info:
-                serverList = []
+            if info is None:
+                fncs.dprint("Server not online")
+                await command_send(
+                    ctx,
+                    embeds=[
+                        interactions.Embed(
+                            title="Error",
+                            description="Server not in database and not online",
+                            timestamp=timeNow(),
+                        )
+                    ],
+                    ephemeral=True,
+                )
+                return
+            else:
+                serverList = [info]
 
         flag = True
         search = {}
@@ -351,6 +366,24 @@ async def find(
                     )
                 ],
             )
+            
+            # check that serverList is not empty
+            if len(serverList) == 0 or serverList[0] is None:
+                fncs.dprint("No servers found in database")
+                await command_send(
+                    ctx,
+                    embeds=[
+                        interactions.Embed(
+                            title="Error",
+                            description="No servers found",
+                            color=0xFF6347,
+                            timestamp=timeNow(),
+                        )
+                    ],
+                    ephemeral=True,
+                )
+                return
+                
 
             # setup the embed
             embed = fncs.genEmbed(serverList, search)

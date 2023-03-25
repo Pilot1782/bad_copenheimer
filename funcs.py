@@ -266,7 +266,7 @@ class funcs:
                             try:
                                 jsonResp = jsonResp.json()
 
-                                if jsonResp:
+                                if jsonResp and "id" in jsonResp:
                                     players.append(
                                         {
                                             "name": self.cFilter(
@@ -279,10 +279,16 @@ class funcs:
                                 self.dprint(
                                     "Error getting player list, bad json response"
                                 )
+                                logging.error(
+                                    f"Error getting player list, bad json response: {jsonResp}"
+                                )
                                 continue
                             except KeyError:
                                 self.dprint(
                                     "Error getting player list, bad json response"
+                                )
+                                logging.error(
+                                    f"Error getting player list, bad json response: {jsonResp}"
                                 )
                                 continue
                         else:
@@ -357,8 +363,12 @@ class funcs:
                 data["whitelisted"] = (
                     dbVal if bool(dbVal is not None or dbVal) else False
                 )
+            
+            dbInfo = self.col.find_one({"host": host})
+            
+            dbInfo = dbInfo if dbInfo is not None else {"lastOnlinePlayersList": []}
 
-            for i in self.col.find_one({"host": host})["lastOnlinePlayersList"]:
+            for i in dbInfo["lastOnlinePlayersList"]:
                 try:
                     if i not in data["lastOnlinePlayersList"]:
                         if type(i) is str:
@@ -747,14 +757,14 @@ class funcs:
             server = mcstatus.JavaServer.lookup(ip + ":" + str(port))
             version = server.status().version.protocol if version == -1 else version
 
-            uuidURL = (
-                "https://api.mojang.com/users/profiles/minecraft/" + player_username
-            )
-            resp = requests.get(uuidURL)
-            if "error" not in resp.text and resp.text != "":
-                uuid = resp.json()["id"]
-            else:
-                uuid = "00000000-0000-0000-0000-000000000000"
+            # uuidURL = (
+            #     "https://api.mojang.com/users/profiles/minecraft/" + player_username
+            # )
+            # resp = requests.get(uuidURL)
+            # if "error" not in resp.text and resp.text != "":
+            #     uuid = resp.json()["id"]
+            # else:
+            #     uuid = "00000000-0000-0000-0000-000000000000"
 
             connection = TCPSocketConnection((ip, port))
 
@@ -1091,6 +1101,9 @@ class funcs:
                           for p in status.players.sample]
         except TimeoutError:
             logging.error("Timeout error")
+            normal = []
+        except ConnectionRefusedError:
+            logging.error("Connection refused")
             normal = []
         except Exception:
             self.print(traceback.format_exc())
