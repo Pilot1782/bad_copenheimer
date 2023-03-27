@@ -360,7 +360,7 @@ class funcs:
                         webhook,
                         json={"content": f"New server added to database: {host}"},
                     )
-            else: # update current values with database values
+            else:  # update current values with database values
                 dbVal = self.col.find_one({"host": ip})
                 if dbVal is not None:
                     data["whitelisted"] = dbVal["whitelisted"] or data["whitelisted"]
@@ -378,7 +378,9 @@ class funcs:
                                         if jsonResp is not None:
                                             data["lastOnlinePlayersList"].append(
                                                 {
-                                                    "name": self.cFilter(jsonResp["name"]),
+                                                    "name": self.cFilter(
+                                                        jsonResp["name"]
+                                                    ),
                                                     "uuid": jsonResp["id"],
                                                 }
                                             )
