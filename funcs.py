@@ -621,10 +621,11 @@ class funcs:
 
         online = False
         try:
-            mcstatus.JavaServer.lookup(info["host"]).status()
+            server = mcstatus.JavaServer.lookup(info["host"])
+            online = True
+            server.status()
             online = True
         except:
-            online = False if not online else online
             self.dprint("Server offline", info["host"])
 
         numServers = len(_serverList)
