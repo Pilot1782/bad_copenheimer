@@ -216,6 +216,8 @@ class funcs:
         if self.col is None:
             self.dprint("Collection is None")
             return None
+        
+        self.dprint("Checking " + host)
 
         hostname = self.resolveHost(host)
         ip = self.resolveIP(host)
@@ -237,9 +239,10 @@ class funcs:
             server = mcstatus.JavaServer.lookup(hostname + ":" + str(port))
             status = server.status()
         except Exception:
-            ip = host
+            hostname = host
+            
 
-        joinability = self.join(ip, port, "Pilot1782").joinability
+        joinability = self.join(host, port, "Pilot1782").joinability
         cracked = bool(joinability == "CRACKED")
 
         try:
@@ -349,6 +352,7 @@ class funcs:
                 "whitelisted": joinability == "WHITELISTED",
                 "favicon": status.favicon,
             }
+            
 
             if not self.col.find_one({"host": ip}) and not self.col.find_one(
                 {"hostname": hostname}
@@ -365,6 +369,7 @@ class funcs:
                 if dbVal is not None:
                     data["whitelisted"] = dbVal["whitelisted"] or data["whitelisted"]
                     data["cracked"] = dbVal["cracked"] or data["cracked"]
+                    data["hostname"] = data["hostname"] if not data["hostname"].replace(".","").isdigit() else dbVal["hostname"]
 
                     for i in dbVal["lastOnlinePlayersList"]:
                         try:
@@ -770,7 +775,7 @@ class funcs:
             connection = TCPSocketConnection((ip, port))
 
             # Send handshake packet: ID, protocol version, server address, server port, intention to login
-            # THis does not change between versions
+            # This does not change between versions
             handshake = Connection()
 
             handshake.write_varint(0)  # Packet ID
@@ -796,22 +801,23 @@ class funcs:
             response = connection.read_buffer()
             id: int = response.read_varint()
             if id == 2:
-                print("Logged in successfully")
+                self.dprint("Logged in successfully")
                 return ServerType(ip, version, "CRACKED")
             elif id == 0:
-                print("Failed to login")
-                print(response.read_utf())
+                self.dprint("Failed to login")
+                self.dprint(response.read_utf())
                 return ServerType(ip, version, "UNKNOW")
             elif id == 1:
+                self.dprint("Encryption requested")
                 return ServerType(ip, version, "PREMIUM")
             else:
-                print("Unknown response: " + str(id))
+                self.dprint("Unknown response: " + str(id))
                 try:
                     reason = response.read_utf()
                 except:
                     reason = "Unknown"
 
-                print("Reason: " + reason)
+                self.dprint("Reason: " + reason)
                 return ServerType(ip, version, "UNKNOW")
         except TimeoutError:
             self.print("Server timed out")
@@ -851,7 +857,7 @@ class funcs:
         return text
 
     def resolveHost(self, ip: str) -> str:
-        """Resolves a hostname to an IP address into a hostname
+        """Resolves a hostname into a hostname
 
         Args:
             host (str): hostname
@@ -860,77 +866,24 @@ class funcs:
             str: IP address
         """
         # test if the ip is an ip address
-        if not re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", ip):
+        if not ip.replace(".", "").isnumeric():
             self.print("Not an IP address")
             return ip
 
-        if ip == "127.0.0.1" or ip == "localhost":
+        if ip == "127.0.0.1":
             return ip
 
         try:
-            host = socket.gethostbyaddr(ip)[0]
-            # if the hostname is an ip address, return the original ip
-            if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", host):
-                self.print("Hostname is an IP address")
+            host = socket.gethostbyaddr(ip)
+            
+            # test if the host is online
+            if host[0] == "":
+                self.print("Host is offline")
                 return ip
-            else:
-                # check the host is a valid hostname by checking if it has a dot and ping it
-                if "." in host:
-                    if os.name == "nt":
-                        self.dprint("Host: " + host)
-
-                        # try pinging the ip first
-                        if (
-                            subprocess.run(
-                                ["ping", "-n", "1", ip], capture_output=True
-                            ).returncode
-                            == 0
-                        ):
-                            self.dprint("The host is online")
-                            # try pinging the hostname
-                            ping = subprocess.run(
-                                ["ping", "-n", "1", host], capture_output=True
-                            )
-                            if ping.returncode == 1:
-                                self.dprint("Hostname is offline")
-                                return ip
-                            else:
-                                return host
-                        else:
-                            self.dprint("The ip is offline")
-                            return ip
-                    else:
-                        self.dprint("Host: " + host)
-
-                        # try pinging the ip first
-                        if (
-                            subprocess.run(
-                                ["ping", "-c", "1", ip], capture_output=True
-                            ).returncode
-                            == 0
-                        ):
-                            self.dprint("The host is online")
-                            # try pinging the hostname
-                            ping = subprocess.run(
-                                ["ping", "-c", "1", host], capture_output=True
-                            )
-                            if ping.returncode == 1:
-                                self.dprint("Hostname is offline")
-                                return ip
-                            else:
-                                return host
-                        else:
-                            self.dprint("The ip is offline")
-                            return ip
-                else:
-                    self.print("Invalid hostname")
-                    return ip
+            
+            return host[0]
         except socket.herror:
-            self.print("Hostname not found: " + ip)
-            return ip
-        except Exception:
-            self.print(traceback.format_exc())
-            logging.error(traceback.format_exc())
+            self.print("IP address not found")
             return ip
 
     def resolveIP(self, host: str) -> str:
