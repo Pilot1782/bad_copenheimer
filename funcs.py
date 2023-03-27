@@ -216,7 +216,7 @@ class funcs:
         if self.col is None:
             self.dprint("Collection is None")
             return None
-        
+
         self.dprint("Checking " + host)
 
         hostname = self.resolveHost(host)
@@ -240,7 +240,6 @@ class funcs:
             status = server.status()
         except Exception:
             hostname = host
-            
 
         joinability = self.join(host, port, "Pilot1782").joinability
         cracked = bool(joinability == "CRACKED")
@@ -352,7 +351,6 @@ class funcs:
                 "whitelisted": joinability == "WHITELISTED",
                 "favicon": status.favicon,
             }
-            
 
             if not self.col.find_one({"host": ip}) and not self.col.find_one(
                 {"hostname": hostname}
@@ -369,7 +367,11 @@ class funcs:
                 if dbVal is not None:
                     data["whitelisted"] = dbVal["whitelisted"] or data["whitelisted"]
                     data["cracked"] = dbVal["cracked"] or data["cracked"]
-                    data["hostname"] = data["hostname"] if not data["hostname"].replace(".","").isdigit() else dbVal["hostname"]
+                    data["hostname"] = (
+                        data["hostname"]
+                        if not data["hostname"].replace(".", "").isdigit()
+                        else dbVal["hostname"]
+                    )
 
                     for i in dbVal["lastOnlinePlayersList"]:
                         try:
@@ -877,12 +879,12 @@ class funcs:
 
         try:
             host = socket.gethostbyaddr(ip)
-            
+
             # test if the host is online
             if host[0] == "":
                 self.print("Host is offline")
                 return ip
-            
+
             return host[0]
         except socket.herror:
             self.print("IP address not found")
