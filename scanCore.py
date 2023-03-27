@@ -1,14 +1,16 @@
-import pymongo
-import masscan as msCan
-import traceback
-import time
-import threading
-import random
+import asyncio
 import multiprocessing
 import multiprocessing.pool
-import asyncio
-import funcs
+import random
 import sys
+import threading
+import time
+import traceback
+
+import masscan as msCan
+import pymongo
+
+import funcs
 
 useWebHook, pingsPerSec, maxActive = False, 4800, 10
 masscan_search_path = (
@@ -18,6 +20,7 @@ masscan_search_path = (
     "/sw/bin/masscan",
     "/opt/local/bin/masscan",
 )
+DSICORD_WEBHOOK = "discord.api.com/..."
 try:
     from privVars import *
 except ImportError:
@@ -75,7 +78,7 @@ def scan(ip_list):
 
         scanner.scan(
             ip_list,
-            ports="25565",
+            ports="25565-25577",
             arguments="--max-rate {}".format(pingsPerSec / maxActive),
             sudo=True,
         )

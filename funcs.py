@@ -357,48 +357,38 @@ class funcs:
                         webhook,
                         json={"content": f"New server added to database: {host}"},
                     )
-            else:
-                # update whitelisted to the database value
+            else: # update current values with database values
                 dbVal = self.col.find_one({"host": ip})
-                if dbVal is not None and "whitelisted" in str(dbVal):
-                    dbVal = dbVal["whitelisted"]
-                else:
-                    dbVal = False
-                data["whitelisted"] = (
-                    dbVal if bool(dbVal is not None or dbVal) else False
-                )
+                if dbVal is not None:
+                    data["whitelisted"] = dbVal["whitelisted"] or data["whitelisted"]
+                    data["cracked"] = dbVal["cracked"] or data["cracked"]
 
-            dbInfo = self.col.find_one({"host": ip})
+                    for i in dbVal["lastOnlinePlayersList"]:
+                        try:
+                            if i not in data["lastOnlinePlayersList"]:
+                                if type(i) is str:
+                                    url = f"https://api.mojang.com/users/profiles/minecraft/{i}"
+                                    jsonResp = requests.get(url)
+                                    if len(jsonResp.text) > 2:
+                                        jsonResp = jsonResp.json()
 
-            dbInfo = dbInfo if dbInfo is not None else {"lastOnlinePlayersList": []}
-
-            for i in dbInfo["lastOnlinePlayersList"]:
-                try:
-                    if i not in data["lastOnlinePlayersList"]:
-                        if type(i) is str:
-                            url = f"https://api.mojang.com/users/profiles/minecraft/{i}"
-                            jsonResp = requests.get(url)
-                            if len(jsonResp.text) > 2:
-                                jsonResp = jsonResp.json()
-
-                                if jsonResp is not None:
-                                    data["lastOnlinePlayersList"].append(
-                                        {
-                                            "name": self.cFilter(jsonResp["name"]),
-                                            "uuid": jsonResp["id"],
-                                        }
-                                    )
-                        else:
-                            data["lastOnlinePlayersList"].append(i)
-                except Exception:
-                    self.print(
-                        traceback.format_exc(),
-                        " --\\/-- ",
-                        # pyright: ignore [reportInvalidStringEscapeSequence]
-                        host,
-                    )
-                    logging.error(traceback.format_exc())
-                    break
+                                        if jsonResp is not None:
+                                            data["lastOnlinePlayersList"].append(
+                                                {
+                                                    "name": self.cFilter(jsonResp["name"]),
+                                                    "uuid": jsonResp["id"],
+                                                }
+                                            )
+                                else:
+                                    data["lastOnlinePlayersList"].append(i)
+                        except Exception:
+                            self.print(
+                                traceback.format_exc(),
+                                " --\\/-- ",
+                                host,
+                            )
+                            logging.error(traceback.format_exc())
+                            break
 
             self.col.update_one({"host": ip}, {"$set": data})
 
