@@ -120,6 +120,12 @@ def timeNow():
             type=interactions.OptionType.BOOLEAN,
             required=False,
         ),
+        interactions.Option(
+            name="hasfavicon",
+            description="If the server has a favicon",
+            type=interactions.OptionType.BOOLEAN,
+            required=False,
+        ),
     ],
 )
 async def find(
@@ -132,6 +138,7 @@ async def find(
     motd: str = "",
     maxplayers: int = -1,
     cracked: bool = False,
+    hasfavicon: bool = False,
 ):
     """Find a server
 
@@ -142,6 +149,9 @@ async def find(
         version (str, optional): The version of the server. Defaults to None.
         motd (str, optional): The motd of the server. Defaults to None.
         port (int, optional): The port of the server. Defaults to 25565.
+        maxplayers (int, optional): The max players of the server. Defaults to -1.
+        cracked (bool, optional): If the server blocks the EULA. Defaults to False.
+        hasfavicon (bool, optional): If the server has a favicon. Defaults to False.
     """
 
     print(
@@ -154,6 +164,7 @@ async def find(
         'motd:"' + motd + '"',
         "maxplayers:" + str(maxplayers),
         "cracked:" + str(cracked),
+        "hasfavicon:" + str(hasfavicon),
     )
 
     # send as embed
@@ -162,10 +173,10 @@ async def find(
     serverList = []
     search = {}
     info = {}
-    _port = str(port)
     flag = False
     # if parameters are given, add them to the search
 
+    # special matching
     if host:
         serverList = [None]
         if host.replace(".", "").isdigit():
@@ -201,14 +212,6 @@ async def find(
 
         flag = True
         search = {}
-    if version:
-        search["lastOnlineVersion"] = version.lower()
-    if motd:
-        search["lastOnlineDescription"] = motd.lower()
-    if maxplayers != -1:
-        search["lastOnlinePlayersMax"] = maxplayers
-    if cracked:
-        search["cracked"] = cracked
     if _id:
         search = {}
 
@@ -336,7 +339,28 @@ async def find(
             "lastOnlinePlayersList": {"$elemMatch": {"uuid": uuid}}
         }  # search for player
 
-    if search == {} and not flag:
+    # pipline that matches version name case insensitive, motd case insensitive, max players, cracked and has favicon
+    pipeline = [{"$match": {"$and": []}}]
+    
+    if version:
+        pipeline[0]["$match"]["$and"].append({"lastOnlineVersion": {"$regex": version, "$options": "i"}})
+    if motd:
+        pipeline[0]["$match"]["$and"].append({"lastOnlineDescription": {"$regex": motd, "$options": "i"}})
+    if maxplayers > 0:
+        pipeline[0]["$match"]["$and"].append({"lastOnlinePlayersMax": maxplayers})
+    if cracked:
+        pipeline[0]["$match"]["$and"].append({"cracked": cracked})
+    if hasfavicon:
+        pipeline[0]["$match"]["$and"].append({
+            "$expr": {
+                "$and": [
+                    {"$ne": ["$favicon", None]},
+                    {"$gt": [{"$strLenCP": "$favicon"}, 10]}
+                ]
+            }
+        })
+
+    if pipeline == {} and not flag:
         await command_send(
             ctx,
             embeds=[
@@ -355,14 +379,15 @@ async def find(
             if not flag:
                 serverList = []
                 fncs.dprint("Flag is down, getting server info from database")
-                serverList = fncs._find(search)
+                serverList = list(col.aggregate(pipeline))
 
                 numServers = len(serverList)
             else:
+                pipeline = {}
                 fncs.dprint("Flag is up, setting server info")
                 numServers = len(serverList)
 
-            fncs.dprint(f"Servers:{len(serverList)}|Search:{search}|Flag:{flag}")
+            fncs.dprint(f"Servers:{numServers}|Search:{pipeline}|Flag:{flag}")
             await command_send(
                 ctx,
                 embeds=[
@@ -377,7 +402,7 @@ async def find(
             )
             
             # check that serverList is not empty
-            if len(serverList) == 0 or serverList[0] is None:
+            if numServers == 0:
                 fncs.dprint("No servers found in database")
                 await command_send(
                     ctx,
@@ -395,7 +420,7 @@ async def find(
                 
 
             # setup the embed
-            embed = fncs.genEmbed(serverList, search)
+            embed = fncs.genEmbed(serverList, pipeline)
             _file = embed[1]
             comps = embed[2]
             embed = embed[0]
@@ -536,7 +561,7 @@ async def rand_select(ctx: interactions.ComponentContext):
             return
 
         fncs.dprint("ReGenerating list")
-        serverList = fncs._find(key)
+        serverList = list(col.aggregate(key))
         fncs.dprint("List generated: " + str(len(serverList)) + " servers")
         index = (index + 1) if (index + 1 < len(serverList)) else 0
 
