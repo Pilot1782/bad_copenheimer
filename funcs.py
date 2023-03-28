@@ -408,7 +408,7 @@ class funcs:
                             logging.error(traceback.format_exc())
                             break
 
-            self.col.update_one({"host": ip}, {"$set": data})
+            self.col.update_one({"host": ip}, {"$set": data}, upsert=True)
 
             return data
         except TimeoutError:
@@ -419,18 +419,24 @@ class funcs:
             return None
 
     def get_doc_at_index(
-        self, cursor: pymongo.cursor.Cursor, index: int
+        self,
+        col: pymongo.collection.Collection,
+        pipeline: list,
+        index: int = 0,
     ) -> dict | None:
-        # loop through cursor until we reach the index we want
-        for i in range(index):
-            try:
-                next(cursor)
-            except StopIteration:
-                return None
-        # now we have the index we want. return the next item in the cursor
+        newPipeline = pipeline.copy()
+        newPipeline.append({"$skip": index})
+        newPipeline.append({"$limit": 1})
+        newPipeline.append({"$project": {"_id": 1}})
+        newPipeline.append({"$limit": 1})
+        newPipeline.append({"$addFields": {"doc": "$$ROOT"}})
+        newPipeline.append({"$project": {"_id": 0, "doc": 1}})
+
+        result = col.aggregate(newPipeline, allowDiskUse=True)
         try:
-            return next(cursor)
+            return col.find_one(next(result)["doc"])
         except StopIteration:
+            logging.error("Index out of range")
             return None
 
     def genEmbed(
@@ -489,37 +495,37 @@ class funcs:
 
             return [embed, None, row]
 
-        info = self.get_doc_at_index(_serverList, index)
+        info = self.get_doc_at_index(self.col, search, index)
 
         if info is None:
-            logging.error("Server not found: " + str(_serverList))
+            logging.error("Iterating too far")
+            info = self.get_doc_at_index(self.col, search, 0)
+            if info is None:
+                logging.error("No servers found")
+                embed = interactions.Embed(
+                    title="No servers found",
+                    description="No servers found",
+                    color=0xFF0000,
+                    timestamp=self.timeNow(),
+                )
+                buttons = [
+                    interactions.Button(
+                        label="Show Players",
+                        custom_id="show_players",
+                        style=interactions.ButtonStyle.PRIMARY,
+                        disabled=True,
+                    ),
+                    interactions.Button(
+                        label="Next Server",
+                        custom_id="rand_select",
+                        style=interactions.ButtonStyle.PRIMARY,
+                        disabled=True,
+                    ),
+                ]
 
-            self.dprint("Server not found", len(_serverList))
-            embed = interactions.Embed(
-                title="Server not found",
-                description="Server not found",
-                color=0xFF0000,
-            )
-            buttons = [
-                interactions.Button(
-                    label="Show Players",
-                    custom_id="show_players",
-                    style=interactions.ButtonStyle.PRIMARY,
-                    disabled=True,
-                ),
-                interactions.Button(
-                    label="Next Server",
-                    custom_id="rand_select",
-                    style=interactions.ButtonStyle.PRIMARY,
-                    disabled=True,
-                ),
-            ]
+                row = interactions.ActionRow(components=buttons)
 
-            row = interactions.ActionRow(
-                components=buttons  # pyright: ignore [reportGeneralTypeIssues]
-            )
-
-            return [embed, None, row]
+                return [embed, None, row]
 
         online = False
         try:

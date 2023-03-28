@@ -171,9 +171,14 @@ async def find(
     await ctx.defer()
 
     serverList = []
-    search = {}
+    # pipline that matches version name case insensitive, motd case insensitive, max players, cracked and has favicon
+    pipeline = [{"$match": {"$and": []}}]
+    
+    pipeline[0]["$match"]["$and"].append({"lastOnlinePlayersMax": {"$gt": 0}})
+    pipeline[0]["$match"]["$and"].append({"lastOnlinePlayers": {"$lte": 100000}})
     info = {}
     flag = False
+    numServers = 0
     # if parameters are given, add them to the search
 
     # special matching
@@ -211,10 +216,8 @@ async def find(
                 serverList = [info]
 
         flag = True
-        search = {}
+        numServers = 1
     if _id:
-        search = {}
-
         # check that _id is vaild
         if len(_id) != 12 and len(_id) != 24:
             fncs.dprint("Invalid ID: " + str(len(_id)))
@@ -232,7 +235,7 @@ async def find(
             fncs.dprint("Valid ID: " + _id)
 
         try:
-            res = col.find_one({"_id": ObjectId(_id)})
+            res = col.find({"_id": ObjectId(_id)})
         except InvalidId:
             fncs.dprint("Invalid ID for ObjectID: " + _id)
             await command_send(
@@ -264,7 +267,8 @@ async def find(
             return
         else:
             fncs.dprint("Server found")
-            serverList = [res]
+            serverList = res
+            numServers = 1
     if player:
         search = {}
         flag = True
@@ -301,14 +305,19 @@ async def find(
             uuid = jresp["id"]
             name = jresp["name"]
 
-        serverList = list(
-            col.find({"lastOnlinePlayersList": {"$elemMatch": {"uuid": uuid}}})
+        pipeline[0]["$match"]["$and"].append(
+            {"lastOnlinePlayersList.uuid": uuid.replace("-", "")}
         )
+
+        fncs.dprint(pipeline)
+
+        serverList = col.aggregate(pipeline)
+        numServers = col.count_documents(pipeline[0]["$match"])
 
         fncs.dprint("Finding player", player)
         face = fncs.playerHead(name)
 
-        if serverList is None or len(serverList) == 0:
+        if numServers == 0:
             fncs.dprint("Player not found in database")
             embeds = [
                 interactions.Embed(
@@ -323,8 +332,6 @@ async def find(
             await command_send(ctx, embeds=embeds, files=[face], ephemeral=True)
             return
 
-        numServers = len(serverList)
-
         embed = interactions.Embed(
             title=f"{name} found",
             description=f"Found {name} in {numServers} servers",
@@ -334,16 +341,6 @@ async def find(
         embed.set_thumbnail(url="attachment://playerhead.png")
 
         await command_send(ctx, embeds=[embed], files=[face])
-
-        search = {
-            "lastOnlinePlayersList": {"$elemMatch": {"uuid": uuid}}
-        }  # search for player
-
-    # pipline that matches version name case insensitive, motd case insensitive, max players, cracked and has favicon
-    pipeline = [{"$match": {"$and": []}}]
-    
-    pipeline[0]["$match"]["$and"].append({"lastOnlinePlayersMax": {"$gt": 0}})
-    pipeline[0]["$match"]["$and"].append({"lastOnlinePlayers": {"$lte": 100000}})
     
     if version:
         pipeline[0]["$match"]["$and"].append({"lastOnlineVersion": {"$regex": ".*"+version+".*", "$options": "i"}})
@@ -386,9 +383,8 @@ async def find(
                 fncs.dprint(f"Number of servers: {numServers}")
                 serverList = col.aggregate(pipeline)
             else:
-                pipeline = {}
+                pipeline = {} if pipeline == [{"$match": {"$and": [{"lastOnlinePlayersMax": {"$gt": 0}},{"lastOnlinePlayers": {"$lte": 100000}}]}}] else pipeline
                 fncs.dprint("Flag is up, setting server info")
-                numServers = len(serverList)
 
             fncs.dprint(f"Servers:{numServers}|Search:{pipeline}|Flag:{flag}")
             await command_send(
@@ -571,13 +567,18 @@ async def rand_select(ctx: interactions.ComponentContext):
         numServers = col.count_documents(key[0]["$match"])
         fncs.dprint("List generated: " + str(numServers) + " servers")
         index = (index + 1) if (index + 1 < numServers) else 0
+        
+        info = fncs.get_doc_at_index(col, key, index)
+        if info == None:
+            fncs.dprint("Error: No server found at index " + str(index) + " out of " + str(numServers) + " servers")
+            return
 
         await component_edit(
             ctx,
             embeds=[
                 interactions.Embed(
                     title="Loading...",
-                    description="Loading {}...".format(fncs.get_doc_at_index(serverList, index)["host"]),
+                    description="Loading {}...".format(info["host"]),
                     color=0x00FF00,
                     timestamp=timeNow(),
                     footer=interactions.EmbedFooter(
