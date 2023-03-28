@@ -361,7 +361,11 @@ class funcs:
                 {"hostname": hostname}
             ):
                 self.print("{} not in database, adding...".format(host))
-                self.col.insert_one(data)
+                self.col.update_one(
+                    {"host": ip},
+                    {"$set": data},
+                    upsert=True,
+                )
                 if webhook != "":
                     requests.post(
                         webhook,
