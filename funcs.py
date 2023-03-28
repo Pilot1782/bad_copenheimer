@@ -6,6 +6,7 @@
 import base64
 import datetime
 import logging
+import lzma
 import os
 import re
 import socket
@@ -14,7 +15,6 @@ import sys
 import threading
 import time
 import traceback
-import lzma
 from json import JSONDecodeError
 
 import interactions
@@ -204,7 +204,7 @@ class funcs:
         # Convert hex string to Unicode characters
         out = "".join(
             [
-                chr(int(hex_compressed[i : i + 2], 16))
+                chr(int(hex_compressed[i: i + 2], 16))
                 for i in range(0, len(hex_compressed), 2)
             ]
         )
@@ -292,8 +292,10 @@ class funcs:
             server = mcstatus.JavaServer.lookup(host + ":" + str(port))
             status = server.status()
 
-            cpLST = self.crackedPlayerList(host, str(port))  # cracked player list
-            cracked = bool((cpLST is not None and type(cpLST) is not bool) or cracked)
+            cpLST = self.crackedPlayerList(
+                host, str(port))  # cracked player list
+            cracked = bool(
+                (cpLST is not None and type(cpLST) is not bool) or cracked)
 
             self.dprint("Getting players")
             players = []
@@ -365,11 +367,13 @@ class funcs:
                             }
                         )
             except Exception:
-                self.dprint("Error getting player list", traceback.format_exc())
+                self.dprint("Error getting player list",
+                            traceback.format_exc())
                 logging.error(traceback.format_exc())
 
             # remove duplicates from player list
-            players = [i for n, i in enumerate(players) if i not in players[n + 1 :]]
+            players = [i for n, i in enumerate(
+                players) if i not in players[n + 1:]]
 
             cracked = bool(joinability == "CRACKED")
 
@@ -609,7 +613,8 @@ class funcs:
                     name="Last Online",
                     value=(
                         time.strftime(
-                            "%Y/%m/%d %H:%M:%S", time.localtime(info["lastOnline"])
+                            "%Y/%m/%d %H:%M:%S", time.localtime(
+                                info["lastOnline"])
                         )
                         if not online
                         else time.strftime(  # give the last online time if the server is offline
@@ -857,7 +862,8 @@ class funcs:
         Returns:
             bool: True if the server is cracked, False if not
         """
-        url = "https://api.mcstatus.io/v2/status/java/" + host + ":" + str(port)
+        url = "https://api.mcstatus.io/v2/status/java/" + \
+            host + ":" + str(port)
 
         resp = requests.get(url)
         if resp.status_code == 200:
@@ -981,7 +987,8 @@ class funcs:
             server = mcstatus.JavaServer.lookup(host + ":" + str(port))
             status = server.status()
             if status.players.sample is not None:
-                normal = [{"name": p.name, "uuid": p.id} for p in status.players.sample]
+                normal = [{"name": p.name, "uuid": p.id}
+                          for p in status.players.sample]
         except TimeoutError:
             logging.error("Timeout error")
             normal = []
