@@ -20,7 +20,7 @@ masscan_search_path = (
     "/sw/bin/masscan",
     "/opt/local/bin/masscan",
 )
-DSICORD_WEBHOOK = "discord.api.com/..."
+DISCORD_WEBHOOK = "discord.api.com/..."
 try:
     from privVars import *
 except ImportError:
@@ -32,7 +32,7 @@ if MONGO_URL == "mongodb+srv://...":
     print("Please add your mongo url to privVars.py")
     input()
     sys.exit()
-if useWebHook and DSICORD_WEBHOOK == "discord.api.com/...":
+if useWebHook and DISCORD_WEBHOOK == "discord.api.com/...":
     print("Please add your discord webhook to privVars.py")
     input()
     sys.exit()
@@ -61,11 +61,19 @@ def print(*args, **kwargs):
     fncs.print(" ".join(map(str, args)), **kwargs)
 
 
-def check(host):
-    if useWebHook:
-        return fncs.check(host, webhook=DSICORD_WEBHOOK)
+def check(scannedHost):
+    # example host: "127.0.0.1": [{"status": "open", "port": 25565, "proto": "tcp"}]
+    
+    ip = list(scannedHost.keys())[0]
+    portsJson = scannedHost[ip]
+    for portJson in portsJson:
+        if portJson["status"] == "open":
+            if useWebHook:
+                return fncs.check(host=str(ip)+":"+str(portJson["port"]), webhook=DISCORD_WEBHOOK)
+            else:
+                return fncs.check(host=str(ip)+":"+str(portJson["port"]))
     else:
-        return fncs.check(host)
+        return
 
 
 def scan(ip_list):
@@ -86,7 +94,7 @@ def scan(ip_list):
         )
         result = json.loads(scanner.scan_result)  # type: ignore
 
-        return list(result["scan"].keys())
+        return list(result["scan"])
     except OSError:
         sys.exit(0)
     except Exception:
