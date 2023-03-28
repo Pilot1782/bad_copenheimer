@@ -7,7 +7,6 @@ import base64
 import datetime
 import logging
 import os
-import random
 import re
 import socket
 import subprocess
@@ -15,7 +14,7 @@ import sys
 import threading
 import time
 import traceback
-import zlib
+import lzma
 from json import JSONDecodeError
 
 import interactions
@@ -147,7 +146,11 @@ class funcs:
 
         if self.debug or override:
             sys.stdout = norm  # reset stdout
-            print(" ".join((str(i) for i in text)))
+            print(
+                " ".join(
+                    (str(i).encode("unicode-escape").decode("ascii")) for i in text
+                )
+            )
             sys.stdout = self.stdout  # redirect stdout
 
     def print(self, *args, **kwargs) -> None:
@@ -187,6 +190,41 @@ class funcs:
             # The run_command() function is responsible for logging STDERR
             self.dprint(str(err))
             return "Error: " + str(err)
+
+    def compress_string_to_unicode(self, s) -> str:
+        # Convert string to bytes and encode as hex string
+        hex_encoded = s.encode().hex()
+
+        # Compress the hex-encoded string
+        compressed = lzma.compress(hex_encoded.encode())
+
+        # Convert compressed bytes to hex string
+        hex_compressed = compressed.hex()
+
+        # Convert hex string to Unicode characters
+        out = "".join(
+            [
+                chr(int(hex_compressed[i : i + 2], 16))
+                for i in range(0, len(hex_compressed), 2)
+            ]
+        )
+
+        return out
+
+    def decompress_unicode_to_string(self, u) -> str:
+        # Convert Unicode characters to hex string
+        hex_compressed = "".join([hex(ord(c))[2:].zfill(2) for c in u])
+
+        # Convert hex string to bytes
+        comp_bytes = bytes.fromhex(hex_compressed)
+
+        # Decompress the compressed bytes and decode from hex
+        hex_decoded = lzma.decompress(comp_bytes).decode()
+
+        # Convert hex string back to original string
+        out = bytes.fromhex(hex_decoded).decode()
+
+        return out
 
     # Finding functions
     def check(
@@ -254,10 +292,8 @@ class funcs:
             server = mcstatus.JavaServer.lookup(host + ":" + str(port))
             status = server.status()
 
-            cpLST = self.crackedPlayerList(
-                host, str(port))  # cracked player list
-            cracked = bool(
-                (cpLST is not None and type(cpLST) is not bool) or cracked)
+            cpLST = self.crackedPlayerList(host, str(port))  # cracked player list
+            cracked = bool((cpLST is not None and type(cpLST) is not bool) or cracked)
 
             self.dprint("Getting players")
             players = []
@@ -329,13 +365,11 @@ class funcs:
                             }
                         )
             except Exception:
-                self.dprint("Error getting player list",
-                            traceback.format_exc())
+                self.dprint("Error getting player list", traceback.format_exc())
                 logging.error(traceback.format_exc())
 
             # remove duplicates from player list
-            players = [i for n, i in enumerate(
-                players) if i not in players[n + 1:]]
+            players = [i for n, i in enumerate(players) if i not in players[n + 1 :]]
 
             cracked = bool(joinability == "CRACKED")
 
@@ -444,7 +478,6 @@ class funcs:
 
     def genEmbed(
         self,
-        _serverList: pymongo.cursor.Cursor,
         search: dict,
         index: int = 0,
         numServ: int = 0,
@@ -576,8 +609,7 @@ class funcs:
                     name="Last Online",
                     value=(
                         time.strftime(
-                            "%Y/%m/%d %H:%M:%S", time.localtime(
-                                info["lastOnline"])
+                            "%Y/%m/%d %H:%M:%S", time.localtime(info["lastOnline"])
                         )
                         if not online
                         else time.strftime(  # give the last online time if the server is offline
@@ -602,7 +634,7 @@ class funcs:
                 )
                 + "\nOut of {} servers\n".format(numServ)
                 + "Key:"
-                + (
+                + self.compress_string_to_unicode(
                     str(search)
                     .replace("'", '"')
                     .replace("ObjectId(", "")
@@ -814,23 +846,6 @@ class funcs:
             logging.error(traceback.format_exc())
             return host
 
-    def compStr(self, value: str) -> bytes:
-        """Compreses a string to a byte array
-
-        Args:
-            value (str): The string to compress
-        """
-
-        return zlib.compress(value.encode("utf-8"))
-
-    def decompStr(self, value: bytes) -> str:
-        """Decompresses a byte array to a string
-
-        Args:
-            value (bytes): The byte array to decompress
-        """
-        return zlib.decompress(value).decode("utf-8")
-
     # Player functions
     def crackCheckAPI(self, host: str, port: str = "25565") -> bool:
         """Checks if a server is cracked using the mcstatus.io API
@@ -842,8 +857,7 @@ class funcs:
         Returns:
             bool: True if the server is cracked, False if not
         """
-        url = "https://api.mcstatus.io/v2/status/java/" + \
-            host + ":" + str(port)
+        url = "https://api.mcstatus.io/v2/status/java/" + host + ":" + str(port)
 
         resp = requests.get(url)
         if resp.status_code == 200:
@@ -967,8 +981,7 @@ class funcs:
             server = mcstatus.JavaServer.lookup(host + ":" + str(port))
             status = server.status()
             if status.players.sample is not None:
-                normal = [{"name": p.name, "uuid": p.id}
-                          for p in status.players.sample]
+                normal = [{"name": p.name, "uuid": p.id} for p in status.players.sample]
         except TimeoutError:
             logging.error("Timeout error")
             normal = []

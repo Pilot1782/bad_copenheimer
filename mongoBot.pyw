@@ -16,8 +16,12 @@ import requests
 from bson.errors import InvalidId
 from bson.objectid import ObjectId
 from interactions.api.models import Message
-from interactions.ext.files import (command_edit, command_send, component_edit,
-                                    component_send)
+from interactions.ext.files import (
+    command_edit,
+    command_send,
+    component_edit,
+    component_send,
+)
 
 from funcs import funcs
 
@@ -173,7 +177,7 @@ async def find(
     serverList = []
     # pipline that matches version name case insensitive, motd case insensitive, max players, cracked and has favicon
     pipeline = [{"$match": {"$and": []}}]
-    
+
     pipeline[0]["$match"]["$and"].append({"lastOnlinePlayersMax": {"$gt": 0}})
     pipeline[0]["$match"]["$and"].append({"lastOnlinePlayers": {"$lte": 100000}})
     info = {}
@@ -341,26 +345,45 @@ async def find(
         embed.set_thumbnail(url="attachment://playerhead.png")
 
         await command_send(ctx, embeds=[embed], files=[face])
-    
+
     if version:
-        pipeline[0]["$match"]["$and"].append({"lastOnlineVersion": {"$regex": ".*"+version+".*", "$options": "i"}})
+        pipeline[0]["$match"]["$and"].append(
+            {"lastOnlineVersion": {"$regex": ".*" + version + ".*", "$options": "i"}}
+        )
     if motd:
-        pipeline[0]["$match"]["$and"].append({"lastOnlineDescription": {"$regex": ".*"+motd+".*", "$options": "i"}})
+        pipeline[0]["$match"]["$and"].append(
+            {"lastOnlineDescription": {"$regex": ".*" + motd + ".*", "$options": "i"}}
+        )
     if maxplayers > 0:
         pipeline[0]["$match"]["$and"].append({"lastOnlinePlayersMax": maxplayers})
     if cracked:
         pipeline[0]["$match"]["$and"].append({"cracked": cracked})
     if hasfavicon:
-        pipeline[0]["$match"]["$and"].append({
-            "$expr": {
-                "$and": [
-                    {"$ne": ["$favicon", None]},
-                    {"$gt": [{"$strLenCP": "$favicon"}, 10]}
-                ]
+        pipeline[0]["$match"]["$and"].append(
+            {
+                "$expr": {
+                    "$and": [
+                        {"$ne": ["$favicon", None]},
+                        {"$gt": [{"$strLenCP": "$favicon"}, 10]},
+                    ]
+                }
             }
-        })
+        )
 
-    if pipeline == [{"$match": {"$and": [{"lastOnlinePlayersMax": {"$gt": 0}},{"lastOnlinePlayers": {"$lte": 100000}}]}}] and not flag:
+    if (
+        pipeline
+        == [
+            {
+                "$match": {
+                    "$and": [
+                        {"lastOnlinePlayersMax": {"$gt": 0}},
+                        {"lastOnlinePlayers": {"$lte": 100000}},
+                    ]
+                }
+            }
+        ]
+        and not flag
+    ):
         await command_send(
             ctx,
             embeds=[
@@ -383,7 +406,21 @@ async def find(
                 fncs.dprint(f"Number of servers: {numServers}")
                 serverList = col.aggregate(pipeline)
             else:
-                pipeline = {} if pipeline == [{"$match": {"$and": [{"lastOnlinePlayersMax": {"$gt": 0}},{"lastOnlinePlayers": {"$lte": 100000}}]}}] else pipeline
+                pipeline = (
+                    {}
+                    if pipeline
+                    == [
+                        {
+                            "$match": {
+                                "$and": [
+                                    {"lastOnlinePlayersMax": {"$gt": 0}},
+                                    {"lastOnlinePlayers": {"$lte": 100000}},
+                                ]
+                            }
+                        }
+                    ]
+                    else pipeline
+                )
                 fncs.dprint("Flag is up, setting server info")
 
             fncs.dprint(f"Servers:{numServers}|Search:{pipeline}|Flag:{flag}")
@@ -399,7 +436,7 @@ async def find(
                     )
                 ],
             )
-            
+
             # check that serverList is not empty
             if numServers == 0:
                 fncs.dprint("No servers found in database")
@@ -416,10 +453,9 @@ async def find(
                     ephemeral=True,
                 )
                 return
-                
 
             # setup the embed
-            embed = fncs.genEmbed(_serverList=serverList, index=0, numServ=numServers, search=pipeline)
+            embed = fncs.genEmbed(index=0, numServ=numServers, search=pipeline)
             _file = embed[1]
             comps = embed[2]
             embed = embed[0]
@@ -553,24 +589,33 @@ async def rand_select(ctx: interactions.ComponentContext):
         text = text.split("/|\\")
 
         key = text[0]
-        fncs.dprint("Key: " + key)
+        try:
+            key = fncs.decompress_unicode_to_string(key)
+        except:
+            fncs.dprint(traceback.format_exc())
         index = int(text[1])
         fncs.dprint("Index: " + str(index))
+        fncs.dprint("Key: " + key)
 
         key = json.loads(key) if key != "---n/a---" else {}
         if key == {}:  # if the key is empty, return
             return
-            
 
         fncs.dprint("ReGenerating list")
         serverList = col.aggregate(key)
         numServers = col.count_documents(key[0]["$match"])
         fncs.dprint("List generated: " + str(numServers) + " servers")
         index = (index + 1) if (index + 1 < numServers) else 0
-        
+
         info = fncs.get_doc_at_index(col, key, index)
         if info == None:
-            fncs.dprint("Error: No server found at index " + str(index) + " out of " + str(numServers) + " servers")
+            fncs.dprint(
+                "Error: No server found at index "
+                + str(index)
+                + " out of "
+                + str(numServers)
+                + " servers"
+            )
             return
 
         await component_edit(
@@ -589,7 +634,7 @@ async def rand_select(ctx: interactions.ComponentContext):
             components=[row],
         )
 
-        embed = fncs.genEmbed(_serverList=serverList, search=key, index=index, numServ=numServers)
+        embed = fncs.genEmbed(search=key, index=index, numServ=numServers)
         _file = embed[1]
         button = embed[2]
         embed = embed[0]
