@@ -412,7 +412,9 @@ class funcs:
             logging.error(traceback.format_exc())
             return None
 
-    def get_doc_at_index(self, cursor: pymongo.cursor.Cursor, index: int) -> dict | None:
+    def get_doc_at_index(
+        self, cursor: pymongo.cursor.Cursor, index: int
+    ) -> dict | None:
         # loop through cursor until we reach the index we want
         for i in range(index):
             try:
@@ -430,7 +432,7 @@ class funcs:
         _serverList: pymongo.cursor.Cursor,
         search: dict,
         index: int = 0,
-        numServ:int = 0
+        numServ: int = 0,
     ) -> list:
         """Generates an embed for the server list
 
@@ -521,7 +523,6 @@ class funcs:
             online = True
         except:
             self.dprint("Server offline", info["host"])
-
 
         hostname = info["hostname"] if "hostname" in info else info["host"]
         whitelisted = info["whitelisted"] if "whitelisted" in info else False
