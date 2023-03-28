@@ -343,9 +343,9 @@ async def find(
     pipeline = [{"$match": {"$and": []}}]
     
     if version:
-        pipeline[0]["$match"]["$and"].append({"lastOnlineVersion": {"$regex": version, "$options": "i"}})
+        pipeline[0]["$match"]["$and"].append({"lastOnlineVersion": {"$regex": ".*"+version+".*", "$options": "i"}})
     if motd:
-        pipeline[0]["$match"]["$and"].append({"lastOnlineDescription": {"$regex": motd, "$options": "i"}})
+        pipeline[0]["$match"]["$and"].append({"lastOnlineDescription": {"$regex": ".*"+motd+".*", "$options": "i"}})
     if maxplayers > 0:
         pipeline[0]["$match"]["$and"].append({"lastOnlinePlayersMax": maxplayers})
     if cracked:
@@ -379,9 +379,9 @@ async def find(
             if not flag:
                 serverList = []
                 fncs.dprint("Flag is down, getting server info from database")
-                serverList = list(col.aggregate(pipeline))
-
-                numServers = len(serverList)
+                numServers = col.count_documents(pipeline[0]["$match"])
+                fncs.dprint(f"Number of servers: {numServers}")
+                serverList = col.aggregate(pipeline)
             else:
                 pipeline = {}
                 fncs.dprint("Flag is up, setting server info")
@@ -420,7 +420,7 @@ async def find(
                 
 
             # setup the embed
-            embed = fncs.genEmbed(serverList, pipeline)
+            embed = fncs.genEmbed(_serverList=serverList, index=0, numServ=numServers, search=pipeline)
             _file = embed[1]
             comps = embed[2]
             embed = embed[0]
@@ -561,16 +561,17 @@ async def rand_select(ctx: interactions.ComponentContext):
             return
 
         fncs.dprint("ReGenerating list")
-        serverList = list(col.aggregate(key))
-        fncs.dprint("List generated: " + str(len(serverList)) + " servers")
-        index = (index + 1) if (index + 1 < len(serverList)) else 0
+        serverList = col.aggregate(key)
+        numServers = col.count_documents(key)
+        fncs.dprint("List generated: " + str(numServers) + " servers")
+        index = (index + 1) if (index + 1 < numServers) else 0
 
         await component_edit(
             ctx,
             embeds=[
                 interactions.Embed(
                     title="Loading...",
-                    description="Loading {}...".format(serverList[index]["host"]),
+                    description="Loading {}...".format(fncs.get_doc_at_index(serverList, index)["host"]),
                     color=0x00FF00,
                     timestamp=timeNow(),
                     footer=interactions.EmbedFooter(
@@ -581,7 +582,7 @@ async def rand_select(ctx: interactions.ComponentContext):
             components=[row],
         )
 
-        embed = fncs.genEmbed(_serverList=serverList, search=key, index=index)
+        embed = fncs.genEmbed(_serverList=serverList, search=key, index=index, len=numServers)
         _file = embed[1]
         button = embed[2]
         embed = embed[0]

@@ -412,132 +412,151 @@ class funcs:
             logging.error(traceback.format_exc())
             return None
 
-    def remove_duplicates(self) -> None:
-        """Removes duplicate entries from the database
+    # def remove_duplicates(self) -> None:
+    #     """Removes duplicate entries from the database
 
-        Returns:
-            None
-        """
-        if self.col is None:
-            return
-        field = "host"
-        cursor = self.col.find({})
-        seen = set()
-        for doc in cursor:
-            value = doc[field]
-            if value in seen:
-                self.col.delete_one({"_id": doc["_id"]})
-            else:
-                seen.add(value)
+    #     Returns:
+    #         None
+    #     """
+    #     if self.col is None:
+    #         return
+    #     field = "host"
+    #     cursor = self.col.find({})
+    #     seen = set()
+    #     for doc in cursor:
+    #         value = doc[field]
+    #         if value in seen:
+    #             self.col.delete_one({"_id": doc["_id"]})
+    #         else:
+    #             seen.add(value)
 
-    def verify(self, search: dict, serverList: list) -> list:
-        """Verifies a search
+    # def verify(self, search: dict, serverList: list) -> list:
+    #     """Verifies a search
 
-        Args:
-            search [dict], len > 0: {
-                "host":"ipv4 addr",
-                "lastOnline":"unicode time",
-                "lastOnlinePlayers": int,
-                "lastOnlineVersion":"Name Version",
-                "lastOnlineDescription":"Very Good Server",
-                "lastOnlinePing":"unicode time",
-                "lastOnlinePlayersList":["Notch","Jeb"],
-                "lastOnlinePlayersMax": int,
-                "favicon":"base64 encoded image"
-            }
-            serverList [list], len > 0: {
-                "host":"ipv4 addr", # optional
-                "lastOnline":"unicode time", # optional
-                "lastOnlinePlayers": int, # optional
-                "lastOnlineVersion":"Name Version", # optional
-                "lastOnlineDescription":"Very Good Server", # optional
-                "lastOnlinePing":"unicode time", # optional
-                "lastOnlinePlayersList":["Notch","Jeb"], # optional
-                "lastOnlinePlayersMax": int, # optional
-                "favicon":"base64 encoded image" # optional
-            }
+    #     Args:
+    #         search [dict], len > 0: {
+    #             "host":"ipv4 addr",
+    #             "lastOnline":"unicode time",
+    #             "lastOnlinePlayers": int,
+    #             "lastOnlineVersion":"Name Version",
+    #             "lastOnlineDescription":"Very Good Server",
+    #             "lastOnlinePing":"unicode time",
+    #             "lastOnlinePlayersList":["Notch","Jeb"],
+    #             "lastOnlinePlayersMax": int,
+    #             "favicon":"base64 encoded image"
+    #         }
+    #         serverList [list], len > 0: {
+    #             "host":"ipv4 addr", # optional
+    #             "lastOnline":"unicode time", # optional
+    #             "lastOnlinePlayers": int, # optional
+    #             "lastOnlineVersion":"Name Version", # optional
+    #             "lastOnlineDescription":"Very Good Server", # optional
+    #             "lastOnlinePing":"unicode time", # optional
+    #             "lastOnlinePlayersList":["Notch","Jeb"], # optional
+    #             "lastOnlinePlayersMax": int, # optional
+    #             "favicon":"base64 encoded image" # optional
+    #         }
 
-        Returns:
-            [list]: {
-                "host":"ipv4 addr",
-                "lastOnline":"unicode time",
-                "lastOnlinePlayers": int,
-                "lastOnlineVersion":"Name Version",
-                "lastOnlineDescription":"Very Good Server",
-                "lastOnlinePing":"unicode time",
-                "lastOnlinePlayersList":["Notch","Jeb"],
-                "lastOnlinePlayersMax": int,
-                "favicon":"base64 encoded image"
-            }
-        """
-        out = []
-        _items = list(search.items())
-        for server in serverList:
-            flag = True
-            for _item in _items:
-                key = str(_item[0])
-                value = str(_item[1])
-                if key in server and str(value).lower() not in str(server[key]).lower():
-                    flag = False
-                    break
-            if flag:
-                out.append(server)
+    #     Returns:
+    #         [list]: {
+    #             "host":"ipv4 addr",
+    #             "lastOnline":"unicode time",
+    #             "lastOnlinePlayers": int,
+    #             "lastOnlineVersion":"Name Version",
+    #             "lastOnlineDescription":"Very Good Server",
+    #             "lastOnlinePing":"unicode time",
+    #             "lastOnlinePlayersList":["Notch","Jeb"],
+    #             "lastOnlinePlayersMax": int,
+    #             "favicon":"base64 encoded image"
+    #         }
+    #     """
+    #     out = []
+    #     _items = list(search.items())
+    #     for server in serverList:
+    #         flag = True
+    #         for _item in _items:
+    #             key = str(_item[0])
+    #             value = str(_item[1])
+    #             if key in server and str(value).lower() not in str(server[key]).lower():
+    #                 flag = False
+    #                 break
+    #         if flag:
+    #             out.append(server)
 
-        self.print(str(len(out)) + " servers match")
+    #     self.print(str(len(out)) + " servers match")
 
-        random.shuffle(out)
-        return out
+    #     random.shuffle(out)
+    #     return out
 
-    def _find(self, search: dict) -> list:
-        """Finds a server in the database
+    # def _find(self, search: dict) -> list:
+    #     """Finds a server in the database
 
-        Args:
-            search [dict], len > 0: {
-                "host":"ipv4 addr",
-                "lastOnlineMaxPlayers": int,
-                "lastOnlineVersion":"Name Version",
-                "lastOnlineDescription":"Very Good Server",
-                "lastOnlinePlayersList": ["WIP", "WIP"],
-            }
+    #     Args:
+    #         search [dict], len > 0: {
+    #             "host":"ipv4 addr",
+    #             "lastOnlineMaxPlayers": int,
+    #             "lastOnlineVersion":"Name Version",
+    #             "lastOnlineDescription":"Very Good Server",
+    #             "lastOnlinePlayersList": ["WIP", "WIP"],
+    #         }
 
-        Returns:
-            [dict]: {
-                "host":"ipv4 addr",
-                "lastOnline":"unicode time",
-                "lastOnlinePlayers": int,
-                "lastOnlineVersion":"Name Version",
-                "lastOnlineDescription":"Very Good Server",
-                "lastOnlinePing":"unicode time",
-            }
-        """
-        if self.col is None:
-            return []
+    #     Returns:
+    #         [dict]: {
+    #             "host":"ipv4 addr",
+    #             "lastOnline":"unicode time",
+    #             "lastOnlinePlayers": int,
+    #             "lastOnlineVersion":"Name Version",
+    #             "lastOnlineDescription":"Very Good Server",
+    #             "lastOnlinePing":"unicode time",
+    #         }
+    #     """
+    #     if self.col is None:
+    #         return []
 
-        # find the server given the parameters
-        if search == {}:
-            return [
-                {
-                    "host": "Server not found",
-                    "lastOnline": 0,
-                    "lastOnlinePlayers": -1,
-                    "lastOnlineVersion": "Server not found",
-                    "lastOnlineDescription": "Server not found",
-                    "lastOnlinePing": -1,
-                    "lastOnlinePlayersList": [],
-                    "lastOnlinePlayersMax": -1,
-                    "favicon": "Server not found",
-                }
-            ]
+    #     # find the server given the parameters
+    #     if search == {}:
+    #         return [
+    #             {
+    #                 "host": "Server not found",
+    #                 "lastOnline": 0,
+    #                 "lastOnlinePlayers": -1,
+    #                 "lastOnlineVersion": "Server not found",
+    #                 "lastOnlineDescription": "Server not found",
+    #                 "lastOnlinePing": -1,
+    #                 "lastOnlinePlayersList": [],
+    #                 "lastOnlinePlayersMax": -1,
+    #                 "favicon": "Server not found",
+    #             }
+    #         ]
 
-        search_query = {}
-        for key, value in search.items():
-            if isinstance(value, str):
-                search_query[key] = {"$regex": f"^{value}$", "$options": "i"}
-            else:
-                search_query[key] = value
-        return list(self.col.find(search_query))
+    #     search_query = {}
+    #     for key, value in search.items():
+    #         if isinstance(value, str):
+    #             search_query[key] = {"$regex": f"^{value}$", "$options": "i"}
+    #         else:
+    #             search_query[key] = value
+    #     return list(self.col.find(search_query))
 
-    def genEmbed(self, _serverList: list[dict], search: dict, index: int = 0) -> list:
+    def get_doc_at_index(self, cursor: pymongo.cursor.Cursor, index: int) -> dict | None:
+        # loop through cursor until we reach the index we want
+        for i in range(index):
+            try:
+                next(cursor)
+            except StopIteration:
+                return None
+        # now we have the index we want. return the next item in the cursor
+        try:
+            return next(cursor)
+        except StopIteration:
+            return None
+
+    def genEmbed(
+        self,
+        _serverList: pymongo.cursor.Cursor,
+        search: dict,
+        index: int = 0,
+        numServ:int = 0
+    ) -> list:
         """Generates an embed for the server list
 
         Args:
@@ -561,7 +580,7 @@ class funcs:
             ]
         """
 
-        if len(_serverList) == 0 or self.col is None:
+        if numServ == 0 or self.col is None:
             embed = interactions.Embed(
                 title="No servers found",
                 description="No servers found",
@@ -587,7 +606,7 @@ class funcs:
 
             return [embed, None, row]
 
-        info = _serverList[index]
+        info = self.get_doc_at_index(_serverList, index)
 
         if info is None:
             logging.error("Server not found: " + str(_serverList))
@@ -628,12 +647,6 @@ class funcs:
         except:
             self.dprint("Server offline", info["host"])
 
-        numServers = len(_serverList)
-
-        try:
-            _serverList.pop(0)
-        except IndexError:
-            pass
 
         hostname = info["hostname"] if "hostname" in info else info["host"]
         whitelisted = info["whitelisted"] if "whitelisted" in info else False
@@ -696,7 +709,7 @@ class funcs:
                     if info["host"] != "Server not found."
                     else "-1"
                 )
-                + "\nOut of {} servers\n".format(numServers)
+                + "\nOut of {} servers\n".format(numServ)
                 + "Key:"
                 + (str(search).replace("'", '"') if search != {} else "---n/a---")
                 + "/|\\"
@@ -749,7 +762,7 @@ class funcs:
                 label="Next Server",
                 custom_id="rand_select",
                 style=interactions.ButtonStyle.PRIMARY,
-                disabled=(len(_serverList) == 0),
+                disabled=(numServ == 0),
             ),
         ]
 
