@@ -587,7 +587,8 @@ class funcs:
                 )
                 + "\nOut of {} servers\n".format(numServ)
                 + "Key:"
-                + (str(search).replace("'", '"') if search != {} else "---n/a---")
+                + (str(search).replace("'", '"').replace("ObjectId(", "").replace(")", "").replace("None", "null")
+                   if search != {} else "---n/a---")
                 + "/|\\"
                 + str(index)
                 + "\n",

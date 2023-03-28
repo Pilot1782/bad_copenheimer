@@ -342,6 +342,9 @@ async def find(
     # pipline that matches version name case insensitive, motd case insensitive, max players, cracked and has favicon
     pipeline = [{"$match": {"$and": []}}]
     
+    pipeline[0]["$match"]["$and"].append({"lastOnlinePlayersMax": {"$gt": 0}})
+    pipeline[0]["$match"]["$and"].append({"lastOnlinePlayers": {"$lte": 100000}})
+    
     if version:
         pipeline[0]["$match"]["$and"].append({"lastOnlineVersion": {"$regex": ".*"+version+".*", "$options": "i"}})
     if motd:
@@ -554,15 +557,18 @@ async def rand_select(ctx: interactions.ComponentContext):
         text = text.split("/|\\")
 
         key = text[0]
+        fncs.dprint("Key: " + key)
         index = int(text[1])
+        fncs.dprint("Index: " + str(index))
 
         key = json.loads(key) if key != "---n/a---" else {}
         if key == {}:  # if the key is empty, return
             return
+            
 
         fncs.dprint("ReGenerating list")
         serverList = col.aggregate(key)
-        numServers = col.count_documents(key)
+        numServers = col.count_documents(key[0]["$match"])
         fncs.dprint("List generated: " + str(numServers) + " servers")
         index = (index + 1) if (index + 1 < numServers) else 0
 
@@ -582,7 +588,7 @@ async def rand_select(ctx: interactions.ComponentContext):
             components=[row],
         )
 
-        embed = fncs.genEmbed(_serverList=serverList, search=key, index=index, len=numServers)
+        embed = fncs.genEmbed(_serverList=serverList, search=key, index=index, numServ=numServers)
         _file = embed[1]
         button = embed[2]
         embed = embed[0]
