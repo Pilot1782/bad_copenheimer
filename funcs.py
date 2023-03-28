@@ -218,6 +218,12 @@ class funcs:
             return None
 
         self.dprint("Checking " + host)
+        
+        # check for embeded port
+        if ":" in host:
+            host = host.split(":")
+            port = host[1]
+            host = host[0]
 
         hostname = self.resolveHost(host)
         ip = self.resolveIP(host)
@@ -251,7 +257,7 @@ class funcs:
             cpLST = self.crackedPlayerList(
                 host, str(port))  # cracked player list
             cracked = bool(
-                (cpLST is not None and type(cpLST) is not bool) and not cracked
+                (cpLST is not None and type(cpLST) is not bool) or cracked
             )
 
             self.dprint("Getting players")

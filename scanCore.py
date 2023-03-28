@@ -63,15 +63,17 @@ def print(*args, **kwargs):
 
 def check(scannedHost):
     # example host: "127.0.0.1": [{"status": "open", "port": 25565, "proto": "tcp"}]
-    
+
     ip = list(scannedHost.keys())[0]
     portsJson = scannedHost[ip]
     for portJson in portsJson:
         if portJson["status"] == "open":
             if useWebHook:
-                return fncs.check(host=str(ip)+":"+str(portJson["port"]), webhook=DISCORD_WEBHOOK)
+                return fncs.check(
+                    host=str(ip) + ":" + str(portJson["port"]), webhook=DISCORD_WEBHOOK
+                )
             else:
-                return fncs.check(host=str(ip)+":"+str(portJson["port"]))
+                return fncs.check(host=str(ip) + ":" + str(portJson["port"]))
     else:
         return
 
