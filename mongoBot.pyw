@@ -363,7 +363,7 @@ async def find(
             }
         })
 
-    if pipeline == {} and not flag:
+    if pipeline == [{"$match": {"$and": [{"lastOnlinePlayersMax": {"$gt": 0}},{"lastOnlinePlayers": {"$lte": 100000}}]}}] and not flag:
         await command_send(
             ctx,
             embeds=[
