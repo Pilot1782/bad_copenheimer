@@ -226,7 +226,7 @@ class funcs:
 
         Args:
             u (String): Compressed string
-    
+
         Returns:
             str: Decompressed string
         """
