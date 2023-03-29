@@ -192,6 +192,15 @@ class funcs:
             return "Error: " + str(err)
 
     def compress_string_to_unicode(self, s) -> str:
+        """Compress a string to a unicode string
+        I'm aware that this is a terrible way to do this, but it works.
+
+        Args:
+            s (String): String to compress
+
+        Returns:
+            str: Compressed string
+        """
         # Convert string to bytes and encode as hex string
         hex_encoded = s.encode().hex()
 
@@ -212,6 +221,15 @@ class funcs:
         return out
 
     def decompress_unicode_to_string(self, u) -> str:
+        """Decompress a unicode string to a string
+        Same as above but the other way around
+
+        Args:
+            u (String): Compressed string
+    
+        Returns:
+            str: Decompressed string
+        """
         # Convert Unicode characters to hex string
         hex_compressed = "".join([hex(ord(c))[2:].zfill(2) for c in u])
 

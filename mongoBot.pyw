@@ -602,7 +602,6 @@ async def rand_select(ctx: interactions.ComponentContext):
             return
 
         fncs.dprint("ReGenerating list")
-        serverList = col.aggregate(key)
         numServers = col.count_documents(key[0]["$match"])
         fncs.dprint("List generated: " + str(numServers) + " servers")
         index = (index + 1) if (index + 1 < numServers) else 0
