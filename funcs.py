@@ -191,60 +191,7 @@ class funcs:
             self.dprint(str(err))
             return "Error: " + str(err)
 
-    def compress_string_to_unicode(self, s) -> str:
-        """Compress a string to a unicode string
-        I'm aware that this is a terrible way to do this, but it works.
-
-        Args:
-            s (String): String to compress
-
-        Returns:
-            str: Compressed string
-        """
-        # Convert string to bytes and encode as hex string
-        hex_encoded = s.encode().hex()
-
-        # Compress the hex-encoded string
-        compressed = lzma.compress(hex_encoded.encode())
-
-        # Convert compressed bytes to hex string
-        hex_compressed = compressed.hex()
-
-        # Convert hex string to Unicode characters
-        out = "".join(
-            [
-                chr(int(hex_compressed[i: i + 2], 16))
-                for i in range(0, len(hex_compressed), 2)
-            ]
-        )
-
-        return out
-
-    def decompress_unicode_to_string(self, u) -> str:
-        """Decompress a unicode string to a string
-        Same as above but the other way around
-
-        Args:
-            u (String): Compressed string
-    
-        Returns:
-            str: Decompressed string
-        """
-        # Convert Unicode characters to hex string
-        hex_compressed = "".join([hex(ord(c))[2:].zfill(2) for c in u])
-
-        # Convert hex string to bytes
-        comp_bytes = bytes.fromhex(hex_compressed)
-
-        # Decompress the compressed bytes and decode from hex
-        hex_decoded = lzma.decompress(comp_bytes).decode()
-
-        # Convert hex string back to original string
-        out = bytes.fromhex(hex_decoded).decode()
-
-        return out
-
-    # Finding functions
+  # Finding functions
     def check(
         self, host: str, port: str = "25565", webhook: str = "", *args
     ) -> dict | None:
@@ -604,7 +551,7 @@ class funcs:
             description="Host name: `"
             + hostname
             + "`\n```\n"
-            + info["lastOnlineDescription"]
+            + str(info["lastOnlineDescription"]).encode("unicode_escape").decode("utf-8")
             + "```",
             timestamp=self.timeNow(),
             color=(0x00FF00 if online else 0xFF0000),
@@ -657,7 +604,7 @@ class funcs:
                 )
                 + "\nOut of {} servers\n".format(numServ)
                 + "Key:"
-                + self.compress_string_to_unicode(
+                + (
                     str(search)
                     .replace("'", '"')
                     .replace("ObjectId(", "")

@@ -274,7 +274,6 @@ async def find(
             serverList = res
             numServers = 1
     if player:
-        search = {}
         flag = True
         name = ""
         uuid = ""
@@ -424,20 +423,6 @@ async def find(
                 fncs.dprint("Flag is up, setting server info")
 
             fncs.dprint(f"Servers:{numServers}|Search:{pipeline}|Flag:{flag}")
-            await command_send(
-                ctx,
-                embeds=[
-                    interactions.Embed(
-                        title="Searching...",
-                        description="Getting info about a server out of "
-                        + str(numServers)
-                        + " servers...",
-                        timestamp=timeNow(),
-                    )
-                ],
-            )
-
-            # check that serverList is not empty
             if numServers == 0:
                 fncs.dprint("No servers found in database")
                 await command_send(
@@ -453,6 +438,20 @@ async def find(
                     ephemeral=True,
                 )
                 return
+            
+            
+            await command_send(
+                ctx,
+                embeds=[
+                    interactions.Embed(
+                        title="Searching...",
+                        description="Getting info about a server out of "
+                        + str(numServers)
+                        + " servers...",
+                        timestamp=timeNow(),
+                    )
+                ],
+            )
 
             # setup the embed
             embed = fncs.genEmbed(index=0, numServ=numServers, search=pipeline)
@@ -589,10 +588,6 @@ async def rand_select(ctx: interactions.ComponentContext):
         text = text.split("/|\\")
 
         key = text[0]
-        try:
-            key = fncs.decompress_unicode_to_string(key)
-        except:
-            fncs.dprint(traceback.format_exc())
         index = int(text[1])
         fncs.dprint("Index: " + str(index))
         fncs.dprint("Key: " + key)
