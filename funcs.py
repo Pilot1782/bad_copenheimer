@@ -191,7 +191,7 @@ class funcs:
             self.dprint(str(err))
             return "Error: " + str(err)
 
-  # Finding functions
+    # Finding functions
     def check(
         self, host: str, port: str = "25565", webhook: str = "", *args
     ) -> dict | None:
@@ -559,7 +559,9 @@ class funcs:
             description="Host name: `"
             + hostname
             + "`\n```\n"
-            + str(info["lastOnlineDescription"]).encode("unicode_escape").decode("utf-8")
+            + str(info["lastOnlineDescription"])
+            .encode("unicode_escape")
+            .decode("utf-8")
             + "```",
             timestamp=self.timeNow(),
             color=(0x00FF00 if online else 0xFF0000),
