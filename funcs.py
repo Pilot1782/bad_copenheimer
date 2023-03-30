@@ -430,20 +430,28 @@ class funcs:
         pipeline: list,
         index: int = 0,
     ) -> dict | None:
-        newPipeline = pipeline.copy()
-        newPipeline.append({"$skip": index})
-        newPipeline.append({"$limit": 1})
-        newPipeline.append({"$project": {"_id": 1}})
-        newPipeline.append({"$limit": 1})
-        newPipeline.append({"$addFields": {"doc": "$$ROOT"}})
-        newPipeline.append({"$project": {"_id": 0, "doc": 1}})
-
-        result = col.aggregate(newPipeline, allowDiskUse=True)
         try:
-            return col.find_one(next(result)["doc"])
-        except StopIteration:
-            logging.error("Index out of range")
-            return None
+            newPipeline = pipeline.copy()
+            
+            if type(newPipeline) is dict:
+                newPipeline = [newPipeline]
+            
+            newPipeline.append({"$skip": index})
+            newPipeline.append({"$limit": 1})
+            newPipeline.append({"$project": {"_id": 1}})
+            newPipeline.append({"$limit": 1})
+            newPipeline.append({"$addFields": {"doc": "$$ROOT"}})
+            newPipeline.append({"$project": {"_id": 0, "doc": 1}})
+
+            result = col.aggregate(newPipeline, allowDiskUse=True)
+            try:
+                return col.find_one(next(result)["doc"])
+            except StopIteration:
+                logging.error("Index out of range")
+                return None
+        except:
+            logging.error(traceback.format_exc())
+            logging.error("Error getting document at index: {}".format(pipeline))
 
     def genEmbed(
         self,
@@ -563,7 +571,7 @@ class funcs:
                     inline=True,
                 ),
                 interactions.EmbedField(
-                    name="Version", value=info["lastOnlineVersion"], inline=True
+                    name="Version", value=f'{info["lastOnlineVersion"]}'.encode("unicode_escape").decode("utf-8"), inline=True
                 ),
                 interactions.EmbedField(
                     name="Ping", value=str(info["lastOnlinePing"]), inline=True
@@ -663,7 +671,7 @@ class funcs:
                 label="Next Server",
                 custom_id="rand_select",
                 style=interactions.ButtonStyle.PRIMARY,
-                disabled=(numServ == 0),
+                disabled=(numServ > 1),
             ),
         ]
 
