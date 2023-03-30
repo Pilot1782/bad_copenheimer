@@ -217,10 +217,11 @@ async def find(
                 )
                 return
             else:
-                serverList = [info]
+                serverList = col.find_one({"host": info["host"]})
 
         flag = True
         numServers = 1
+        pipeline[0]["$match"]["$and"].append({"_id": ObjectId(serverList[0]["_id"])})
     if _id:
         # check that _id is vaild
         if len(_id) != 12 and len(_id) != 24:
