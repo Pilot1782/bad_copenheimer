@@ -432,10 +432,10 @@ class funcs:
     ) -> dict | None:
         try:
             newPipeline = pipeline.copy()
-            
+
             if type(newPipeline) is dict:
                 newPipeline = [newPipeline]
-            
+
             newPipeline.append({"$skip": index})
             newPipeline.append({"$limit": 1})
             newPipeline.append({"$project": {"_id": 1}})
@@ -451,7 +451,8 @@ class funcs:
                 return None
         except:
             logging.error(traceback.format_exc())
-            logging.error("Error getting document at index: {}".format(pipeline))
+            logging.error(
+                "Error getting document at index: {}".format(pipeline))
 
     def genEmbed(
         self,
@@ -573,7 +574,11 @@ class funcs:
                     inline=True,
                 ),
                 interactions.EmbedField(
-                    name="Version", value=f'{info["lastOnlineVersion"]}'.encode("unicode_escape").decode("utf-8"), inline=True
+                    name="Version",
+                    value=f'{info["lastOnlineVersion"]}'.encode(
+                        "unicode_escape"
+                    ).decode("utf-8"),
+                    inline=True,
                 ),
                 interactions.EmbedField(
                     name="Ping", value=str(info["lastOnlinePing"]), inline=True
