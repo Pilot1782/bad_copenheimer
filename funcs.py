@@ -673,7 +673,7 @@ class funcs:
                 label="Next Server",
                 custom_id="rand_select",
                 style=interactions.ButtonStyle.PRIMARY,
-                disabled=(numServ > 1),
+                disabled=not (numServ > 1),
             ),
         ]
 
