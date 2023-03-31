@@ -625,6 +625,8 @@ class funcs:
                     .replace("ObjectId(", "")
                     .replace(")", "")
                     .replace("None", "null")
+                    .replace("True", "true")
+                    .replace("False", "false")
                     if search != {}
                     else "---n/a---"
                 )
