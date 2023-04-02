@@ -74,8 +74,8 @@ def check(scannedHost):
                 )
             else:
                 return fncs.check(host=str(ip) + ":" + str(portJson["port"]))
-    else:
-        return
+
+    return
 
 
 def scan(ip_list):
