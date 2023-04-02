@@ -743,29 +743,32 @@ async def help(ctx: interactions.CommandContext):
                 title="Help",
                 description="""Commands:
 `/find` - Find a server
-    *Arguments:*
-        `host` - The host of the server
-            `port` - The port of the server
+```markdown
+*Arguments:*
+`host` - The host of the server to ping (not a search argument, and if included will ignore all other arguments except `port`)
+....`port` - The port of the server (optional and only used when `host` is included, note that `host:port` is supported instead of using this argument)
 
-        `player` - The name or uuid of a player
+`player` - The name or uuid of a player
 
-        `_id` - The id of the server in the database
+`_id` - The id of the server in the database
 
-        `version` - The version of the server
-        `players` - The max amount of players on the server
-        `motd` - The description of the server
-        `cracked` - If the server is cracked or not
-    *Returns:*
-        A list of servers that match the search
-        `hostname` - The hostname of the server (optional)
-        `motd` - The description of the server
-        `version` - The version of the server
-        `players` - The amount of players on the server
-        `maxPlayers` - The max amount of players on the server
-        `cracked` - If the server is cracked or not
-        `whitelisted` - If the server is whitelisted or not
-        `ping` - The ping of the server
-        `lastOnline` - The last time the server was online
+`version` - The version of the server
+`players` - The max amount of players on the server
+`motd` - The description of the server
+`cracked` - If the server is cracked or not
+
+*Returns:*
+A list of servers that match the search
+`hostname` - The hostname of the server (optional)
+`motd` - The description of the server
+`version` - The version of the server
+`players` - The amount of players on the server
+`maxPlayers` - The max amount of players on the server
+`cracked` - If the server is cracked or not
+`whitelisted` - If the server is whitelisted or not
+`ping` - The ping of the server
+`lastOnline` - The last time the server was online
+```
 
 `/stats` - Get stats about the database
 
