@@ -76,11 +76,13 @@ class Text:
         except Exception:
             self.logger.error(traceback.format_exc())
             return host
-    
+
     def timeNow(self):
         # return local time
         return datetime.datetime.now(
             datetime.timezone(
-                datetime.timedelta(hours=0)  # no clue why this is needed but it works now?
+                datetime.timedelta(
+                    hours=0
+                )  # no clue why this is needed but it works now?
             )
         ).strftime("%Y-%m-%d %H:%M:%S")
