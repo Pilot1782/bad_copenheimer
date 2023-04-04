@@ -10,7 +10,7 @@ import traceback
 import masscan as msCan
 import pymongo
 
-import funcs
+import utils
 
 useWebHook, pingsPerSec, maxActive = False, 4800, 10
 masscan_search_path = (
@@ -51,14 +51,17 @@ client = pymongo.MongoClient(
 )  # type: ignore
 db = client["mc"]
 col = db["servers"]
-fncs = funcs.funcs(collection=col)
+
+utils = utils.utils(col, debug=DEBUG)
+logger = utils.logger
+finder = utils.finder
 
 # Funcs
 # ---------------------------------------------
 
 
 def print(*args, **kwargs):
-    fncs.print(" ".join(map(str, args)), **kwargs)
+    logger.print(*args, **kwargs)
 
 
 def check(scannedHost):
@@ -69,11 +72,11 @@ def check(scannedHost):
     for portJson in portsJson:
         if portJson["status"] == "open":
             if useWebHook:
-                return fncs.check(
+                return finder.check(
                     host=str(ip) + ":" + str(portJson["port"]), webhook=DISCORD_WEBHOOK
                 )
             else:
-                return fncs.check(host=str(ip) + ":" + str(portJson["port"]))
+                return finder.check(host=str(ip) + ":" + str(portJson["port"]))
     else:
         return
 
@@ -100,19 +103,8 @@ def scan(ip_list):
     except OSError:
         sys.exit(0)
     except Exception:
-        Eprint(traceback.format_exc())
+        logger.error(traceback.format_exc())
         return []
-
-
-def Eprint(text):
-    """Error printer
-
-    Args:
-        text (String): Error text
-    """
-    text = str(text)
-    (disLog("Error: " + "".join(str(i) for i in text))) if useWebHook else None
-    fncs.dprint("\n" + "".join(str(i) for i in text) + "\n")
 
 
 def disLog(text, end="\r"):
@@ -124,7 +116,7 @@ def disLog(text, end="\r"):
             data = {"content": text + end}
             requests.post(url, data=data)
         except Exception:
-            Eprint(text + "\n" + traceback.format_exc())
+            logger.error(text + "\n" + traceback.format_exc())
 
 
 async def threader(ip_range):
@@ -137,7 +129,7 @@ async def threader(ip_range):
     except OSError:
         sys.exit(0)
     except Exception:
-        Eprint(traceback.format_exc())
+        logger.error(traceback.format_exc())
 
 
 def crank(ip_range):
@@ -167,7 +159,7 @@ async def makeThreads():
         # check to make sure that more than 2*maxActive threads haven't been created in the last 1 second
         if len(threads) >= maxActive * 2 and time.time() - tStart <= 1:
             await asyncio.sleep(0.5)
-            Eprint(
+            logger.error(
                 "Too many threads spawned to quickly, exiting\nPlease check the console and logs for more details"
             )
             sys.exit()

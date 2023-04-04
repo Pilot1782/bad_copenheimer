@@ -10,12 +10,10 @@ import time
 import traceback
 
 import interactions
-from mcstatus import server
 import pymongo
 import requests
 from bson.errors import InvalidId
 from bson.objectid import ObjectId
-from interactions.api.models import Message
 from interactions.ext.files import (
     command_edit,
     command_send,
@@ -23,7 +21,7 @@ from interactions.ext.files import (
     component_send,
 )
 
-from funcs import funcs
+import utils
 
 autoRestart = False
 try:
@@ -52,11 +50,15 @@ client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi(
 db = client["mc"]
 col = db["servers"]
 
-fncs = funcs(collection=col)
+utils = utils.utils(col, debug=True)
+logger = utils.logger
+databaseLib = utils.database
+finderLib = utils.finder
+playerLib = utils.players
 
 
 def print(*args, **kwargs):
-    fncs.print(" ".join(map(str, args)), **kwargs)
+    logger.print(" ".join(map(str, args)), **kwargs)
 
 
 def timeNow():
@@ -198,12 +200,12 @@ async def find(
                 serverList = [col.find_one({"host": host})]
 
         if serverList[0] is None:
-            fncs.dprint("Server not in database")
+            logger.print("Server not in database")
             # try to get the server info from check
-            info = fncs.check(host, port)
+            info = finderLib.check(host, port)
 
             if info is None:
-                fncs.dprint("Server not online")
+                logger.print("Server not online")
                 await command_send(
                     ctx,
                     embeds=[
@@ -225,7 +227,7 @@ async def find(
     if _id:
         # check that _id is vaild
         if len(_id) != 12 and len(_id) != 24:
-            fncs.dprint("Invalid ID: " + str(len(_id)))
+            logger.print("Invalid ID: " + str(len(_id)))
             await command_send(
                 ctx,
                 embeds=[
@@ -237,12 +239,12 @@ async def find(
             )
             return
         else:
-            fncs.dprint("Valid ID: " + _id)
+            logger.print("Valid ID: " + _id)
 
         try:
             res = col.find({"_id": ObjectId(_id)})
         except InvalidId:
-            fncs.dprint("Invalid ID for ObjectID: " + _id)
+            logger.print("Invalid ID for ObjectID: " + _id)
             await command_send(
                 ctx,
                 embeds=[
@@ -253,11 +255,11 @@ async def find(
                 ephemeral=True,
             )
             return
-        fncs.dprint(res)
+        logger.print(res)
         flag = True
 
         if res is None:
-            fncs.dprint("Server not found")
+            logger.print("Server not found")
             await command_send(
                 ctx,
                 embeds=[
@@ -271,7 +273,7 @@ async def find(
             )
             return
         else:
-            fncs.dprint("Server found")
+            logger.print("Server found")
             serverList = res
             numServers = 1
     if player:
@@ -292,7 +294,7 @@ async def find(
         jresp = resp.json()
 
         if "error" in resp.text or resp.text == "":  # if the player is not found
-            fncs.dprint("Player not found in minecraft api")
+            logger.print("Player not found in minecraft api")
             await command_send(
                 ctx,
                 embeds=[
@@ -313,16 +315,16 @@ async def find(
             {"lastOnlinePlayersList.uuid": uuid.replace("-", "")}
         )
 
-        fncs.dprint(pipeline)
+        logger.print(pipeline)
 
         serverList = col.aggregate(pipeline)
         numServers = col.count_documents(pipeline[0]["$match"])
 
-        fncs.dprint("Finding player", player)
-        face = fncs.playerHead(name)
+        logger.print("Finding player", player)
+        face = utils.players.playerHead(name)
 
         if numServers == 0:
-            fncs.dprint("Player not found in database")
+            logger.print("Player not found in database")
             embeds = [
                 interactions.Embed(
                     title="Error",
@@ -401,9 +403,9 @@ async def find(
             # get server info
             if not flag:
                 serverList = []
-                fncs.dprint("Flag is down, getting server info from database")
+                logger.print("Flag is down, getting server info from database")
                 numServers = col.count_documents(pipeline[0]["$match"])
-                fncs.dprint(f"Number of servers: {numServers}")
+                logger.print(f"Number of servers: {numServers}")
                 serverList = col.aggregate(pipeline)
             else:
                 pipeline = (
@@ -421,11 +423,11 @@ async def find(
                     ]
                     else pipeline
                 )
-                fncs.dprint("Flag is up, setting server info")
+                logger.print("Flag is up, setting server info")
 
-            fncs.dprint(f"Servers:{numServers}|Search:{pipeline}|Flag:{flag}")
+            logger.print(f"Servers:{numServers}|Search:{pipeline}|Flag:{flag}")
             if numServers == 0:
-                fncs.dprint("No servers found in database")
+                logger.print("No servers found in database")
                 await command_send(
                     ctx,
                     embeds=[
@@ -439,8 +441,7 @@ async def find(
                     ephemeral=True,
                 )
                 return
-            
-            
+
             await command_send(
                 ctx,
                 embeds=[
@@ -455,12 +456,12 @@ async def find(
             )
 
             # setup the embed
-            embed = fncs.genEmbed(index=0, numServ=numServers, search=pipeline)
+            embed = finderLib.genEmbed(index=0, numServ=numServers, search=pipeline)
             _file = embed[1]
             comps = embed[2]
             embed = embed[0]
 
-            fncs.dprint("Embed generated", embed, comps, _file)
+            logger.print("Embed generated", embed, comps, _file)
 
             # send the embed sometimes with the favicon
             if _file:
@@ -468,7 +469,7 @@ async def find(
             else:
                 await command_edit(ctx, embeds=[embed], components=comps)
         except Exception:
-            fncs.dprint(traceback.format_exc())
+            logger.print(traceback.format_exc())
             await command_send(
                 ctx,
                 embeds=[
@@ -495,7 +496,7 @@ async def show_players(ctx: interactions.ComponentContext):
 
         host = msg.embeds[0].title[2:]  # exclude the online symbol
 
-        players = fncs.playerList(host)
+        players = utils.players.playerList(host)
 
         random.shuffle(players)  # for servers with more than 25 logged players
 
@@ -517,7 +518,7 @@ async def show_players(ctx: interactions.ComponentContext):
                 print(player)
                 break
 
-        fncs.dprint(embed, "\n---\n", players)
+        logger.print(embed, "\n---\n", players)
 
         await component_send(ctx, embeds=[embed], ephemeral=True)
     except Exception:
@@ -539,9 +540,9 @@ async def show_players(ctx: interactions.ComponentContext):
 @bot.component("rand_select")
 async def rand_select(ctx: interactions.ComponentContext):
     try:
-        fncs.dprint("Fetching message")
+        logger.print("Fetching message")
         msg = ctx.message.embeds[0]
-        fncs.dprint(str(msg))
+        logger.print(str(msg))
 
         if "---n/a---" in msg.footer.text:
             return
@@ -590,21 +591,21 @@ async def rand_select(ctx: interactions.ComponentContext):
 
         key = text[0]
         index = int(text[1])
-        fncs.dprint("Index: " + str(index))
-        fncs.dprint("Key: " + key)
+        logger.print("Index: " + str(index))
+        logger.print("Key: " + key)
 
         key = json.loads(key) if key != "---n/a---" else {}
         if key == {}:  # if the key is empty, return
             return
 
-        fncs.dprint("ReGenerating list")
+        logger.print("ReGenerating list")
         numServers = col.count_documents(key[0]["$match"])
-        fncs.dprint("List generated: " + str(numServers) + " servers")
+        logger.print("List generated: " + str(numServers) + " servers")
         index = (index + 1) if (index + 1 < numServers) else 0
 
-        info = fncs.get_doc_at_index(col, key, index)
+        info = finderLib.get_doc_at_index(col, key, index)
         if info == None:
-            fncs.dprint(
+            logger.print(
                 "Error: No server found at index "
                 + str(index)
                 + " out of "
@@ -629,12 +630,12 @@ async def rand_select(ctx: interactions.ComponentContext):
             components=[row],
         )
 
-        embed = fncs.genEmbed(search=key, index=index, numServ=numServers)
+        embed = finderLib.genEmbed(search=key, index=index, numServ=numServers)
         _file = embed[1]
         button = embed[2]
         embed = embed[0]
 
-        fncs.dprint("Embed generated", embed, button, _file)
+        logger.print("Embed generated", embed, button, _file)
 
         if _file:
             await component_edit(ctx, embeds=[embed], files=[_file], components=button)
@@ -672,7 +673,7 @@ async def stats(ctx: interactions.CommandContext):
             ]
         )
 
-        fncs.dprint("Getting stats...")
+        logger.print("Getting stats...")
 
         serverCount = col.count_documents({})
         # add commas to server count
@@ -684,8 +685,8 @@ async def stats(ctx: interactions.CommandContext):
             ]
         )
 
-        fncs.dprint("Getting versions...")
-        versions = await fncs.get_sorted_versions(col)
+        logger.print("Getting versions...")
+        versions = await databaseLib.get_sorted_versions(col)
         topTen = [x["version"] for x in versions[:10]]
 
         text = "Total servers: `{}`\nRough Player Count: `...`\nMost common version:```css\n{}\n```".format(
@@ -697,13 +698,13 @@ async def stats(ctx: interactions.CommandContext):
             ]
         )
 
-        fncs.dprint("Getting player count...")
-        players = await fncs.get_total_players_online(col)
+        logger.print("Getting player count...")
+        players = await databaseLib.get_total_players_online(col)
         # add commas to player count
         players = "{:,}".format(players)
 
-        fncs.dprint("Getting players logged...")
-        pLogged = await fncs.getPlayersLogged(col)
+        logger.print("Getting players logged...")
+        pLogged = await databaseLib.getPlayersLogged(col)
         pLogged = "{:,}".format(pLogged)
         text = "Total servers: `{}`\nRough Player Count: `{}`\nPlayers logged: `{}`\nMost common version:```css\n{}\n```".format(
             serverCount, players, pLogged, ("\n".join(topTen[:5]))
@@ -720,7 +721,7 @@ async def stats(ctx: interactions.CommandContext):
         )
     except Exception:
         print(f"====\nError: {traceback.format_exc()}\n====")
-        fncs.dprint(traceback.format_exc())
+        logger.print(traceback.format_exc())
 
         await ctx.send(
             embeds=[
@@ -794,7 +795,7 @@ if __name__ == "__main__":
                 break
             else:
                 print(e)
-                fncs.dprint(traceback.format_exc())
+                logger.print(traceback.format_exc())
                 time.sleep(30)
                 if autoRestart:
                     print("Restarting...")
