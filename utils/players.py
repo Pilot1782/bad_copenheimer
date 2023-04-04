@@ -1,9 +1,10 @@
 import time
-import requests
 import traceback
+
 import interactions
 import mcstatus
 import pymongo
+import requests
 
 
 class Players:
@@ -29,7 +30,8 @@ class Players:
         Returns:
             bool: True if the server is cracked, False if not
         """
-        url = "https://api.mcstatus.io/v2/status/java/" + host + ":" + str(port)
+        url = "https://api.mcstatus.io/v2/status/java/" + \
+            host + ":" + str(port)
 
         resp = requests.get(url)
         if resp.status_code == 200:
@@ -152,7 +154,8 @@ class Players:
             server = mcstatus.JavaServer.lookup(host + ":" + str(port))
             status = server.status()
             if status.players.sample is not None:
-                normal = [{"name": p.name, "uuid": p.id} for p in status.players.sample]
+                normal = [{"name": p.name, "uuid": p.id}
+                          for p in status.players.sample]
         except TimeoutError:
             self.logger.error("Timeout error")
             normal = []

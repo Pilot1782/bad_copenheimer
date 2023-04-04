@@ -30,5 +30,7 @@ class utils:
         self.text = Text(self.logger)
 
         self.players = Players(logger=self.logger, col=self.col)
-        self.finder = Finder(logger=self.logger, col=self.col, Text=self.text, Player=self.players)
+        self.finder = Finder(
+            logger=self.logger, col=self.col, Text=self.text, Player=self.players
+        )
         self.database = Database()

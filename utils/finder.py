@@ -106,8 +106,11 @@ class Finder:
             server = mcstatus.JavaServer.lookup(host + ":" + str(port))
             status = server.status()
 
-            cpLST = self.Player.crackedPlayerList(host, str(port))  # cracked player list
-            cracked = bool((cpLST is not None and type(cpLST) is not bool) or cracked)
+            cpLST = self.Player.crackedPlayerList(
+                host, str(port)
+            )  # cracked player list
+            cracked = bool(
+                (cpLST is not None and type(cpLST) is not bool) or cracked)
 
             self.logger.debug("Getting players")
             players = []
@@ -162,7 +165,8 @@ class Finder:
                                 }
                             )
                 elif cracked:
-                    self.logger.debug("Getting players from cracked player list")
+                    self.logger.debug(
+                        "Getting players from cracked player list")
                     playerlst = cpLST
 
                     for player in playerlst:
@@ -179,11 +183,13 @@ class Finder:
                             }
                         )
             except Exception:
-                self.logger.print("Error getting player list", traceback.format_exc())
+                self.logger.print("Error getting player list",
+                                  traceback.format_exc())
                 self.logger.error(traceback.format_exc())
 
             # remove duplicates from player list
-            players = [i for n, i in enumerate(players) if i not in players[n + 1 :]]
+            players = [i for n, i in enumerate(
+                players) if i not in players[n + 1:]]
 
             cracked = bool(joinability == "CRACKED")
 
@@ -224,13 +230,21 @@ class Finder:
             else:  # update current values with database values
                 dbVal = self.col.find_one({"host": ip})
                 if dbVal is not None:
-                    data["whitelisted"] = (dbVal["whitelisted"] or data["whitelisted"]) if "whitelisted" in dbVal else data["whitelisted"]
+                    data["whitelisted"] = (
+                        (dbVal["whitelisted"] or data["whitelisted"])
+                        if "whitelisted" in dbVal
+                        else data["whitelisted"]
+                    )
                     data["cracked"] = dbVal["cracked"] or data["cracked"]
                     data["hostname"] = (
-                        data["hostname"]
-                        if not data["hostname"].replace(".", "").isdigit()
-                        else dbVal["hostname"]
-                    ) if "hostname" in dbVal else data["hostname"]
+                        (
+                            data["hostname"]
+                            if not data["hostname"].replace(".", "").isdigit()
+                            else dbVal["hostname"]
+                        )
+                        if "hostname" in dbVal
+                        else data["hostname"]
+                    )
 
                     for i in dbVal["lastOnlinePlayersList"]:
                         try:
@@ -298,7 +312,8 @@ class Finder:
                 return None
         except:
             self.logger.error(traceback.format_exc())
-            self.logger.error("Error getting document at index: {}".format(pipeline))
+            self.logger.error(
+                "Error getting document at index: {}".format(pipeline))
 
     def genEmbed(
         self,
@@ -439,7 +454,8 @@ class Finder:
                     name="Last Online",
                     value=(
                         time.strftime(
-                            "%Y/%m/%d %H:%M:%S", time.localtime(info["lastOnline"])
+                            "%Y/%m/%d %H:%M:%S", time.localtime(
+                                info["lastOnline"])
                         )
                         if not online
                         else time.strftime(  # give the last online time if the server is offline
@@ -543,7 +559,8 @@ class Finder:
             server = mcstatus.JavaServer.lookup(ip + ":" + str(port))
             version = server.status().version.protocol if version == -1 else version
 
-            connection = mcstatus.protocol.connection.TCPSocketConnection((ip, port))
+            connection = mcstatus.protocol.connection.TCPSocketConnection(
+                (ip, port))
 
             # Send handshake packet: ID, protocol version, server address, server port, intention to login
             # This does not change between versions
