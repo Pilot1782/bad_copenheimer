@@ -1,18 +1,19 @@
 import logging
 import os
 
-from funcs import funcs
 
-fncs = funcs()
+from utils import logger
+
+logger = logger.Logger()
+
 def print(*args, **kwargs):
-    fncs.print(" ".join(map(str, args)), **kwargs)
-
+    logger.print(" ".join(args), **kwargs)
 
 def instPyPackage():
     print("\n------------------\nInstalling python packages...")
     # check to make sure that requirements.txt exists
     if not os.path.isfile("requirements.txt"):
-        fncs.logging.error("requirements.txt not found in current directory.")
+        logger.error("requirements.txt not found in current directory.")
         print("requirements.txt not found in current directory.")
     else:
         os.system("pip install -r requirements.txt")
