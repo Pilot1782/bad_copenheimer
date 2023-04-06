@@ -1,13 +1,14 @@
 import logging
 import os
 
-
 from utils import logger
 
 logger = logger.Logger()
 
+
 def print(*args, **kwargs):
     logger.print(" ".join(args), **kwargs)
+
 
 def instPyPackage():
     print("\n------------------\nInstalling python packages...")
