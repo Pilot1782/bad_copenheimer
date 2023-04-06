@@ -166,7 +166,7 @@ class Players:
         except Exception:
             self.logger.error(traceback.format_exc())
             normal = []
-        
+
         # get players by connecting to the server
         if usrname != "":
             try:
@@ -174,8 +174,14 @@ class Players:
                 time.sleep(5)
                 for player in self.server.getPlayers():
                     if player not in normal:
-                        url = "https://api.mojang.com/users/profiles/minecraft/" + player
-                        uuid = requests.get(url).json()["id"] if "id" in requests.get(url).text else "---n/a---"
+                        url = (
+                            "https://api.mojang.com/users/profiles/minecraft/" + player
+                        )
+                        uuid = (
+                            requests.get(url).json()["id"]
+                            if "id" in requests.get(url).text
+                            else "---n/a---"
+                        )
                         normal.appen({"name": player, "uuid": uuid})
             except:
                 pass

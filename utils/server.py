@@ -20,7 +20,7 @@ class Server:
         self.ip = ip
         self.port = port
         self.username = username
-        
+
         # server info
         self.names = []
         self.position = None
@@ -64,9 +64,11 @@ class Server:
         @On(self.bot, "spawn")
         def handle(*args):
             self.STATE = "CONNECTED"
-            
+
             players = self.bot.players
-            self.heldItem = self.bot.heldItem.name if self.bot.heldItem is not None else "nothing"
+            self.heldItem = (
+                self.bot.heldItem.name if self.bot.heldItem is not None else "nothing"
+            )
             self.logger.info("I spawned 👋")
             self.logger.info("I am at {}".format(self.bot.entity.position))
             self.logger.info("I am with {}".format(players))
@@ -74,13 +76,13 @@ class Server:
 
             for player in players:  # append lower case names to list
                 self.names.append(player.lower())
-            
+
             self.position = (
                 round(self.bot.entity.position.x, 2),
                 round(self.bot.entity.position.y, 2),
                 round(self.bot.entity.position.z, 2),
             )
-            
+
             self.inventory = []
             for item in self.bot.inventory.items():
                 self.inventory.append(item)
@@ -95,18 +97,18 @@ class Server:
             text = args if len(args) < 100 else args[:100]
             self.logger.error("Bot errored!{} ".format(args))
             self.STATE = "ERROR"
-        
+
         @On(self.bot, "disconnected")
         def handle(*args):
             self.logger.error("Bot disconnected! {}".format(args))
             self.STATE = "DISCONNECTED:ERROR"
-    
+
     def getPlayers(self):
         return self.names
-    
+
     def getState(self):
         return self.STATE
-    
+
     def getInfo(self):
         return {
             "names": self.names,
