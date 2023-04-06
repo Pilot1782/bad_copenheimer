@@ -15,16 +15,13 @@ import pymongo
 import requests
 from bson.errors import InvalidId
 from bson.objectid import ObjectId
-from interactions.ext.files import (
-    command_edit,
-    command_send,
-    component_edit,
-    component_send,
-)
+from interactions.ext.files import (command_edit, command_send, component_edit,
+                                    component_send)
 
 import utils
 
 autoRestart = False
+allowJoin = False
 try:
     from privVars import *
 except ImportError:
@@ -458,7 +455,7 @@ async def find(
             )
 
             # setup the embed
-            embed = finderLib.genEmbed(index=0, numServ=numServers, search=pipeline)
+            embed = finderLib.genEmbed(index=0, numServ=numServers, search=pipeline, allowJoin=allowJoin)
             _file = embed[1]
             comps = embed[2]
             embed = embed[0]
@@ -564,6 +561,12 @@ async def rand_select(ctx: interactions.ComponentContext):
                 style=interactions.ButtonStyle.PRIMARY,
                 disabled=True,
             ),
+            interactions.Button(
+                label="Join",
+                custom_id="join",
+                style=interactions.ButtonStyle.PRIMARY,
+                disabled=True,
+            ),
         ]
 
         row = interactions.ActionRow(
@@ -632,7 +635,7 @@ async def rand_select(ctx: interactions.ComponentContext):
             components=[row],
         )
 
-        embed = finderLib.genEmbed(search=key, index=index, numServ=numServers)
+        embed = finderLib.genEmbed(search=key, index=index, numServ=numServers, allowJoin=allowJoin)
         _file = embed[1]
         button = embed[2]
         embed = embed[0]

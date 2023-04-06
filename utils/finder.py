@@ -320,6 +320,7 @@ class Finder:
         search: dict,
         index: int = 0,
         numServ: int = 0,
+        allowJoin: bool = False,
     ) -> list:
         """Generates an embed for the server list
 
@@ -558,7 +559,7 @@ class Finder:
                 label="Join",
                 custom_id="join",
                 style=interactions.ButtonStyle.PRIMARY,
-                disabled=not online,
+                disabled=not online or not allowJoin,
             ),
         ]
 
