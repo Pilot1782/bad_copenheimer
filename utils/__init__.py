@@ -8,6 +8,7 @@ from .finder import Finder
 from .logger import Logger
 from .players import Players
 from .text import Text
+from .server import Server
 
 
 class utils:
@@ -27,10 +28,12 @@ class utils:
         """
         self.col = col
         self.logger = logger if logger else Logger(debug)
+        self.logger.clear()
         self.text = Text(self.logger)
+        self.server = Server(self.logger)
+        self.database = Database()
 
-        self.players = Players(logger=self.logger, col=self.col)
+        self.players = Players(logger=self.logger, col=self.col, server=self.server)
         self.finder = Finder(
             logger=self.logger, col=self.col, Text=self.text, Player=self.players
         )
-        self.database = Database()

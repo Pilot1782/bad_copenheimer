@@ -10,7 +10,7 @@ import requests
 class Players:
     """Class to hold all the player related functions"""
 
-    def __init__(self, logger, col: pymongo.collection.Collection):
+    def __init__(self, logger, col: pymongo.collection.Collection, server):
         """Initializes the Players class
 
         Args:
@@ -18,6 +18,7 @@ class Players:
             col (pymongo.collection.Collection): The database collection
         """
         self.logger = logger
+        self.server = server
         self.col = col
 
     def crackCheckAPI(self, host: str, port: str = "25565") -> bool:
@@ -106,7 +107,7 @@ class Players:
         self.logger.debug("Player head downloaded")
         return interactions.File(filename="playerhead.png")
 
-    def playerList(self, host: str, port: int = 25565) -> list[dict]:
+    def playerList(self, host: str, port: int = 25565, usrname: str = "") -> list[dict]:
         """Return a list of players on a Minecraft server
 
         Args:
@@ -165,6 +166,19 @@ class Players:
         except Exception:
             self.logger.error(traceback.format_exc())
             normal = []
+        
+        # get players by connecting to the server
+        if usrname != "":
+            try:
+                self.server.start(host, int(port), "pilot1782")
+                time.sleep(5)
+                for player in self.server.getPlayers():
+                    if player not in normal:
+                        url = "https://api.mojang.com/users/profiles/minecraft/" + player
+                        uuid = requests.get(url).json()["id"] if "id" in requests.get(url).text else "---n/a---"
+                        normal.appen({"name": player, "uuid": uuid})
+            except:
+                pass
 
         if cracked:
             for player in cpLST:

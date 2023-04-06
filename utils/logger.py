@@ -4,13 +4,6 @@ import sys
 
 norm = sys.stdout
 
-try:
-    # clear log.log
-    with open("log.log", "w") as f:
-        f.write("")
-except:
-    pass
-
 
 class StreamToLogger(object):
     """

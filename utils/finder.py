@@ -364,6 +364,12 @@ class Finder:
                     style=interactions.ButtonStyle.PRIMARY,
                     disabled=True,
                 ),
+                interactions.Button(
+                    label="Join",
+                    custom_id="join",
+                    style=interactions.ButtonStyle.PRIMARY,
+                    disabled=True,
+                )
             ]
 
             row = interactions.ActionRow(components=buttons)
@@ -393,6 +399,12 @@ class Finder:
                     interactions.Button(
                         label="Next Server",
                         custom_id="rand_select",
+                        style=interactions.ButtonStyle.PRIMARY,
+                        disabled=True,
+                    ),
+                    interactions.Button(
+                        label="Join",
+                        custom_id="join",
                         style=interactions.ButtonStyle.PRIMARY,
                         disabled=True,
                     ),
@@ -541,6 +553,12 @@ class Finder:
                 custom_id="rand_select",
                 style=interactions.ButtonStyle.PRIMARY,
                 disabled=not (numServ > 1),
+            ),
+            interactions.Button(
+                label="Join",
+                custom_id="join",
+                style=interactions.ButtonStyle.PRIMARY,
+                disabled=not online,
             ),
         ]
 

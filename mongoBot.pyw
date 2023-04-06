@@ -2,6 +2,7 @@
 """
 # pyright: basic, reportGeneralTypeIssues=false, reportOptionalSubscript=false, reportOptionalMemberAccess=false
 
+import asyncio
 import datetime
 import json
 import random
@@ -55,6 +56,7 @@ logger = utils.logger
 databaseLib = utils.database
 finderLib = utils.finder
 playerLib = utils.players
+serverLib = utils.server
 
 
 def print(*args, **kwargs):
@@ -654,6 +656,163 @@ async def rand_select(ctx: interactions.ComponentContext):
             ],
             ephemeral=True,
         )
+
+
+async def emailModal(ctx: interactions.Modal, host: str):
+    textInp = interactions.TextInput(
+        label="email",
+        custom_id="email",
+        placeholder="Email",
+        min_length=1,
+        max_length=100,
+        style=interactions.TextStyleType.SHORT,
+    )
+    modal = interactions.Modal(
+        title="Email for " + host,
+        custom_id="email_modal",
+        description="Please enter the email you want to join with.",
+        components=[textInp],
+    )
+
+    await ctx.popup(modal)
+
+
+@bot.component("join")
+async def joinServer(ctx: interactions.ComponentContext):
+    """Join a servver"""
+    # get the original message
+    msg = ctx.message.embeds[0]
+    host = msg.title[2:]  # exclude the online symbol
+
+    # spawn a text box to ask for an email
+    await emailModal(ctx, host)
+
+
+@bot.modal("email_modal")
+async def emailModalResponse(
+    ctx: interactions.CommandContext, email: interactions.TextInput
+):
+    modal = ctx.message.embeds[0].title
+    host = modal[2:]
+
+    await ctx.defer(ephemeral=True)
+
+    serverLib.start(
+        ip=host,
+        port=25565,
+        username=email,
+    )
+
+    if "AUTHENTICATING:" in serverLib.getState():
+        code = serverLib.getState().split("AUTHENTICATING:")[1]
+
+        tStart = time.time()
+        while "AUTHENTICATING:" in serverLib.getState() or time.time() - tStart < 120:
+            await asyncio.sleep(1)
+        
+    await asyncio.sleep(3)
+
+    if serverLib.getState() == "CONNECTED":
+        print("Connected")
+
+        serverInfo = serverLib.getInfo()
+        players = serverInfo["names"]
+        position = serverInfo["position"]
+        heldItem = serverInfo["heldItem"]
+
+        # update player list
+        dbVal = col.find_one({"host": host})
+        players2 = []
+        for player in players:
+            url = "https://api.mojang.com/users/profiles/minecraft/{}".format(player)
+            uuid = (
+                requests.get(url).json()["id"]
+                if "id" in requests.get(url).json()
+                else ""
+            )
+            if uuid == "":
+                continue
+
+            player = {
+                "name": player,
+                "uuid": uuid,
+            }
+            players2.append(player)
+            if player not in dbVal["lastOnlinePlayersList"]:
+                dbVal["lastOnlinePlayersList"].append(player)
+        players = players2
+
+        plyOnline = len(players)
+        col.update_one(
+            {"host": host},
+            {"$set": {"players": dbVal["lastOnlinePlayersList"]}},
+            upsert=True,
+        )
+
+        players2 = []
+        for player in dbVal["lastOnlinePlayersList"]:
+            player["online"] = player in players
+            players2.append(player)
+        players = players2
+
+        embed = interactions.Embed(
+            title="Join Server",
+            description="Done! You spawned at {} with {} players holding a(n) {}.".format(
+                position, plyOnline, heldItem
+            ),
+            color=0x00FF00,
+            timestamp=timeNow(),
+        ).set_footer("Powered by MineFlayer")
+
+        for player in players:
+            embed.add_field(
+                name=(
+                    player["name"] + (" (Online)" if player["online"] else " (Offline)")
+                ),
+                value="`" + player["uuid"] + "`",
+                inline=True,
+            )
+
+        await command_send(ctx, embeds=[embed])
+        return
+
+    if serverLib.getState().startswith("DISCONNECTED"):
+        reason = serverLib.getState().split("DISCONNECTED:")[1]
+        if reason == "WHITELISTED":
+            # update the server to be whitelisted
+            col.update_one(
+                {"host": host},
+                {"$set": {"whitelisted": True}},
+                upsert=True,
+            )
+            
+            await command_send(
+                ctx,
+                embeds=[
+                    interactions.Embed(
+                        title="Join Server",
+                        description="Error: This server is whitelisted or you are banned. Please contact the server owner to be allowed back in.",
+                        color=0xFF0000,
+                        timestamp=timeNow(),
+                    )
+                ],
+            )
+        else:
+            print("Error")
+        
+        return
+
+    await command_send(  # failed to join
+        ctx,
+        embeds=[
+            interactions.Embed(
+                title="Join Server",
+                description="Error: {}".format(serverLib.getState()),
+                color=0xFF0000,
+                timestamp=timeNow(),
+            )
+        ],
+    )
 
 
 @bot.command(
