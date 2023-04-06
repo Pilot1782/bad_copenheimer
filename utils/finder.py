@@ -370,7 +370,7 @@ class Finder:
                     custom_id="join",
                     style=interactions.ButtonStyle.PRIMARY,
                     disabled=True,
-                )
+                ),
             ]
 
             row = interactions.ActionRow(components=buttons)
