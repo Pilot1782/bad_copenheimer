@@ -10,7 +10,7 @@ import requests
 class Players:
     """Class to hold all the player related functions"""
 
-    def __init__(self, logger, col: pymongo.collection.Collection, server = None):
+    def __init__(self, logger, col: pymongo.collection.Collection, server=None):
         """Initializes the Players class
 
         Args:

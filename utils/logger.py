@@ -1,6 +1,6 @@
 import logging
-import unicodedata
 import sys
+import unicodedata
 
 norm = sys.stdout
 
@@ -37,7 +37,7 @@ class StreamToLogger(object):
 
 
 class Logger:
-    def __init__(self, DEBUG=False, level: int = logging.INFO, allowJoin = False):
+    def __init__(self, DEBUG=False, level: int = logging.INFO, allowJoin=False):
         """Initializes the logger class
 
         Args:
@@ -56,7 +56,7 @@ class Logger:
         self.log = logging.getLogger("STDOUT")
         self.out = StreamToLogger(self.log, level)
         sys.stdout = self.out
-        
+
         # if allowJoin:
         #     # output js console to log.log
         #     from javascript import On, require, console
@@ -79,7 +79,7 @@ class Logger:
         print(message)
         sys.stdout = self.out  # output to log.log
         self.logger.error(message)
-    
+
     def critical(self, message):
         sys.stdout = norm
         print(message)
