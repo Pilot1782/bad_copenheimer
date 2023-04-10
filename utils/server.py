@@ -1,3 +1,4 @@
+import os
 import time
 
 from javascript import On, require
@@ -7,6 +8,11 @@ class Server:
     """Class to allow for joining a server"""
 
     def __init__(self, logger):
+        # clear nmp cache
+        os.remove("%appdata%/.minecraft/nmp-cache/") if os.path.exists(
+            "%appdata%/.minecraft/nmp-cache/"
+        ) else None
+
         self.ip = None
         self.port = 25565
         self.mineflayer = require("mineflayer")
@@ -17,6 +23,11 @@ class Server:
 
     def start(self, ip, port, username):
         """Join the server"""
+        # clear nmp cache
+        os.remove("%appdata%/.minecraft/nmp-cache/") if os.path.exists(
+            "%appdata%/.minecraft/nmp-cache/"
+        ) else None
+        
         self.ip = ip
         self.port = port
         self.username = username
@@ -35,11 +46,14 @@ class Server:
                 "auth": "microsoft",
             }
         )
-        self.STATE = "CONNECTING"
+        
+        time.sleep(2)
 
         # check if the bot is connected an account
         log = self.logger.read()
         if "To sign in, use a web browser to open the page" in log:
+            self.logger.print("Authenticating...")
+            
             # find that last instance of the string
             lines = log.splitlines()
             for line in lines[::-1]:
@@ -49,17 +63,11 @@ class Server:
                         "To sign in, use a web browser to open the page https://www.microsoft.com/link and enter the code "
                     )[1]
                     line = line.split(" to authenticate.")[0]
-                    self.STATE = "AUTHENTICATING: " + line
-                    break
-
-            while "AUTHENTICATING" in self.STATE:
-                time.sleep(5)
-                # check to see if "Signed in with Microsoft" is in the log
-                if "Signed in with Microsoft" in self.logger.read():
-                    self.STATE = "CONNECTING"
+                    self.STATE = "AUTHENTICATING:" + line
                     break
         else:
             self.STATE = "CONNECTING"
+            self.logger.print("Authenticated!")
 
         @On(self.bot, "spawn")
         def handle(*args):
@@ -102,6 +110,12 @@ class Server:
         def handle(*args):
             self.logger.error("Bot disconnected! {}".format(args))
             self.STATE = "DISCONNECTED:ERROR"
+        
+        @On(self.bot, "kicked")
+        def handle(*args):
+            self.logger.error("Bot kicked! {}".format(args))
+            self.STATE = "DISCONNECTED:KICKED"
+        
 
     def getPlayers(self):
         return self.names

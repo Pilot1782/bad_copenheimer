@@ -15,8 +15,12 @@ import pymongo
 import requests
 from bson.errors import InvalidId
 from bson.objectid import ObjectId
-from interactions.ext.files import (command_edit, command_send, component_edit,
-                                    component_send)
+from interactions.ext.files import (
+    command_edit,
+    command_send,
+    component_edit,
+    component_send,
+)
 
 import utils
 
@@ -48,7 +52,7 @@ client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi(
 db = client["mc"]
 col = db["servers"]
 
-utils = utils.utils(col, debug=True)
+utils = utils.utils(col, debug=True, allowJoin=allowJoin)
 logger = utils.logger
 databaseLib = utils.database
 finderLib = utils.finder
@@ -455,7 +459,9 @@ async def find(
             )
 
             # setup the embed
-            embed = finderLib.genEmbed(index=0, numServ=numServers, search=pipeline, allowJoin=allowJoin)
+            embed = finderLib.genEmbed(
+                index=0, numServ=numServers, search=pipeline, allowJoin=allowJoin
+            )
             _file = embed[1]
             comps = embed[2]
             embed = embed[0]
@@ -635,7 +641,9 @@ async def rand_select(ctx: interactions.ComponentContext):
             components=[row],
         )
 
-        embed = finderLib.genEmbed(search=key, index=index, numServ=numServers, allowJoin=allowJoin)
+        embed = finderLib.genEmbed(
+            search=key, index=index, numServ=numServers, allowJoin=allowJoin
+        )
         _file = embed[1]
         button = embed[2]
         embed = embed[0]
@@ -706,14 +714,47 @@ async def emailModalResponse(
         username=email,
     )
 
+    while serverLib.getState() == "NOT_CONNECTED":
+        await asyncio.sleep(1)
+
+    logger.print("state: " + serverLib.getState())
     if "AUTHENTICATING:" in serverLib.getState():
         code = serverLib.getState().split("AUTHENTICATING:")[1]
+        logger.print("Code: " + code)
+
+        await command_send(
+            ctx,
+            embeds=[
+                interactions.Embed(
+                    label="Authentication required",
+                    description="Please enter the code `{}` at https://www.microsoft.com/link in order to authenticate.\nYou will have three minutes before the code expires.".format(
+                        code
+                    ),
+                )
+            ],
+            ephemeral=True,
+        )
 
         tStart = time.time()
-        while "AUTHENTICATING:" in serverLib.getState() or time.time() - tStart < 120:
+        while "AUTHENTICATING:" in serverLib.getState() or time.time() - tStart < 180:
             await asyncio.sleep(1)
-        
-    await asyncio.sleep(3)
+
+        if "AUTHENTICATING:" in serverLib.getState():
+            await command_send(
+                ctx,
+                embeds=[
+                    interactions.Embed(
+                        label="Authentication required",
+                        description="The code has expired. Please try again.",
+                    )
+                ],
+                ephemeral=True,
+            )
+            return
+
+    logger.print("state: " + serverLib.getState())
+    while serverLib.getState() == "CONNECTING":
+        await asyncio.sleep(1)
 
     if serverLib.getState() == "CONNECTED":
         print("Connected")
@@ -788,7 +829,7 @@ async def emailModalResponse(
                 {"$set": {"whitelisted": True}},
                 upsert=True,
             )
-            
+
             await command_send(
                 ctx,
                 embeds=[
@@ -799,10 +840,11 @@ async def emailModalResponse(
                         timestamp=timeNow(),
                     )
                 ],
+                ephemeral=True,
             )
         else:
             print("Error")
-        
+
         return
 
     await command_send(  # failed to join
@@ -815,6 +857,7 @@ async def emailModalResponse(
                 timestamp=timeNow(),
             )
         ],
+        ephemeral=True,
     )
 
 

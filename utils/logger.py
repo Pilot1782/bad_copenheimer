@@ -1,5 +1,5 @@
 import logging
-import os
+import unicodedata
 import sys
 
 norm = sys.stdout
@@ -23,49 +23,21 @@ class StreamToLogger(object):
         pass
 
     def read(self):
+        text1, text2 = "", ""
         with open("log.log", "r") as f:
-            return f.read()
+            text1 = f.read()
 
+        try:
+            with open("out.log", "r") as f:
+                text2 = f.read()
+        except:
+            self.write("out.log does not exist")
 
-# This code is used in the main function to set the logging level to INFO and the format to the specified format
-# The logging level is set to INFO so that only the INFO level and above will be logged
-# The logging format is set to the specified format so that the time, level, name, and message will be logged
-# The logging file is set to log.log so that the logs will be written to the log.log file
-# The logging file mode is set to append so that the logs will be appended to the log.log file
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s:%(levelname)s:%(name)s:%(message)s",
-    filename="log.log",
-    filemode="a",
-)
-
-# This code is used in the main function to set the logger name to STDOUT and the logging level to INFO
-log = logging.getLogger("STDOUT")
-
-# This code is used in the main function to set the stream to the logger and the logging level to INFO
-out = StreamToLogger(log, logging.INFO)
-
-# This code is used in the main function to set the standard output to the stream and the logging level to ERROR
-sys.stdout = out
-
-# This code is used in the main function to set the standard error to the stream and the logging level to ERROR
-sys.stderr = StreamToLogger(log, logging.ERROR)
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s:%(levelname)s:%(name)s:%(message)s",
-    filename=".." + ("\\" if os.name == "nt" else "/") + "log.log",
-    filemode="a",
-)
-
-log = logging.getLogger("STDOUT")
-out = StreamToLogger(log, logging.INFO)
-sys.stdout = out
-sys.stderr = StreamToLogger(log, logging.ERROR)
+        return text1 + "\n" + text2
 
 
 class Logger:
-    def __init__(self, DEBUG=False):
+    def __init__(self, DEBUG=False, level: int = logging.INFO, allowJoin = False):
         """Initializes the logger class
 
         Args:
@@ -74,14 +46,45 @@ class Logger:
         self.DEBUG = DEBUG
         self.logger = logging
 
+        logging.basicConfig(
+            level=level,
+            format="%(asctime)s:%(levelname)s:%(name)s:%(message)s",
+            filename="log.log",
+            filemode="a",
+        )
+
+        self.log = logging.getLogger("STDOUT")
+        self.out = StreamToLogger(self.log, level)
+        sys.stdout = self.out
+        
+        # if allowJoin:
+        #     # output js console to log.log
+        #     from javascript import On, require, console
+        #     log4js = require("log4js")
+        #     log4js.configure({
+        #         "appenders": {
+        #             "out": {"type": "stdout"},
+        #             "app": {"type": "file", "filename": "out.log"}
+        #         },
+        #         "categories": {
+        #             "default": {"appenders": ["out", "app"], "level": "debug"}
+        #         }
+        #     })
+
     def info(self, message):
         self.logger.info(message)
 
     def error(self, message):
         sys.stdout = norm  # output to console
         print(message)
-        sys.stdout = out  # output to log.log
+        sys.stdout = self.out  # output to log.log
         self.logger.error(message)
+    
+    def critical(self, message):
+        sys.stdout = norm
+        print(message)
+        sys.stdout = self.out
+        self.logger.critical(message)
 
     def debug(self, *args, **kwargs):
         self.logger.debug(" ".join([str(arg) for arg in args]))
@@ -98,14 +101,29 @@ class Logger:
         self.logger.exception(message)
 
     def read(self):
+        text1, text2 = "", ""
         with open("log.log", "r") as f:
-            return f.read()
+            text1 = f.read()
+
+        try:
+            with open("out.log", "r") as f:
+                text2 = f.read()[3:]
+                text2 = "".join(
+                    ch
+                    for ch in text2
+                    if unicodedata.category(ch)[0] != "C" or ch in "\t" or ch in "\n"
+                )
+                text2 = text2.replace("\n\n", "\n")
+        except:
+            self.write("out.log does not exist")
+
+        return text1 + "\n" + text2
 
     def print(self, *args, **kwargs):
         msg = " ".join([str(arg) for arg in args])
         sys.stdout = norm  # output to console
         print(msg, **kwargs)
-        sys.stdout = out  # output to log.log
+        sys.stdout = self.out  # output to log.log
         self.info(msg)
 
     def clear(self):

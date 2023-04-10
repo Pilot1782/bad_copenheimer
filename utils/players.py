@@ -10,7 +10,7 @@ import requests
 class Players:
     """Class to hold all the player related functions"""
 
-    def __init__(self, logger, col: pymongo.collection.Collection, server):
+    def __init__(self, logger, col: pymongo.collection.Collection, server = None):
         """Initializes the Players class
 
         Args:
@@ -168,7 +168,7 @@ class Players:
             normal = []
 
         # get players by connecting to the server
-        if usrname != "":
+        if usrname != "" and self.server is not None:
             try:
                 self.server.start(host, int(port), "pilot1782")
                 time.sleep(5)
