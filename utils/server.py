@@ -27,7 +27,7 @@ class Server:
         os.remove("%appdata%/.minecraft/nmp-cache/") if os.path.exists(
             "%appdata%/.minecraft/nmp-cache/"
         ) else None
-        
+
         self.ip = ip
         self.port = port
         self.username = username
@@ -46,14 +46,14 @@ class Server:
                 "auth": "microsoft",
             }
         )
-        
+
         time.sleep(2)
 
         # check if the bot is connected an account
         log = self.logger.read()
         if "To sign in, use a web browser to open the page" in log:
             self.logger.print("Authenticating...")
-            
+
             # find that last instance of the string
             lines = log.splitlines()
             for line in lines[::-1]:
@@ -110,12 +110,11 @@ class Server:
         def handle(*args):
             self.logger.error("Bot disconnected! {}".format(args))
             self.STATE = "DISCONNECTED:ERROR"
-        
+
         @On(self.bot, "kicked")
         def handle(*args):
             self.logger.error("Bot kicked! {}".format(args))
             self.STATE = "DISCONNECTED:KICKED"
-        
 
     def getPlayers(self):
         return self.names
