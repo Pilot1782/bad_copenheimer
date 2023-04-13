@@ -6,10 +6,13 @@ This client requires a Mojang account for online-mode servers. It logs in to
 the server and prints the players listed in the tab menu.
 """
 
-from twisted.internet import reactor, defer
-from quarry.net.client import ClientFactory, ClientProtocol
+import traceback
+
+import quarry
+import twisted
 from quarry.net.auth import ProfileCLI
-import twisted, traceback, quarry
+from quarry.net.client import ClientFactory, ClientProtocol
+from twisted.internet import defer, reactor
 
 playerArr = []
 
@@ -146,6 +149,8 @@ def main(argv):
         reactor.callLater(3, ReactorQuit) # type: ignore
         reactor.run() # type: ignore
     except twisted.internet.error.ReactorNotRestartable: # pyright: ignore[reportGeneralTypeIssues]
+        pass
+    except twisted.internet.error.ReactorAlreadyRunning:
         pass
     except Exception:
         traceback.print_exc()

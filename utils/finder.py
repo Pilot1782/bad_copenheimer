@@ -437,6 +437,7 @@ class Finder:
             + str(info["lastOnlineDescription"])
             .encode("unicode_escape")
             .decode("utf-8")
+            .replace("\\n", "\n")
             + "```",
             timestamp=self.Text.timeNow(),
             color=(0x00FF00 if online else 0xFF0000),
