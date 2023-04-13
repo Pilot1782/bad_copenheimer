@@ -18,6 +18,7 @@ class Text:
 
         Args:
             text [str]: The string to remove color bits from
+            trim [bool]: Whether to trim the string or not
 
         Returns:
             [str]: The string without color bits

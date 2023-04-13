@@ -128,35 +128,26 @@ class Players:
         if self.col is None:
             self.logger.print("Collection not set")
             return []
+        
+        # generate all the player lists
 
-        # get list from database
+        # Database list
         res = self.col.find_one({"host": host})
         DBplayers = res["lastOnlinePlayersList"] if res is not None else []
+        DBnames = [p["name"] for p in DBplayers]
 
-        cpLST = self.crackedPlayerList(host, str(port))
-        cracked = bool(cpLST or cpLST == [])
+        # cracked server list
+        cpNames = self.crackedPlayerList(host, str(port))
+        cpNames = [] if cpNames is False else cpNames
 
-        if cracked:
-            self.logger.info("Cracked server, getting UUIDs")
-            for player in cpLST:
-                jsonResp = requests.get(
-                    "https://api.mojang.com/users/profiles/minecraft/" + player
-                )
-                uuid = "---n/a---"
-                if "id" in str(jsonResp.text):
-                    uuid = jsonResp.json()["id"]
-
-                player = {"name": player, "uuid": uuid}
-        else:
-            cpLST = []
-
+        # normal server list
         normal = []
         try:
             self.logger.info("Getting player list from server")
             server = mcstatus.JavaServer.lookup(host + ":" + str(port))
             status = server.status()
             if status.players.sample is not None:
-                normal = [{"name": p.name, "uuid": p.id}
+                normal = [{"name": self.text.cFilter(p.name, True), "uuid": p.id}
                           for p in status.players.sample]
         except TimeoutError:
             self.logger.error("Timeout error")
@@ -167,51 +158,52 @@ class Players:
         except Exception:
             self.logger.error(traceback.format_exc())
             normal = []
-
-        # get players by connecting to the server
-        if usrname != "" and self.server is not None:
-            try:
-                self.server.start(host, int(port), "pilot1782")
-                time.sleep(5)
-                for player in self.server.getPlayers():
-                    if player not in normal:
-                        url = (
-                            "https://api.mojang.com/users/profiles/minecraft/" + player
-                        )
-                        uuid = (
-                            requests.get(url).json()["id"]
-                            if "id" in requests.get(url).text
-                            else "---n/a---"
-                        )
-                        normal.appen({"name": player, "uuid": uuid})
-            except:
-                pass
-
-        if cracked:
-            for player in cpLST:
-                if player not in normal:
-                    normal.append(player)
-
-        names = [p["name"].lower() for p in normal]
-
-        # loop through normal and if the player is in the database player list then set "online" to true
-        for player in DBplayers:
-            player["online"] = player["name"].lower() in names
-            (names.pop(names.index(player["name"].lower()))) if player[
-                "name"
-            ].lower() in names else None
-
-        # loop through normal and if the player is not in the players list then add them
-        for player in normal:
-            if player["name"].lower() in names:
-                player["online"] = True
-                DBplayers.append(player)
         
-        # fix player list
-        for player in DBplayers:
-            # if the color char is in the name then remove it and set uuid to ---n/a---
-            if "§" in player["name"]:
-                player["name"] = self.text.cFilter(text=player["name"])
-                player["uuid"] = "---n/a---"
+        smapleNames = [p["name"] for p in normal]
+
+
+        # combine all the names fetched from the server
+        onlineNames = cpNames + smapleNames
+        
+        # remove duplicates
+        onlineNames = list(dict.fromkeys(onlineNames))
+        # clean the names
+        for name in onlineNames:
+            name = self.text.cFilter(name, True)
+        
+        players = []
+        for name in DBnames:
+            online = name in onlineNames
+            
+            # get uuid
+            url = "https://api.mojang.com/users/profiles/minecraft/" + name
+            uuid = "---n/a---"
+            res = requests.get(url)
+            if "error" not in res.text.lower():
+                uuid = res.json()["id"]
+            
+            players.append({
+                "name": name,
+                "uuid": uuid,
+                "online": online
+            })
+        
+        # check if any players are missing from the database
+        for name in onlineNames:
+            if name not in DBnames:
+                url = "https://api.mojang.com/users/profiles/minecraft/" + name
+                uuid = "---n/a---"
+                res = requests.get(url)
+                if "error" not in res.text.lower():
+                    uuid = res.json()["id"]
+                players.append({"name": name, "uuid": uuid, "online": True})
+        
+        # update the database
+        self.col.update_one(
+            {"host": host},
+            {"$set": {"lastOnlinePlayersList": players}},
+            upsert=True,
+        )
+        self.logger.info(f"Updated player list for {host} ({len(players)} players): {players}")
 
         return DBplayers
