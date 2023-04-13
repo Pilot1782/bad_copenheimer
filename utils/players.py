@@ -206,7 +206,7 @@ class Players:
             if player["name"].lower() in names:
                 player["online"] = True
                 DBplayers.append(player)
-        
+
         # fix player list
         for player in DBplayers:
             # if the color char is in the name then remove it and set uuid to ---n/a---
