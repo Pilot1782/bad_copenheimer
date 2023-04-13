@@ -46,7 +46,11 @@ class utils:
         self.database = Database()
 
         self.players = Players(
-            logger=self.logger, col=self.col, server=self.server)
+            logger=self.logger,
+            col=self.col,
+            server=self.server,
+            text=self.text,
+        )
         self.finder = Finder(
             logger=self.logger, col=self.col, Text=self.text, Player=self.players
         )

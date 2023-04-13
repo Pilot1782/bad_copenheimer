@@ -10,7 +10,7 @@ import requests
 class Players:
     """Class to hold all the player related functions"""
 
-    def __init__(self, logger, col: pymongo.collection.Collection, server=None):
+    def __init__(self, logger, col: pymongo.collection.Collection, text, server=None):
         """Initializes the Players class
 
         Args:
@@ -20,6 +20,7 @@ class Players:
         self.logger = logger
         self.server = server
         self.col = col
+        self.text = text
 
     def crackCheckAPI(self, host: str, port: str = "25565") -> bool:
         """Checks if a server is cracked using the mcstatus.io API
@@ -205,5 +206,12 @@ class Players:
             if player["name"].lower() in names:
                 player["online"] = True
                 DBplayers.append(player)
+        
+        # fix player list
+        for player in DBplayers:
+            # if the color char is in the name then remove it and set uuid to ---n/a---
+            if "§" in player["name"]:
+                player["name"] = self.text.cFilter(text=player["name"])
+                player["uuid"] = "---n/a---"
 
         return DBplayers
