@@ -6,3 +6,4 @@ python-masscan
 interactions-files
 twisted
 quarry
+javascript

@@ -1,4 +1,8 @@
+"""This is the discord bot for the mongoDB server list
+"""
 # pyright: basic, reportGeneralTypeIssues=false, reportOptionalSubscript=false, reportOptionalMemberAccess=false
+
+import asyncio
 import datetime
 import json
 import random
@@ -11,13 +15,17 @@ import pymongo
 import requests
 from bson.errors import InvalidId
 from bson.objectid import ObjectId
-from interactions.api.models import Message
-from interactions.ext.files import (command_edit, command_send, component_edit,
-                                    component_send)
+from interactions.ext.files import (
+    command_edit,
+    command_send,
+    component_edit,
+    component_send,
+)
 
-from funcs import funcs
+import utils
 
 autoRestart = False
+allowJoin = False
 try:
     from privVars import *
 except ImportError:
@@ -44,11 +52,16 @@ client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi(
 db = client["mc"]
 col = db["servers"]
 
-fncs = funcs(collection=col)
+utils = utils.utils(col, debug=True, allowJoin=allowJoin)
+logger = utils.logger
+databaseLib = utils.database
+finderLib = utils.finder
+playerLib = utils.players
+serverLib = utils.server
 
 
 def print(*args, **kwargs):
-    fncs.print(" ".join(map(str, args)), **kwargs)
+    logger.print(" ".join(map(str, args)), **kwargs)
 
 
 def timeNow():
@@ -116,6 +129,12 @@ def timeNow():
             type=interactions.OptionType.BOOLEAN,
             required=False,
         ),
+        interactions.Option(
+            name="hasfavicon",
+            description="If the server has a favicon",
+            type=interactions.OptionType.BOOLEAN,
+            required=False,
+        ),
     ],
 )
 async def find(
@@ -128,6 +147,7 @@ async def find(
     motd: str = "",
     maxplayers: int = -1,
     cracked: bool = False,
+    hasfavicon: bool = False,
 ):
     """Find a server
 
@@ -138,6 +158,9 @@ async def find(
         version (str, optional): The version of the server. Defaults to None.
         motd (str, optional): The motd of the server. Defaults to None.
         port (int, optional): The port of the server. Defaults to 25565.
+        maxplayers (int, optional): The max players of the server. Defaults to -1.
+        cracked (bool, optional): If the server blocks the EULA. Defaults to False.
+        hasfavicon (bool, optional): If the server has a favicon. Defaults to False.
     """
 
     print(
@@ -150,44 +173,64 @@ async def find(
         'motd:"' + motd + '"',
         "maxplayers:" + str(maxplayers),
         "cracked:" + str(cracked),
+        "hasfavicon:" + str(hasfavicon),
     )
 
     # send as embed
     await ctx.defer()
 
     serverList = []
-    search = {}
+    # pipline that matches version name case insensitive, motd case insensitive, max players, cracked and has favicon
+    pipeline = [{"$match": {"$and": []}}]
+
+    pipeline[0]["$match"]["$and"].append({"lastOnlinePlayersMax": {"$gt": 0}})
+    pipeline[0]["$match"]["$and"].append({"lastOnlinePlayers": {"$lte": 100000}})
     info = {}
-    _port = str(port)
     flag = False
+    numServers = 0
     # if parameters are given, add them to the search
 
+    # special matching
     if host:
-        serverList = [col.find_one({"host": host})]
+        serverList = [None]
+        if host.replace(".", "").isdigit():
+            serverList = [col.find_one({"host": host})]
+            if serverList[0] is None:
+                serverList = [col.find_one({"hostname": host})]
+        else:
+            serverList = [col.find_one({"hostname": host})]
+            if serverList[0] is None:
+                serverList = [col.find_one({"host": host})]
 
-        if not serverList[0]:
+        if serverList[0] is None:
+            logger.print("Server not in database")
             # try to get the server info from check
-            info = fncs.check(host, port)
+            info = finderLib.check(host, port)
 
-            if not info:
-                serverList = []
+            if info is None:
+                logger.print("Server not online")
+                await command_send(
+                    ctx,
+                    embeds=[
+                        interactions.Embed(
+                            title="Error",
+                            description="Server not in database and not online",
+                            timestamp=timeNow(),
+                        )
+                    ],
+                    ephemeral=True,
+                )
+                return
+            else:
+                serverList = col.find_one({"host": info["host"]})
 
         flag = True
-        search = {}
-    if version:
-        search["lastOnlineVersion"] = version.lower()
-    if motd:
-        search["lastOnlineDescription"] = motd.lower()
-    if maxplayers != -1:
-        search["lastOnlinePlayersMax"] = maxplayers
-    if cracked:
-        search["cracked"] = cracked
+        numServers = 1
+        pipeline[0]["$match"]["$and"].append({"_id": ObjectId(serverList[0]["_id"])})
     if _id:
-        search = {}
-
         # check that _id is vaild
         if len(_id) != 12 and len(_id) != 24:
-            fncs.dprint("Invalid ID: " + str(len(_id)))
+            logger.print("Invalid ID: " + str(len(_id)))
             await command_send(
                 ctx,
                 embeds=[
@@ -199,12 +242,12 @@ async def find(
             )
             return
         else:
-            fncs.dprint("Valid ID: " + _id)
+            logger.print("Valid ID: " + _id)
 
         try:
-            res = col.find_one({"_id": ObjectId(_id)})
+            res = col.find({"_id": ObjectId(_id)})
         except InvalidId:
-            fncs.dprint("Invalid ID for ObjectID: " + _id)
+            logger.print("Invalid ID for ObjectID: " + _id)
             await command_send(
                 ctx,
                 embeds=[
@@ -215,11 +258,11 @@ async def find(
                 ephemeral=True,
             )
             return
-        fncs.dprint(res)
+        logger.print(res)
         flag = True
 
         if res is None:
-            fncs.dprint("Server not found")
+            logger.print("Server not found")
             await command_send(
                 ctx,
                 embeds=[
@@ -233,10 +276,10 @@ async def find(
             )
             return
         else:
-            fncs.dprint("Server found")
-            serverList = [res]
+            logger.print("Server found")
+            serverList = res
+            numServers = 1
     if player:
-        search = {}
         flag = True
         name = ""
         uuid = ""
@@ -254,13 +297,13 @@ async def find(
         jresp = resp.json()
 
         if "error" in resp.text or resp.text == "":  # if the player is not found
-            fncs.dprint("UUID not found in minecraft api")
+            logger.print("Player not found in minecraft api")
             await command_send(
                 ctx,
                 embeds=[
                     interactions.Embed(
                         title="Error",
-                        description="UUID not found in minecraft api",
+                        description=f"{player} not found in minecraft api",
                         timestamp=timeNow(),
                     )
                 ],
@@ -271,19 +314,24 @@ async def find(
             uuid = jresp["id"]
             name = jresp["name"]
 
-        serverList = list(
-            col.find({"lastOnlinePlayersList": {"$elemMatch": {"uuid": uuid}}})
+        pipeline[0]["$match"]["$and"].append(
+            {"lastOnlinePlayersList.uuid": uuid.replace("-", "")}
         )
 
-        fncs.dprint("Finding player", player)
-        face = fncs.playerHead(name)
+        logger.print(pipeline)
 
-        if serverList is None or len(serverList) == 0:
-            fncs.dprint("Player not found in database")
+        serverList = col.aggregate(pipeline)
+        numServers = col.count_documents(pipeline[0]["$match"])
+
+        logger.print("Finding player", player)
+        face = utils.players.playerHead(name)
+
+        if numServers == 0:
+            logger.print("Player not found in database")
             embeds = [
                 interactions.Embed(
                     title="Error",
-                    description="Player not found in database",
+                    description=f"{player} not found in database",
                     color=0xFF6347,
                     timestamp=timeNow(),
                 )
@@ -292,8 +340,6 @@ async def find(
 
             await command_send(ctx, embeds=embeds, files=[face], ephemeral=True)
             return
-
-        numServers = len(serverList)
 
         embed = interactions.Embed(
             title=f"{name} found",
@@ -305,11 +351,44 @@ async def find(
 
         await command_send(ctx, embeds=[embed], files=[face])
 
-        search = {
-            "lastOnlinePlayersList": {"$elemMatch": {"uuid": uuid}}
-        }  # search for player
+    if version:
+        pipeline[0]["$match"]["$and"].append(
+            {"lastOnlineVersion": {"$regex": ".*" + version + ".*", "$options": "i"}}
+        )
+    if motd:
+        pipeline[0]["$match"]["$and"].append(
+            {"lastOnlineDescription": {"$regex": ".*" + motd + ".*", "$options": "i"}}
+        )
+    if maxplayers > 0:
+        pipeline[0]["$match"]["$and"].append({"lastOnlinePlayersMax": maxplayers})
+    if cracked:
+        pipeline[0]["$match"]["$and"].append({"cracked": cracked})
+    if hasfavicon:
+        pipeline[0]["$match"]["$and"].append(
+            {
+                "$expr": {
+                    "$and": [
+                        {"$ne": ["$favicon", None]},
+                        {"$gt": [{"$strLenCP": "$favicon"}, 10]},
+                    ]
+                }
+            }
+        )
 
-    if search == {} and not flag:
+    if (
+        pipeline
+        == [
+            {
+                "$match": {
+                    "$and": [
+                        {"lastOnlinePlayersMax": {"$gt": 0}},
+                        {"lastOnlinePlayers": {"$lte": 100000}},
+                    ]
+                }
+            }
+        ]
+        and not flag
+    ):
         await command_send(
             ctx,
             embeds=[
@@ -327,15 +406,45 @@ async def find(
             # get server info
             if not flag:
                 serverList = []
-                fncs.dprint("Flag is down, getting server info from database")
-                serverList = fncs._find(search)
-
-                numServers = len(serverList)
+                logger.print("Flag is down, getting server info from database")
+                numServers = col.count_documents(pipeline[0]["$match"])
+                logger.print(f"Number of servers: {numServers}")
+                serverList = col.aggregate(pipeline)
             else:
-                fncs.dprint("Flag is up, setting server info")
-                numServers = len(serverList)
+                pipeline = (
+                    {}
+                    if pipeline
+                    == [
+                        {
+                            "$match": {
+                                "$and": [
+                                    {"lastOnlinePlayersMax": {"$gt": 0}},
+                                    {"lastOnlinePlayers": {"$lte": 100000}},
+                                ]
+                            }
+                        }
+                    ]
+                    else pipeline
+                )
+                logger.print("Flag is up, setting server info")
 
-            fncs.dprint(f"Servers:{len(serverList)}|Search:{search}|Flag:{flag}")
+            logger.print(f"Servers:{numServers}|Search:{pipeline}|Flag:{flag}")
+            if numServers == 0:
+                logger.print("No servers found in database")
+                await command_send(
+                    ctx,
+                    embeds=[
+                        interactions.Embed(
+                            title="Error",
+                            description="No servers found",
+                            color=0xFF6347,
+                            timestamp=timeNow(),
+                        )
+                    ],
+                    ephemeral=True,
+                )
+                return
+
             await command_send(
                 ctx,
                 embeds=[
@@ -350,12 +459,14 @@ async def find(
             )
 
             # setup the embed
-            embed = fncs.genEmbed(serverList, search)
+            embed = finderLib.genEmbed(
+                index=0, numServ=numServers, search=pipeline, allowJoin=allowJoin
+            )
             _file = embed[1]
             comps = embed[2]
             embed = embed[0]
 
-            fncs.dprint("Embed generated", embed, comps, _file)
+            logger.print("Embed generated", embed, comps, _file)
 
             # send the embed sometimes with the favicon
             if _file:
@@ -363,7 +474,7 @@ async def find(
             else:
                 await command_edit(ctx, embeds=[embed], components=comps)
         except Exception:
-            fncs.dprint(traceback.format_exc())
+            logger.print(traceback.format_exc())
             await command_send(
                 ctx,
                 embeds=[
@@ -390,7 +501,7 @@ async def show_players(ctx: interactions.ComponentContext):
 
         host = msg.embeds[0].title[2:]  # exclude the online symbol
 
-        players = fncs.playerList(host)
+        players = utils.players.playerList(host)
 
         random.shuffle(players)  # for servers with more than 25 logged players
 
@@ -412,7 +523,7 @@ async def show_players(ctx: interactions.ComponentContext):
                 print(player)
                 break
 
-        fncs.dprint(embed, "\n---\n", players)
+        logger.print(embed, "\n---\n", players)
 
         await component_send(ctx, embeds=[embed], ephemeral=True)
     except Exception:
@@ -434,9 +545,9 @@ async def show_players(ctx: interactions.ComponentContext):
 @bot.component("rand_select")
 async def rand_select(ctx: interactions.ComponentContext):
     try:
-        fncs.dprint("Fetching message")
+        logger.print("Fetching message")
         msg = ctx.message.embeds[0]
-        fncs.dprint(str(msg))
+        logger.print(str(msg))
 
         if "---n/a---" in msg.footer.text:
             return
@@ -453,6 +564,12 @@ async def rand_select(ctx: interactions.ComponentContext):
             interactions.Button(
                 label="Next Server",
                 custom_id="rand_select",
+                style=interactions.ButtonStyle.PRIMARY,
+                disabled=True,
+            ),
+            interactions.Button(
+                label="Join",
+                custom_id="join",
                 style=interactions.ButtonStyle.PRIMARY,
                 disabled=True,
             ),
@@ -485,22 +602,35 @@ async def rand_select(ctx: interactions.ComponentContext):
 
         key = text[0]
         index = int(text[1])
+        logger.print("Index: " + str(index))
+        logger.print("Key: " + key)
 
         key = json.loads(key) if key != "---n/a---" else {}
         if key == {}:  # if the key is empty, return
             return
 
-        fncs.dprint("ReGenerating list")
-        serverList = fncs._find(key)
-        fncs.dprint("List generated: " + str(len(serverList)) + " servers")
-        index = (index + 1) if (index + 1 < len(serverList)) else 0
+        logger.print("ReGenerating list")
+        numServers = col.count_documents(key[0]["$match"])
+        logger.print("List generated: " + str(numServers) + " servers")
+        index = (index + 1) if (index + 1 < numServers) else 0
+
+        info = finderLib.get_doc_at_index(col, key, index)
+        if info == None:
+            logger.print(
+                "Error: No server found at index "
+                + str(index)
+                + " out of "
+                + str(numServers)
+                + " servers"
+            )
+            return
 
         await component_edit(
             ctx,
             embeds=[
                 interactions.Embed(
                     title="Loading...",
-                    description="Loading {}...".format(serverList[index]["host"]),
+                    description="Loading {}...".format(info["host"]),
                     color=0x00FF00,
                     timestamp=timeNow(),
                     footer=interactions.EmbedFooter(
@@ -511,12 +641,14 @@ async def rand_select(ctx: interactions.ComponentContext):
             components=[row],
         )
 
-        embed = fncs.genEmbed(_serverList=serverList, search=key, index=index)
+        embed = finderLib.genEmbed(
+            search=key, index=index, numServ=numServers, allowJoin=allowJoin
+        )
         _file = embed[1]
         button = embed[2]
         embed = embed[0]
 
-        fncs.dprint("Embed generated", embed, button, _file)
+        logger.print("Embed generated", embed, button, _file)
 
         if _file:
             await component_edit(ctx, embeds=[embed], files=[_file], components=button)
@@ -537,6 +669,198 @@ async def rand_select(ctx: interactions.ComponentContext):
         )
 
 
+async def emailModal(ctx: interactions.Modal, host: str):
+    textInp = interactions.TextInput(
+        label="email",
+        custom_id="email",
+        placeholder="Email",
+        min_length=1,
+        max_length=100,
+        style=interactions.TextStyleType.SHORT,
+    )
+    modal = interactions.Modal(
+        title="Email for " + host,
+        custom_id="email_modal",
+        description="Please enter the email you want to join with.",
+        components=[textInp],
+    )
+
+    await ctx.popup(modal)
+
+
+@bot.component("join")
+async def joinServer(ctx: interactions.ComponentContext):
+    """Join a servver"""
+    # get the original message
+    msg = ctx.message.embeds[0]
+    host = msg.title[2:]  # exclude the online symbol
+
+    # spawn a text box to ask for an email
+    await emailModal(ctx, host)
+
+
+@bot.modal("email_modal")
+async def emailModalResponse(
+    ctx: interactions.CommandContext, email: interactions.TextInput
+):
+    modal = ctx.message.embeds[0].title
+    host = modal[2:]
+
+    await ctx.defer(ephemeral=True)
+
+    serverLib.start(
+        ip=host,
+        port=25565,
+        username=email,
+    )
+
+    while serverLib.getState() == "NOT_CONNECTED":
+        await asyncio.sleep(1)
+
+    logger.print("state: " + serverLib.getState())
+    if "AUTHENTICATING:" in serverLib.getState():
+        code = serverLib.getState().split("AUTHENTICATING:")[1]
+        logger.print("Code: " + code)
+
+        await command_send(
+            ctx,
+            embeds=[
+                interactions.Embed(
+                    label="Authentication required",
+                    description="Please enter the code `{}` at https://www.microsoft.com/link in order to authenticate.\nYou will have three minutes before the code expires.".format(
+                        code
+                    ),
+                )
+            ],
+            ephemeral=True,
+        )
+
+        tStart = time.time()
+        while "AUTHENTICATING:" in serverLib.getState() or time.time() - tStart < 180:
+            await asyncio.sleep(1)
+
+        if "AUTHENTICATING:" in serverLib.getState():
+            await command_send(
+                ctx,
+                embeds=[
+                    interactions.Embed(
+                        label="Authentication required",
+                        description="The code has expired. Please try again.",
+                    )
+                ],
+                ephemeral=True,
+            )
+            return
+
+    logger.print("state: " + serverLib.getState())
+    while serverLib.getState() == "CONNECTING":
+        await asyncio.sleep(1)
+
+    if serverLib.getState() == "CONNECTED":
+        print("Connected")
+
+        serverInfo = serverLib.getInfo()
+        players = serverInfo["names"]
+        position = serverInfo["position"]
+        heldItem = serverInfo["heldItem"]
+
+        # update player list
+        dbVal = col.find_one({"host": host})
+        players2 = []
+        for player in players:
+            url = "https://api.mojang.com/users/profiles/minecraft/{}".format(player)
+            uuid = (
+                requests.get(url).json()["id"]
+                if "id" in requests.get(url).json()
+                else ""
+            )
+            if uuid == "":
+                continue
+
+            player = {
+                "name": player,
+                "uuid": uuid,
+            }
+            players2.append(player)
+            if player not in dbVal["lastOnlinePlayersList"]:
+                dbVal["lastOnlinePlayersList"].append(player)
+        players = players2
+
+        plyOnline = len(players)
+        col.update_one(
+            {"host": host},
+            {"$set": {"players": dbVal["lastOnlinePlayersList"]}},
+            upsert=True,
+        )
+
+        players2 = []
+        for player in dbVal["lastOnlinePlayersList"]:
+            player["online"] = player in players
+            players2.append(player)
+        players = players2
+
+        embed = interactions.Embed(
+            title="Join Server",
+            description="Done! You spawned at {} with {} players holding a(n) {}.".format(
+                position, plyOnline, heldItem
+            ),
+            color=0x00FF00,
+            timestamp=timeNow(),
+        ).set_footer("Powered by MineFlayer")
+
+        for player in players:
+            embed.add_field(
+                name=(
+                    player["name"] + (" (Online)" if player["online"] else " (Offline)")
+                ),
+                value="`" + player["uuid"] + "`",
+                inline=True,
+            )
+
+        await command_send(ctx, embeds=[embed])
+        return
+
+    if serverLib.getState().startswith("DISCONNECTED"):
+        reason = serverLib.getState().split("DISCONNECTED:")[1]
+        if reason == "WHITELISTED":
+            # update the server to be whitelisted
+            col.update_one(
+                {"host": host},
+                {"$set": {"whitelisted": True}},
+                upsert=True,
+            )
+
+            await command_send(
+                ctx,
+                embeds=[
+                    interactions.Embed(
+                        title="Join Server",
+                        description="Error: This server is whitelisted or you are banned. Please contact the server owner to be allowed back in.",
+                        color=0xFF0000,
+                        timestamp=timeNow(),
+                    )
+                ],
+                ephemeral=True,
+            )
+        else:
+            print("Error")
+
+        return
+
+    await command_send(  # failed to join
+        ctx,
+        embeds=[
+            interactions.Embed(
+                title="Join Server",
+                description="Error: {}".format(serverLib.getState()),
+                color=0xFF0000,
+                timestamp=timeNow(),
+            )
+        ],
+        ephemeral=True,
+    )
+
+
 @bot.command(
     name="stats",
     description="Get stats about the database",
@@ -554,7 +878,7 @@ async def stats(ctx: interactions.CommandContext):
             ]
         )
 
-        fncs.dprint("Getting stats...")
+        logger.print("Getting stats...")
 
         serverCount = col.count_documents({})
         # add commas to server count
@@ -566,8 +890,8 @@ async def stats(ctx: interactions.CommandContext):
             ]
         )
 
-        fncs.dprint("Getting versions...")
-        versions = fncs.get_sorted_versions(col)
+        logger.print("Getting versions...")
+        versions = await databaseLib.get_sorted_versions(col)
         topTen = [x["version"] for x in versions[:10]]
 
         text = "Total servers: `{}`\nRough Player Count: `...`\nMost common version:```css\n{}\n```".format(
@@ -579,13 +903,13 @@ async def stats(ctx: interactions.CommandContext):
             ]
         )
 
-        fncs.dprint("Getting player count...")
-        players = fncs.get_total_players_online(col)
+        logger.print("Getting player count...")
+        players = await databaseLib.get_total_players_online(col)
         # add commas to player count
         players = "{:,}".format(players)
 
-        fncs.dprint("Getting players logged...")
-        pLogged = fncs.getPlayersLogged(col)
+        logger.print("Getting players logged...")
+        pLogged = await databaseLib.getPlayersLogged(col)
         pLogged = "{:,}".format(pLogged)
         text = "Total servers: `{}`\nRough Player Count: `{}`\nPlayers logged: `{}`\nMost common version:```css\n{}\n```".format(
             serverCount, players, pLogged, ("\n".join(topTen[:5]))
@@ -602,7 +926,7 @@ async def stats(ctx: interactions.CommandContext):
         )
     except Exception:
         print(f"====\nError: {traceback.format_exc()}\n====")
-        fncs.dprint(traceback.format_exc())
+        logger.print(traceback.format_exc())
 
         await ctx.send(
             embeds=[
@@ -625,29 +949,32 @@ async def help(ctx: interactions.CommandContext):
                 title="Help",
                 description="""Commands:
 `/find` - Find a server
-    *Arguments:*
-        `host` - The host of the server
-            `port` - The port of the server
+```markdown
+*Arguments:*
+`host` - The host of the server to ping (not a search argument, and if included will ignore all other arguments except `port`)
+....`port` - The port of the server (optional and only used when `host` is included, note that `host:port` is supported instead of using this argument)
 
-        `player` - The name or uuid of a player
+`player` - The name or uuid of a player
 
-        `_id` - The id of the server in the database
+`_id` - The id of the server in the database
 
-        `version` - The version of the server
-        `players` - The max amount of players on the server
-        `motd` - The description of the server
-        `cracked` - If the server is cracked or not
-    *Returns:*
-        A list of servers that match the search
-        `hostname` - The hostname of the server (optional)
-        `motd` - The description of the server
-        `version` - The version of the server
-        `players` - The amount of players on the server
-        `maxPlayers` - The max amount of players on the server
-        `cracked` - If the server is cracked or not
-        `whitelisted` - If the server is whitelisted or not
-        `ping` - The ping of the server
-        `lastOnline` - The last time the server was online
+`version` - The version of the server
+`players` - The max amount of players on the server
+`motd` - The description of the server
+`cracked` - If the server is cracked or not
+
+*Returns:*
+A list of servers that match the search
+`hostname` - The hostname of the server (optional)
+`motd` - The description of the server
+`version` - The version of the server
+`players` - The amount of players on the server
+`maxPlayers` - The max amount of players on the server
+`cracked` - If the server is cracked or not
+`whitelisted` - If the server is whitelisted or not
+`ping` - The ping of the server
+`lastOnline` - The last time the server was online
+```
 
 `/stats` - Get stats about the database
 
@@ -673,7 +1000,7 @@ if __name__ == "__main__":
                 break
             else:
                 print(e)
-                fncs.dprint(traceback.format_exc())
+                logger.print(traceback.format_exc())
                 time.sleep(30)
                 if autoRestart:
                     print("Restarting...")

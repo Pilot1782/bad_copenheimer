@@ -4,7 +4,7 @@ A Python impelentation of a discord bot that acts as a server scanner.
 
 This is a discord bot that will scan ip adresses to see if they are minecraft servers and will post the results in your channel.
 
-[Discord Server](https://discord.gg/kw3EYRwUkt) if you want to test or play around with a premade bot.
+[Discord Server](https://discord.gg/kw3EYRwUkt) for testing a working and setup bot to see if it works for you.
 
 ----
 
@@ -36,19 +36,12 @@ You can now use the new bot, it is still in beta, but it is much more stable and
 * Linux/Docker (for the scanner, the discord bot will run on windows)
 * Masscan (for the scanner)
 * requirements.txt (needs to be run with pip3)
+* node.js 16 or higher
 
 ### Normal
 
 `/help`
 This shows all of the commands you can use and their usage. Then to create your server list, run:
-
-`/server_scan`
-This will get a list of all active minecraft servers, you may want to set the threads higher than the current value. This will take several hours to complete.
-**(legacy bot only)**
-
-`/status`
-This will get information about the requested server, including players online, ping, and if possible players connected.
-**(legacy bot only)**
 
 `/find`
 This will look through your database to find servers that match the provided paramaters. In the new build, there are two more buttons that can be used to either show the player names and uuids of players found on the server or to pick another random server from the list, after pressing it, wait for the message to update.
