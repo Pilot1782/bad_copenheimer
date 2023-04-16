@@ -4,7 +4,7 @@ import threading
 import time
 import traceback
 from json import JSONDecodeError
-
+from typing import List, Dict, Optional
 import interactions
 import mcstatus
 import pymongo
@@ -43,7 +43,7 @@ class Finder:
 
     def check(
         self, host: str, port: str = "25565", webhook: str = "", *args
-    ) -> dict | None:
+    ) -> Optional[Dict]:
         """Checks out a host and adds it to the database if it's not there
 
         Args:
@@ -290,7 +290,7 @@ class Finder:
         col: pymongo.collection.Collection,
         pipeline: list,
         index: int = 0,
-    ) -> dict | None:
+    ) -> Optional[Dict]:
         try:
             newPipeline = pipeline.copy()
 

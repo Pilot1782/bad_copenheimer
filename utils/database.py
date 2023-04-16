@@ -1,12 +1,12 @@
 import pymongo
-
+from typing import List, Dict
 
 class Database:
     """A class to hold all the database functions"""
 
     async def get_sorted_versions(
         self, collection: pymongo.collection.Collection
-    ) -> list[dict[str, int]]:
+    ) -> List[Dict[str, int]]:
         """I have no idea how this works, but it does, thanks github copilot
 
         Args:

@@ -1,6 +1,7 @@
+
 import time
 import traceback
-
+from typing import List, Union, Optional, Dict
 import interactions
 import mcstatus
 import pymongo
@@ -44,7 +45,7 @@ class Players:
 
     def crackedPlayerList(
         self, host: str, port: str = "25565", username: str = "pilot1782"
-    ) -> list[str] | bool:
+    ) -> Union[List[str], bool]:
         """Gets a list of players on a server
 
         Args:
@@ -92,7 +93,7 @@ class Players:
 
         return out
 
-    def playerHead(self, name: str) -> interactions.File | None:
+    def playerHead(self, name: str) -> Optional[interactions.File]:
         """Downloads a player head from minotar.net
 
         Args:
@@ -108,7 +109,7 @@ class Players:
         self.logger.debug("Player head downloaded")
         return interactions.File(filename="playerhead.png")
 
-    def playerList(self, host: str, port: int = 25565, usrname: str = "") -> list[dict]:
+    def playerList(self, host: str, port: int = 25565, usrname: str = "") -> List[Dict]:
         """Return a list of players on a Minecraft server
 
         Args:
