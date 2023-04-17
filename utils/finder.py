@@ -423,7 +423,7 @@ class Finder:
             online = True
             status = server.status()
             online = True
-            
+
             # update the online player count
             info["lastOnlinePlayers"] = status.players.online
         except:
