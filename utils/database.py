@@ -1,3 +1,5 @@
+from typing import Dict, List
+
 import pymongo
 
 
@@ -6,7 +8,7 @@ class Database:
 
     async def get_sorted_versions(
         self, collection: pymongo.collection.Collection
-    ) -> list[dict[str, int]]:
+    ) -> List[Dict[str, int]]:
         """I have no idea how this works, but it does, thanks github copilot
 
         Args:

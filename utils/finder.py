@@ -4,6 +4,7 @@ import threading
 import time
 import traceback
 from json import JSONDecodeError
+from typing import List, Dict, Optional
 
 import interactions
 import mcstatus
@@ -43,7 +44,7 @@ class Finder:
 
     def check(
         self, host: str, port: str = "25565", webhook: str = "", *args
-    ) -> dict | None:
+    ) -> Optional[Dict]:
         """Checks out a host and adds it to the database if it's not there
 
         Args:
@@ -290,7 +291,7 @@ class Finder:
         col: pymongo.collection.Collection,
         pipeline: list,
         index: int = 0,
-    ) -> dict | None:
+    ) -> Optional[dict]:
         try:
             newPipeline = pipeline.copy()
 
@@ -314,6 +315,7 @@ class Finder:
             self.logger.error(traceback.format_exc())
             self.logger.error(
                 "Error getting document at index: {}".format(pipeline))
+            return None
 
     def genEmbed(
         self,

@@ -1,5 +1,6 @@
 import time
 import traceback
+from typing import Dict, List, Optional, Union
 
 import interactions
 import mcstatus
@@ -44,7 +45,7 @@ class Players:
 
     def crackedPlayerList(
         self, host: str, port: str = "25565", username: str = "pilot1782"
-    ) -> list[str] | bool:
+    ) -> Optional[List[str]]:
         """Gets a list of players on a server
 
         Args:
@@ -65,7 +66,7 @@ class Players:
             chat2.main(args)
         except Exception:
             self.logger.error(traceback.format_exc())
-            return [] if self.crackCheckAPI(host, port) else False
+            return [] if self.crackCheckAPI(host, port) else None
 
         while True:
             if time.time() - tStart > 5:
@@ -75,7 +76,7 @@ class Players:
                 return chat2.playerArr
             time.sleep(0.2)
 
-        out = [] if self.crackCheckAPI(host, port) else False
+        out = [] if self.crackCheckAPI(host, port) else None
 
         lines = self.logger.read().split("\n")
         lines = lines[::-1]
@@ -88,11 +89,11 @@ class Players:
 
             if "PlayerListProtocol{" + host in line:
                 self.logger.info(host + " is an online mode server")
-                return False
+                return None
 
         return out
 
-    def playerHead(self, name: str) -> interactions.File | None:
+    def playerHead(self, name: str) -> Optional[interactions.File]:
         """Downloads a player head from minotar.net
 
         Args:
@@ -108,7 +109,7 @@ class Players:
         self.logger.debug("Player head downloaded")
         return interactions.File(filename="playerhead.png")
 
-    def playerList(self, host: str, port: int = 25565, usrname: str = "") -> list[dict]:
+    def playerList(self, host: str, port: int = 25565, usrname: str = "") -> List[Dict]:
         """Return a list of players on a Minecraft server
 
         Args:
@@ -138,7 +139,7 @@ class Players:
 
         # cracked server list
         cpNames = self.crackedPlayerList(host, str(port))
-        cpNames = [] if cpNames is False else cpNames
+        cpNames = [] if cpNames is None else cpNames
 
         # normal server list
         normal = []

@@ -987,6 +987,12 @@ A list of servers that match the search
     )
 
 
+# on ready
+@bot.event
+async def on_ready():
+    user = await bot.get_self_user()
+    logger.print("Bot is signed in as {}".format(user.username))
+
 # Run the bot
 # ---------------------------------------------
 
