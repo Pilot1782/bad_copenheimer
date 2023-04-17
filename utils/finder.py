@@ -421,8 +421,11 @@ class Finder:
         try:
             server = mcstatus.JavaServer.lookup(info["host"])
             online = True
-            server.status()
+            status = server.status()
             online = True
+            
+            # update the online player count
+            info["lastOnlinePlayers"] = status.players.online
         except:
             self.logger.debug("Server offline", info["host"])
 

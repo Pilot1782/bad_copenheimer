@@ -513,6 +513,9 @@ async def show_players(ctx: interactions.ComponentContext):
 
         for player in players:
             try:
+                # check if online is in the dict
+                if "online" not in player:
+                    player["online"] = False
                 embed.add_field(
                     name=("🟢 " if player["online"] else "🔴 ") + player["name"],
                     value="`{}`".format(player["uuid"]),

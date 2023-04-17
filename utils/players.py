@@ -171,10 +171,11 @@ class Players:
         onlineNames = list(dict.fromkeys(onlineNames))
         # clean the names
         for name in onlineNames:
-            name = self.text.cFilter(name, True)
+            name = self.text.cFilter(name, True).lower()
 
         players = []
         for name in DBnames:
+            name = name.lower()
             online = name in onlineNames
 
             # get uuid
@@ -188,6 +189,7 @@ class Players:
 
         # check if any players are missing from the database
         for name in onlineNames:
+            name = name.lower()
             if name not in DBnames:
                 url = "https://api.mojang.com/users/profiles/minecraft/" + name
                 uuid = "---n/a---"
@@ -195,6 +197,9 @@ class Players:
                 if "error" not in res.text.lower():
                     uuid = res.json()["id"]
                 players.append({"name": name, "uuid": uuid, "online": True})
+
+        # remove any objects which have duplicate names
+        players = [dict(t) for t in {tuple(d.items()) for d in players}]
 
         # update the database
         self.col.update_one(
