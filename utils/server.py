@@ -86,6 +86,8 @@ class Server:
             self.inventory = []
             for item in self.bot.inventory.items():
                 self.inventory.append(item)
+            
+            self.clearNMPCache()
 
         @On(self.bot, "end")
         def handle(*args):
