@@ -4,7 +4,7 @@ import threading
 import time
 import traceback
 from json import JSONDecodeError
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
 import interactions
 import mcstatus
