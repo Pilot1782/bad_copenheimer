@@ -8,11 +8,6 @@ class Server:
     """Class to allow for joining a server"""
 
     def __init__(self, logger):
-        # clear nmp cache
-        os.remove("%appdata%/.minecraft/nmp-cache/") if os.path.exists(
-            "%appdata%/.minecraft/nmp-cache/"
-        ) else None
-
         self.ip = None
         self.port = 25565
         self.mineflayer = require("mineflayer")
@@ -21,12 +16,13 @@ class Server:
         self.logger = logger
         self.STATE = "NOT_CONNECTED"
 
+        # clear nmp cache
+        self.clearNMPCache()
+
     def start(self, ip, port, username):
         """Join the server"""
         # clear nmp cache
-        os.remove("%appdata%/.minecraft/nmp-cache/") if os.path.exists(
-            "%appdata%/.minecraft/nmp-cache/"
-        ) else None
+        self.clearNMPCache()
 
         self.ip = ip
         self.port = port
@@ -77,10 +73,6 @@ class Server:
             self.heldItem = (
                 self.bot.heldItem.name if self.bot.heldItem is not None else "nothing"
             )
-            self.logger.info("I spawned 👋")
-            self.logger.info("I am at {}".format(self.bot.entity.position))
-            self.logger.info("I am with {}".format(players))
-            self.logger.info("I am holding a(n) {}".format(self.heldItem))
 
             for player in players:  # append lower case names to list
                 self.names.append(player.lower())
@@ -129,3 +121,39 @@ class Server:
             "heldItem": self.heldItem,
             "state": self.STATE,
         }
+
+    def clearNMPCache(self):
+        """Clear the nmp cache"""
+
+        # check that the cache exists
+        if os.name == "nt":
+            minecraftPath = os.path.expandvars(r"%appdata%\.minecraft\nmp-cache")
+            if not os.path.exists(minecraftPath):
+                return
+        elif os.name == "posix":
+            if not os.path.exists("~/.minecraft/nmp-cache/"):
+                return
+
+        if os.getpid() == 0:  # if running as root
+            if os.name == "nt":  # windows
+                minecraftPath = os.path.expandvars(r"%appdata%\.minecraft\nmp-cache")
+                if os.path.exists(minecraftPath):
+                    os.remove(minecraftPath)
+                else:
+                    self.logger.print("No cache to delete")
+            elif os.name == "posix":  # linux
+                os.remove("~/.minecraft/nmp-cache/") if os.path.exists(
+                    "~/.minecraft/nmp-cache/"
+                ) else self.logger.print("No cache to delete")
+            else:
+                self.logger.error("Unknown OS")
+        else:
+            self.logger.print("Clearing cache as root...")
+            if os.name == "nt":
+                os.system(
+                    'powershell.exe "Start-Process -Verb runas -FilePath cmd.exe -ArgumentList \\"/c, rmdir /s /q %appdata%\\.minecraft\\nmp-cache\\""'
+                )
+            elif os.name == "posix":
+                os.system("sudo rm -rf ~/.minecraft/nmp-cache/")
+            else:
+                self.logger.error("Unknown OS")

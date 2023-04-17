@@ -98,6 +98,7 @@ def timeNow():
             description="The port of the server",
             type=interactions.OptionType.INTEGER,
             required=False,
+            value=25565,
         ),
         interactions.Option(
             name="player",
@@ -122,28 +123,31 @@ def timeNow():
             description="The max players of the server",
             type=interactions.OptionType.INTEGER,
             required=False,
+            min_value=0,
         ),
         interactions.Option(
             name="cracked",
             description="If the server blocks the EULA",
             type=interactions.OptionType.BOOLEAN,
             required=False,
+            value=False,
         ),
         interactions.Option(
             name="hasfavicon",
             description="If the server has a favicon",
             type=interactions.OptionType.BOOLEAN,
             required=False,
+            value=False,
         ),
     ],
 )
 async def find(
     ctx: interactions.CommandContext,
     _id: str = "",
-    player: str = "",
-    version: str = "",
     host: str = "",
     port: int = 25565,
+    player: str = "",
+    version: str = "",
     motd: str = "",
     maxplayers: int = -1,
     cracked: bool = False,
@@ -698,6 +702,9 @@ async def joinServer(ctx: interactions.ComponentContext):
     msg = ctx.message.embeds[0]
     host = msg.title[2:]  # exclude the online symbol
 
+    # clear nmp cache
+    serverLib.clearNMPCache()
+
     # spawn a text box to ask for an email
     await emailModal(ctx, host)
 
@@ -718,9 +725,8 @@ async def emailModalResponse(
     )
 
     while serverLib.getState() == "NOT_CONNECTED":
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.1)
 
-    logger.print("state: " + serverLib.getState())
     if "AUTHENTICATING:" in serverLib.getState():
         code = serverLib.getState().split("AUTHENTICATING:")[1]
         logger.print("Code: " + code)
@@ -733,13 +739,14 @@ async def emailModalResponse(
                     description="Please enter the code `{}` at https://www.microsoft.com/link in order to authenticate.\nYou will have three minutes before the code expires.".format(
                         code
                     ),
+                    color=0x00FF00,
                 )
             ],
             ephemeral=True,
         )
 
         tStart = time.time()
-        while "AUTHENTICATING:" in serverLib.getState() or time.time() - tStart < 180:
+        while "AUTHENTICATING:" in serverLib.getState() and time.time() - tStart < 180:
             await asyncio.sleep(1)
 
         if "AUTHENTICATING:" in serverLib.getState():
@@ -757,7 +764,7 @@ async def emailModalResponse(
 
     logger.print("state: " + serverLib.getState())
     while serverLib.getState() == "CONNECTING":
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.1)
 
     if serverLib.getState() == "CONNECTED":
         print("Connected")
@@ -820,7 +827,8 @@ async def emailModalResponse(
                 inline=True,
             )
 
-        await command_send(ctx, embeds=[embed])
+        await command_send(ctx, embeds=[embed], ephemeral=True)
+        serverLib.clearNMPCache()
         return
 
     if serverLib.getState().startswith("DISCONNECTED"):
@@ -848,6 +856,7 @@ async def emailModalResponse(
         else:
             print("Error")
 
+        serverLib.clearNMPCache()
         return
 
     await command_send(  # failed to join
@@ -862,6 +871,7 @@ async def emailModalResponse(
         ],
         ephemeral=True,
     )
+    serverLib.clearNMPCache()
 
 
 @bot.command(
@@ -995,6 +1005,7 @@ A list of servers that match the search
 async def on_ready():
     user = await bot.get_self_user()
     logger.print("Bot is signed in as {}".format(user.username))
+
 
 # Run the bot
 # ---------------------------------------------
