@@ -127,7 +127,8 @@ class Server:
 
         # check that the cache exists
         if os.name == "nt":
-            minecraftPath = os.path.expandvars(r"%appdata%\.minecraft\nmp-cache")
+            minecraftPath = os.path.expandvars(
+                r"%appdata%\.minecraft\nmp-cache")
             if not os.path.exists(minecraftPath):
                 return
         elif os.name == "posix":
@@ -136,7 +137,8 @@ class Server:
 
         if os.getpid() == 0:  # if running as root
             if os.name == "nt":  # windows
-                minecraftPath = os.path.expandvars(r"%appdata%\.minecraft\nmp-cache")
+                minecraftPath = os.path.expandvars(
+                    r"%appdata%\.minecraft\nmp-cache")
                 if os.path.exists(minecraftPath):
                     os.remove(minecraftPath)
                 else:
