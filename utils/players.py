@@ -129,7 +129,7 @@ class Players:
         if self.col is None:
             self.logger.print("Collection not set")
             return []
-        
+
         # generate all the player lists
 
         # Database list
@@ -148,8 +148,10 @@ class Players:
             server = mcstatus.JavaServer.lookup(host + ":" + str(port))
             status = server.status()
             if status.players.sample is not None:
-                normal = [{"name": self.text.cFilter(p.name, True), "uuid": p.id}
-                          for p in status.players.sample]
+                normal = [
+                    {"name": self.text.cFilter(p.name, True), "uuid": p.id}
+                    for p in status.players.sample
+                ]
         except TimeoutError:
             self.logger.error("Timeout error")
             normal = []
@@ -159,36 +161,31 @@ class Players:
         except Exception:
             self.logger.error(traceback.format_exc())
             normal = []
-        
-        smapleNames = [p["name"] for p in normal]
 
+        smapleNames = [p["name"] for p in normal]
 
         # combine all the names fetched from the server
         onlineNames = cpNames + smapleNames
-        
+
         # remove duplicates
         onlineNames = list(dict.fromkeys(onlineNames))
         # clean the names
         for name in onlineNames:
             name = self.text.cFilter(name, True)
-        
+
         players = []
         for name in DBnames:
             online = name in onlineNames
-            
+
             # get uuid
             url = "https://api.mojang.com/users/profiles/minecraft/" + name
             uuid = "---n/a---"
             res = requests.get(url)
             if "error" not in res.text.lower():
                 uuid = res.json()["id"]
-            
-            players.append({
-                "name": name,
-                "uuid": uuid,
-                "online": online
-            })
-        
+
+            players.append({"name": name, "uuid": uuid, "online": online})
+
         # check if any players are missing from the database
         for name in onlineNames:
             if name not in DBnames:
@@ -198,13 +195,15 @@ class Players:
                 if "error" not in res.text.lower():
                     uuid = res.json()["id"]
                 players.append({"name": name, "uuid": uuid, "online": True})
-        
+
         # update the database
         self.col.update_one(
             {"host": host},
             {"$set": {"lastOnlinePlayersList": players}},
             upsert=True,
         )
-        self.logger.info(f"Updated player list for {host} ({len(players)} players): {players}")
+        self.logger.info(
+            f"Updated player list for {host} ({len(players)} players): {players}"
+        )
 
         return DBplayers

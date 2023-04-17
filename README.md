@@ -36,6 +36,7 @@ You can now use the new bot, it is still in beta, but it is much more stable and
 * Linux/Docker (for the scanner, the discord bot will run on windows)
 * Masscan (for the scanner)
 * requirements.txt (needs to be run with pip3)
+* node.js 16 or higher
 
 ### Normal
 
