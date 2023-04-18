@@ -68,11 +68,16 @@ def print(*args, **kwargs):
 def check(scannedHost):
     # example host: "127.0.0.1": [{"status": "open", "port": 25565, "proto": "tcp"}]
 
-    ip = (
-        json.loads(scannedHost)[0]
-        if type(scannedHost) == list
-        else list(scannedHost.keys())[0]
-    )
+    try:
+        ip = (
+            json.loads(scannedHost)[0]
+            if type(scannedHost) is str
+            else list(scannedHost.keys())[0]
+        )
+    except Exception:
+        logger.print("Error parsing host: " + str(scannedHost))
+        logger.error(traceback.format_exc())
+        return
     portsJson = scannedHost[ip]
     for portJson in portsJson:
         if portJson["status"] == "open":
