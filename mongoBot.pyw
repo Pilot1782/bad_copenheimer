@@ -26,6 +26,7 @@ import utils
 
 autoRestart = False
 allowJoin = False
+DEBUG = False
 try:
     from privVars import *
 except ImportError:
@@ -52,7 +53,7 @@ client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi(
 db = client["mc"]
 col = db["servers"]
 
-utils = utils.utils(col, debug=True, allowJoin=allowJoin)
+utils = utils.utils(col, debug=DEBUG, allowJoin=allowJoin)
 logger = utils.logger
 databaseLib = utils.database
 finderLib = utils.finder
@@ -773,6 +774,18 @@ async def emailModalResponse(
                 ephemeral=True,
             )
             return
+        else:
+            await command_send(
+                ctx,
+                embeds=[
+                    interactions.Embed(
+                        label="Join server",
+                        description="Connecting to {}...".format(host),
+                        color=finderLib.ORANGE,
+                    )
+                ],
+                ephemeral=True,
+            ) if DEBUG else None
 
     logger.print("state: " + serverLib.getState())
     while serverLib.getState() == "CONNECTING":
