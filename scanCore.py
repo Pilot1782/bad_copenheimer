@@ -1,4 +1,5 @@
 import asyncio
+import json
 import multiprocessing
 import multiprocessing.pool
 import random
@@ -67,7 +68,7 @@ def print(*args, **kwargs):
 def check(scannedHost):
     # example host: "127.0.0.1": [{"status": "open", "port": 25565, "proto": "tcp"}]
 
-    ip = list(scannedHost.keys())[0]
+    ip = json.loads(scannedHost)[0] if type(scannedHost) == list else list(scannedHost.keys())[0]
     portsJson = scannedHost[ip]
     for portJson in portsJson:
         if portJson["status"] == "open":
@@ -97,7 +98,7 @@ def scan(ip_list):
             arguments="--max-rate {}".format(pingsPerSec / maxActive),
             sudo=True,
         )
-        result = json.loads(scanner.scan_result)  # type: ignore
+        result = json.loads(scanner.scan_result)
 
         return list(result["scan"])
     except OSError:
