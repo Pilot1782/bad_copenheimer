@@ -1013,6 +1013,7 @@ async def help(ctx: interactions.CommandContext):
 *Arguments:*
 `host` - The host of the server to ping (not a search argument, and if included will ignore all other arguments except `port`)
 ....`port` - The port of the server (optional and only used when `host` is included, note that `host:port` is supported instead of using this argument)
+....If the passed host is not a valid server ie: hypixel.net, it will be treated as a search argument and find servers with similar hostnames, hypixel.net would return mc.hypixel.net
 
 `player` - The name or uuid of a player
 
