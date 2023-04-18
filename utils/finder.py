@@ -41,13 +41,13 @@ class Finder:
         self.logger = logger
         self.Text = Text
         self.Player = Player
-        
+
         # Hex colors
-        self.RED = 0xFF0000     # Error
-        self.GREEN = 0x00FF00   # Success
-        self.PINK = 0xFFC0CB    # Offline
+        self.RED = 0xFF0000  # Error
+        self.GREEN = 0x00FF00  # Success
+        self.PINK = 0xFFC0CB  # Offline
         self.YELLOW = 0xFFFF00  # Warning
-        self.BLUE = 0x0000FF    # Info
+        self.BLUE = 0x0000FF  # Info
         self.ORANGE = 0xFFA500  # Debug
 
     def check(
@@ -118,7 +118,8 @@ class Finder:
             cpLST = self.Player.crackedPlayerList(
                 host, str(port)
             )  # cracked player list
-            cracked = bool((cpLST is not None and type(cpLST) is not bool) or cracked)
+            cracked = bool(
+                (cpLST is not None and type(cpLST) is not bool) or cracked)
 
             self.logger.debug("Getting players")
             players = []
@@ -173,7 +174,8 @@ class Finder:
                                 }
                             )
                 elif cracked:
-                    self.logger.debug("Getting players from cracked player list")
+                    self.logger.debug(
+                        "Getting players from cracked player list")
                     playerlst = cpLST
 
                     for player in playerlst:
@@ -190,11 +192,13 @@ class Finder:
                             }
                         )
             except Exception:
-                self.logger.print("Error getting player list", traceback.format_exc())
+                self.logger.print("Error getting player list",
+                                  traceback.format_exc())
                 self.logger.error(traceback.format_exc())
 
             # remove duplicates from player list
-            players = [i for n, i in enumerate(players) if i not in players[n + 1 :]]
+            players = [i for n, i in enumerate(
+                players) if i not in players[n + 1:]]
 
             cracked = bool(joinability == "CRACKED")
 
@@ -312,7 +316,8 @@ class Finder:
                 return None
         except:
             self.logger.error(traceback.format_exc())
-            self.logger.error("Error getting document at index: {}".format(pipeline))
+            self.logger.error(
+                "Error getting document at index: {}".format(pipeline))
             return None
 
     def genEmbed(
@@ -466,7 +471,8 @@ class Finder:
                     name="Last Online",
                     value=(
                         time.strftime(
-                            "%Y/%m/%d %H:%M:%S", time.localtime(info["lastOnline"])
+                            "%Y/%m/%d %H:%M:%S", time.localtime(
+                                info["lastOnline"])
                         )
                         if not online
                         else time.strftime(  # give the last online time if the server is offline
@@ -576,7 +582,8 @@ class Finder:
             server = mcstatus.JavaServer.lookup(ip + ":" + str(port))
             version = server.status().version.protocol if version == -1 else version
 
-            connection = mcstatus.protocol.connection.TCPSocketConnection((ip, port))
+            connection = mcstatus.protocol.connection.TCPSocketConnection(
+                (ip, port))
 
             # Send handshake packet: ID, protocol version, server address, server port, intention to login
             # This does not change between versions
