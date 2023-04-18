@@ -217,17 +217,12 @@ class Finder:
             if not self.col.find_one({"host": ip}) and not self.col.find_one(
                 {"hostname": hostname}
             ):
-                self.print("{} not in database, adding...".format(host))
+                self.logger.print("{} not in database, adding...".format(host))
                 self.col.update_one(
                     {"host": ip},
                     {"$set": data},
                     upsert=True,
                 )
-                if webhook != "":
-                    requests.post(
-                        webhook,
-                        json={"content": f"New server added to database: {host}"},
-                    )
             else:  # update current values with database values
                 dbVal = self.col.find_one({"host": ip})
                 if dbVal is not None:
@@ -418,6 +413,7 @@ class Finder:
                 return [embed, None, row]
 
         online = False
+        motd = info["lastOnlineDescription"]
         try:
             server = mcstatus.JavaServer.lookup(info["host"])
             online = True
@@ -426,6 +422,7 @@ class Finder:
 
             # update the online player count
             info["lastOnlinePlayers"] = status.players.online
+            motd = self.Text.colorAnsi(text=status.description)
         except:
             self.logger.debug("Server offline", info["host"])
 
@@ -438,12 +435,9 @@ class Finder:
             + info["host"],
             description="Host name: `"
             + hostname
-            + "`\n```\n"
-            + str(info["lastOnlineDescription"])
-            .encode("unicode_escape")
-            .decode("utf-8")
-            .replace("\\n", "\n")
-            + "```",
+            + "`\n```ansi\n"
+            + str(motd)
+            + "\n```",
             timestamp=self.Text.timeNow(),
             color=(0x00FF00 if online else 0xFF0000),
             type="rich",
