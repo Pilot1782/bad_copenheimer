@@ -28,7 +28,7 @@ class Text:
         text = re.sub(r"§[0-9a-fk-or]*", "", text).replace("|", "")
         if trim:
             text = text.strip()
-        
+
         text = text.replace("@", "@ ")  # fix @ mentions
         return text
 
