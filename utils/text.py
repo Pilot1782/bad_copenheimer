@@ -84,17 +84,17 @@ class Text:
             "§d": colorChar + "[35m",
             "§e": colorChar + "[33m",
             "§f": colorChar + "[37m",
-            "§l":   "",
-            "§k":   "",
-            "§m":   "",
-            "§n":   "",
-            "§o":   "",
-            "§r":   "",
+            "§l": "",
+            "§k": "",
+            "§m": "",
+            "§n": "",
+            "§o": "",
+            "§r": "",
         }
 
         for color in ansi:
             text = text.replace(color, ansi[color])
-        
+
         # remove remaining color codes
         text = re.sub(r"§[0-9a-fk-or]*", "", text)
 
