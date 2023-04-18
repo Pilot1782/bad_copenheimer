@@ -88,6 +88,9 @@ class Server:
                 self.inventory.append(item)
 
             self.clearNMPCache()
+            
+            # disconnect the bot
+            self.bot.quit()
 
         @On(self.bot, "end")
         def handle(*args):

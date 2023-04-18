@@ -51,12 +51,20 @@ class Finder:
         self.ORANGE = 0xFFA500  # Debug
 
     def check(
-        self, host: str, port: str = "25565", webhook: str = "", *args
+        self,
+        host: str,
+        port: str = "25565",
+        webhook: str = "",
+        full: bool = True,
+        *args,
     ) -> Optional[Dict]:
         """Checks out a host and adds it to the database if it's not there
 
         Args:
             host (String): ip of the server
+            port (String, optional): port of the server. Defaults to "25565".
+            webhook (String, optional): webhook to send the message to. Defaults to "".
+            full (bool, optional): if the full scan should be done. Defaults to True.
 
         Returns:
             dict: {
@@ -115,11 +123,8 @@ class Finder:
             server = mcstatus.JavaServer.lookup(host + ":" + str(port))
             status = server.status()
 
-            cpLST = self.Player.crackedPlayerList(
-                host, str(port)
-            )  # cracked player list
-            cracked = bool(
-                (cpLST is not None and type(cpLST) is not bool) or cracked)
+            cpLST = self.Player.crackedPlayerList(host, str(port)) if full else None
+            cracked = bool((cpLST is not None and type(cpLST) is not bool) or cracked)
 
             self.logger.debug("Getting players")
             players = []
@@ -174,9 +179,8 @@ class Finder:
                                 }
                             )
                 elif cracked:
-                    self.logger.debug(
-                        "Getting players from cracked player list")
-                    playerlst = cpLST
+                    self.logger.debug("Getting players from cracked player list")
+                    playerlst = cpLST if cpLST is not None else []
 
                     for player in playerlst:
                         jsonResp = requests.get(
@@ -192,13 +196,11 @@ class Finder:
                             }
                         )
             except Exception:
-                self.logger.print("Error getting player list",
-                                  traceback.format_exc())
+                self.logger.print("Error getting player list", traceback.format_exc())
                 self.logger.error(traceback.format_exc())
 
             # remove duplicates from player list
-            players = [i for n, i in enumerate(
-                players) if i not in players[n + 1:]]
+            players = [i for n, i in enumerate(players) if i not in players[n + 1 :]]
 
             cracked = bool(joinability == "CRACKED")
 
@@ -231,6 +233,8 @@ class Finder:
                     {"$set": data},
                     upsert=True,
                 )
+                # we need an id now
+                data = self.col.find_one({"host": ip})
             else:  # update current values with database values
                 dbVal = self.col.find_one({"host": ip})
                 if dbVal is not None:
@@ -279,7 +283,11 @@ class Finder:
                             self.logger.error(traceback.format_exc())
                             break
 
-            self.col.update_one({"host": ip}, {"$set": data}, upsert=True)
+                self.col.update_one(
+                    {"host": ip},
+                    {"$set": data},
+                    upsert=True,
+                )
 
             return data
         except TimeoutError:
@@ -316,8 +324,7 @@ class Finder:
                 return None
         except:
             self.logger.error(traceback.format_exc())
-            self.logger.error(
-                "Error getting document at index: {}".format(pipeline))
+            self.logger.error("Error getting document at index: {}".format(pipeline))
             return None
 
     def genEmbed(
@@ -471,8 +478,7 @@ class Finder:
                     name="Last Online",
                     value=(
                         time.strftime(
-                            "%Y/%m/%d %H:%M:%S", time.localtime(
-                                info["lastOnline"])
+                            "%Y/%m/%d %H:%M:%S", time.localtime(info["lastOnline"])
                         )
                         if not online
                         else time.strftime(  # give the last online time if the server is offline
@@ -582,8 +588,7 @@ class Finder:
             server = mcstatus.JavaServer.lookup(ip + ":" + str(port))
             version = server.status().version.protocol if version == -1 else version
 
-            connection = mcstatus.protocol.connection.TCPSocketConnection(
-                (ip, port))
+            connection = mcstatus.protocol.connection.TCPSocketConnection((ip, port))
 
             # Send handshake packet: ID, protocol version, server address, server port, intention to login
             # This does not change between versions
@@ -646,4 +651,12 @@ class Finder:
         Args:
             server (dict): The server to update
         """
-        threading.Thread(target=self.check, args=(server["host"],)).start()
+        threading.Thread(
+            target=self.check,
+            args=(
+                server["host"],
+                "25565",
+                "",
+                False,
+            ),
+        ).start()

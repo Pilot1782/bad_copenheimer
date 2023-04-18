@@ -197,6 +197,8 @@ async def find(
 
     # special matching
     if host:
+        validServ = True
+        # check if the given host is a valid server
         serverList = [None]
         if host.replace(".", "").isdigit():
             serverList = [col.find_one({"host": host})]
@@ -214,25 +216,27 @@ async def find(
 
             if info is None:
                 logger.print("Server not online")
-                await command_send(
-                    ctx,
-                    embeds=[
-                        interactions.Embed(
-                            title="Error",
-                            description="Server not in database and not online",
-                            timestamp=timeNow(),
-                            color=finderLib.RED,
-                        )
-                    ],
-                    ephemeral=True,
-                )
-                return
+                validServ = False
             else:
                 serverList = col.find_one({"host": info["host"]})
 
-        flag = True
-        numServers = 1
-        pipeline[0]["$match"]["$and"].append({"_id": ObjectId(serverList[0]["_id"])})
+        if validServ:
+            flag = True
+            numServers = 1
+            pipeline[0]["$match"]["$and"].append(
+                {"_id": ObjectId(serverList[0]["_id"])}
+            )
+        else:
+            # search the database for serbers with similar hostnames
+            # search with regex applyed to 'hostname' and 'host' of .*host.*
+            pipeline[0]["$match"]["$and"].append(
+                {
+                    "$or": [
+                        {"hostname": {"$regex": ".*" + host + ".*"}},
+                        {"host": {"$regex": ".*" + host + ".*"}},
+                    ]
+                }
+            )
     if _id:
         # check that _id is vaild
         if len(_id) != 12 and len(_id) != 24:
@@ -690,9 +694,9 @@ async def rand_select(ctx: interactions.ComponentContext):
 
 async def emailModal(ctx: interactions.Modal, host: str):
     textInp = interactions.TextInput(
-        label="email",
+        label="Email",
         custom_id="email",
-        placeholder="Email",
+        placeholder="pilot1782@verygooddomain.com",
         min_length=1,
         max_length=100,
         style=interactions.TextStyleType.SHORT,
