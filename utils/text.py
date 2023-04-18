@@ -56,9 +56,29 @@ class Text:
         # use the ansi color codes
         text = self.colorAnsi(text)
 
-        return "```ansi\n" + text + "\n```"
+        text = "```ansi\n" + text + "\n```"
+
+        # loop through and escape all unicode chars that are not \u001b or \n
+        text = "".join(
+            [
+                char
+                if char == "\u001b" or char == "\n"
+                else unicodedata.normalize("NFKD", char)
+                for char in text
+            ]
+        )
+
+        return text
 
     def colorAnsi(self, text: str) -> str:
+        """Changes color tags to those that work with ansi code blocks
+
+        Args:​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​
+            text (str): text to change
+
+        Returns:
+            str: text with ansi color tags
+        """
         # 30: Gray   <- §7
         # 31: Red    <- §c
         # 32: Green  <- §a
@@ -84,7 +104,7 @@ class Text:
             "§d": colorChar + "[35m",
             "§e": colorChar + "[33m",
             "§f": colorChar + "[37m",
-            "§l": "",
+            "§l": "",  # text styles
             "§k": "",
             "§m": "",
             "§n": "",

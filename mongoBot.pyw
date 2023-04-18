@@ -220,6 +220,7 @@ async def find(
                             title="Error",
                             description="Server not in database and not online",
                             timestamp=timeNow(),
+                            color=finderLib.RED,
                         )
                     ],
                     ephemeral=True,
@@ -239,7 +240,10 @@ async def find(
                 ctx,
                 embeds=[
                     interactions.Embed(
-                        title="Error", description="Invalid ID", timestamp=timeNow()
+                        title="Error",
+                        description="Invalid ID Length",
+                        timestamp=timeNow(),
+                        color=finderLib.RED,
                     )
                 ],
                 ephemeral=True,
@@ -256,7 +260,10 @@ async def find(
                 ctx,
                 embeds=[
                     interactions.Embed(
-                        title="Error", description="Invalid ID", timestamp=timeNow()
+                        title="Error",
+                        description="Invalid ID",
+                        timestamp=timeNow(),
+                        color=finderLib.RED,
                     )
                 ],
                 ephemeral=True,
@@ -274,6 +281,7 @@ async def find(
                         title="Error",
                         description="Server not found",
                         timestamp=timeNow(),
+                        color=finderLib.RED,
                     )
                 ],
                 ephemeral=True,
@@ -309,6 +317,7 @@ async def find(
                         title="Error",
                         description=f"{player} not found in minecraft api",
                         timestamp=timeNow(),
+                        color=finderLib.RED,
                     )
                 ],
                 ephemeral=True,
@@ -336,7 +345,7 @@ async def find(
                 interactions.Embed(
                     title="Error",
                     description=f"{player} not found in database",
-                    color=0xFF6347,
+                    color=finderLib.RED,
                     timestamp=timeNow(),
                 )
             ]
@@ -348,7 +357,7 @@ async def find(
         embed = interactions.Embed(
             title=f"{name} found",
             description=f"Found {name} in {numServers} servers",
-            color=0x00FF00,
+            color=finderLib.GREEN,
             timestamp=timeNow(),
         )
         embed.set_thumbnail(url="attachment://playerhead.png")
@@ -399,7 +408,7 @@ async def find(
                 interactions.Embed(
                     title="Error",
                     description="No search parameters given",
-                    color=0xFF6347,
+                    color=finderLib.YELLOW,
                     timestamp=timeNow(),
                 )
             ],
@@ -441,7 +450,7 @@ async def find(
                         interactions.Embed(
                             title="Error",
                             description="No servers found",
-                            color=0xFF6347,
+                            color=finderLib.YELLOW,
                             timestamp=timeNow(),
                         )
                     ],
@@ -458,6 +467,7 @@ async def find(
                         + str(numServers)
                         + " servers...",
                         timestamp=timeNow(),
+                        color=finderLib.BLUE,
                     )
                 ],
             )
@@ -485,7 +495,7 @@ async def find(
                     interactions.Embed(
                         title="Error",
                         description="An error occured while searching. Please try again later and check the logs for more details.",
-                        color=0xFF0000,
+                        color=finderLib.RED,
                         timestamp=timeNow(),
                     )
                 ],
@@ -513,6 +523,7 @@ async def show_players(ctx: interactions.ComponentContext):
             title="Players",
             description="{} players logged".format(len(players)),
             timestamp=timeNow(),
+            color=finderLib.GREEN,
         )
 
         for player in players:
@@ -541,7 +552,7 @@ async def show_players(ctx: interactions.ComponentContext):
                 interactions.Embed(
                     title="Error",
                     description="An error occured while searching. Please try again later and check the logs for more details.",
-                    color=0xFF0000,
+                    color=finderLib.RED,
                     timestamp=timeNow(),
                 )
             ],
@@ -592,7 +603,7 @@ async def rand_select(ctx: interactions.ComponentContext):
                 interactions.Embed(
                     title="Loading...",
                     description="Loading the next server...",
-                    color=0x00FF00,
+                    color=finderLib.BLUE,
                     timestamp=timeNow(),
                     footer=interactions.EmbedFooter(
                         text="Key:---n/a---/|\\0"
@@ -638,7 +649,7 @@ async def rand_select(ctx: interactions.ComponentContext):
                 interactions.Embed(
                     title="Loading...",
                     description="Loading {}...".format(info["host"]),
-                    color=0x00FF00,
+                    color=finderLib.BLUE,
                     timestamp=timeNow(),
                     footer=interactions.EmbedFooter(
                         text="Key:---n/a---/|\\{}".format(index)
@@ -668,7 +679,7 @@ async def rand_select(ctx: interactions.ComponentContext):
                 interactions.Embed(
                     title="Error",
                     description="An error occured while searching. Please try again later and check the logs for more details.",
-                    color=0xFF0000,
+                    color=finderLib.RED,
                     timestamp=timeNow(),
                 )
             ],
@@ -739,7 +750,7 @@ async def emailModalResponse(
                     description="Please enter the code `{}` at https://www.microsoft.com/link in order to authenticate.\nYou will have three minutes before the code expires.".format(
                         code
                     ),
-                    color=0x00FF00,
+                    color=finderLib.BLUE,
                 )
             ],
             ephemeral=True,
@@ -756,6 +767,7 @@ async def emailModalResponse(
                     interactions.Embed(
                         label="Authentication required",
                         description="The code has expired. Please try again.",
+                        color=finderLib.RED,
                     )
                 ],
                 ephemeral=True,
@@ -814,7 +826,7 @@ async def emailModalResponse(
             description="Done! You spawned at {} with {} players holding a(n) {}.".format(
                 position, plyOnline, heldItem
             ),
-            color=0x00FF00,
+            color=finderLib.GREEN,
             timestamp=timeNow(),
         ).set_footer("Powered by MineFlayer")
 
@@ -847,7 +859,7 @@ async def emailModalResponse(
                     interactions.Embed(
                         title="Join Server",
                         description="Error: This server is whitelisted or you are banned. Please contact the server owner to be allowed back in.",
-                        color=0xFF0000,
+                        color=finderLib.YELLOW,
                         timestamp=timeNow(),
                     )
                 ],
@@ -865,7 +877,7 @@ async def emailModalResponse(
             interactions.Embed(
                 title="Join Server",
                 description="Error: {}".format(serverLib.getState()),
-                color=0xFF0000,
+                color=finderLib.RED,
                 timestamp=timeNow(),
             )
         ],
@@ -886,7 +898,10 @@ async def stats(ctx: interactions.CommandContext):
         await ctx.send(
             embeds=[
                 interactions.Embed(
-                    title="Stats", description="Getting stats...", timestamp=timeNow()
+                    title="Stats",
+                    description="Getting stats...",
+                    timestamp=timeNow(),
+                    color=finderLib.BLUE,
                 )
             ]
         )
@@ -899,7 +914,12 @@ async def stats(ctx: interactions.CommandContext):
         text = f"Total servers: `{serverCount}`\nPlayer Count: `...`\nPlayers logged: `...`\nMost common version:\n`...`"
         await ctx.edit(
             embeds=[
-                interactions.Embed(title="Stats", description=text, timestamp=timeNow())
+                interactions.Embed(
+                    title="Stats",
+                    description=text,
+                    timestamp=timeNow(),
+                    color=finderLib.BLUE,
+                )
             ]
         )
 
@@ -912,7 +932,12 @@ async def stats(ctx: interactions.CommandContext):
         )
         await ctx.edit(
             embeds=[
-                interactions.Embed(title="Stats", description=text, timestamp=timeNow())
+                interactions.Embed(
+                    title="Stats",
+                    description=text,
+                    timestamp=timeNow(),
+                    color=finderLib.BLUE,
+                )
             ]
         )
 
@@ -934,7 +959,12 @@ async def stats(ctx: interactions.CommandContext):
 
         await ctx.edit(
             embeds=[
-                interactions.Embed(title="Stats", description=text, timestamp=timeNow())
+                interactions.Embed(
+                    title="Stats",
+                    description=text,
+                    timestamp=timeNow(),
+                    color=finderLib.BLUE,
+                )
             ]
         )
     except Exception:
@@ -994,6 +1024,7 @@ A list of servers that match the search
 `/help` - This message
 """,
                 timestamp=timeNow(),  # local time
+                color=finderLib.BLUE,
             )
         ],
         ephemeral=True,
