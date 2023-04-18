@@ -88,7 +88,7 @@ class Server:
                 self.inventory.append(item)
 
             self.clearNMPCache()
-            
+
             # disconnect the bot
             self.bot.quit()
 
