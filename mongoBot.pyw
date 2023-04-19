@@ -1068,11 +1068,10 @@ if __name__ == "__main__":
             if e == KeyboardInterrupt:
                 break
             else:
-                print(e)
-                logger.print(traceback.format_exc())
+                logger.error(traceback.format_exc())
                 time.sleep(30)
                 if autoRestart:
-                    print("Restarting...")
+                    logger.print("Restarting...")
                     continue
                 else:
                     break

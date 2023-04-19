@@ -199,7 +199,15 @@ class Players:
                 players.append({"name": name, "uuid": uuid, "online": True})
 
         # remove any objects which have duplicate names
-        players = [dict(t) for t in {tuple(d.items()) for d in players}]
+        players2 = []
+        for player in players:
+            if player["name"] not in [p["name"] for p in players2]:
+                players2.append(player)
+            else:
+                # make sure that if online is true for any of the duplicates, it is true for all
+                for p in players2:
+                    if p["name"] == player["name"]:
+                        p["online"] = p["online"] or player["online"]
 
         # update the database
         self.col.update_one(
@@ -211,4 +219,4 @@ class Players:
             f"Updated player list for {host} ({len(players)} players): {players}"
         )
 
-        return DBplayers
+        return players

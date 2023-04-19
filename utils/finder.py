@@ -123,10 +123,8 @@ class Finder:
             server = mcstatus.JavaServer.lookup(host + ":" + str(port))
             status = server.status()
 
-            cpLST = self.Player.crackedPlayerList(
-                host, str(port)) if full else None
-            cracked = bool(
-                (cpLST is not None and type(cpLST) is not bool) or cracked)
+            cpLST = self.Player.crackedPlayerList(host, str(port)) if full else None
+            cracked = bool((cpLST is not None and type(cpLST) is not bool) or cracked)
 
             self.logger.debug("Getting players")
             players = []
@@ -181,8 +179,7 @@ class Finder:
                                 }
                             )
                 elif cracked:
-                    self.logger.debug(
-                        "Getting players from cracked player list")
+                    self.logger.debug("Getting players from cracked player list")
                     playerlst = cpLST if cpLST is not None else []
 
                     for player in playerlst:
@@ -199,15 +196,26 @@ class Finder:
                             }
                         )
             except Exception:
-                self.logger.print("Error getting player list",
-                                  traceback.format_exc())
+                self.logger.print("Error getting player list", traceback.format_exc())
                 self.logger.error(traceback.format_exc())
 
             # remove duplicates from player list
-            players = [i for n, i in enumerate(
-                players) if i not in players[n + 1:]]
+            players = [i for n, i in enumerate(players) if i not in players[n + 1 :]]
 
             cracked = bool(joinability == "CRACKED")
+
+            # get the description
+            rawMOTD = status.raw["description"]
+
+            if "extra" in rawMOTD and "text" in rawMOTD:
+                motd = rawMOTD["text"]
+                for extra in rawMOTD["extra"]:
+                    motd += extra["text"]
+            elif "text" in rawMOTD:
+                motd = rawMOTD["text"]
+                motd = re.sub(r"§.", "", str(motd))
+            else:
+                motd = re.sub(r"§.", "", str(rawMOTD))
 
             data = {
                 "host": ip,
@@ -217,7 +225,7 @@ class Finder:
                 "lastOnlineVersion": self.Text.cFilter(
                     str(re.sub(r"§\S*[|]*\s*", "", status.version.name))
                 ),
-                "lastOnlineDescription": self.Text.cFilter(str(status.description)),
+                "lastOnlineDescription": self.Text.cFilter(str(motd)),
                 "lastOnlinePing": int(status.latency * 10),
                 "lastOnlinePlayersList": players,
                 "lastOnlinePlayersMax": status.players.max,
@@ -329,8 +337,7 @@ class Finder:
                 return None
         except:
             self.logger.error(traceback.format_exc())
-            self.logger.error(
-                "Error getting document at index: {}".format(pipeline))
+            self.logger.error("Error getting document at index: {}".format(pipeline))
             return None
 
     def genEmbed(
@@ -443,9 +450,23 @@ class Finder:
 
             # update the online player count
             info["lastOnlinePlayers"] = status.players.online
-            motd = self.Text.markFilter(text=status.description)
+
+            rawMotd = status.raw["description"]
+            if "text" in rawMotd and "extra" in rawMotd:
+                motd = rawMotd["text"]
+                for i in rawMotd["extra"]:
+                    motd += self.Text.colorMine(i["color"]) + i["text"]
+            elif "text" in rawMotd:
+                motd = rawMotd["text"]
+            else:
+                motd = rawMotd
+
+            motd = self.Text.markFilter(motd)
+
+            self.logger.debug(f"Raw MOTD: {rawMotd}, MOTD: {motd}")
         except:
             self.logger.debug("Server offline", info["host"])
+            self.logger.debug(traceback.format_exc())
 
         hostname = info["hostname"] if "hostname" in info else info["host"]
         whitelisted = info["whitelisted"] if "whitelisted" in info else False
@@ -484,8 +505,7 @@ class Finder:
                     name="Last Online",
                     value=(
                         time.strftime(
-                            "%Y/%m/%d %H:%M:%S", time.localtime(
-                                info["lastOnline"])
+                            "%Y/%m/%d %H:%M:%S", time.localtime(info["lastOnline"])
                         )
                         if not online
                         else time.strftime(  # give the last online time if the server is offline
@@ -595,8 +615,7 @@ class Finder:
             server = mcstatus.JavaServer.lookup(ip + ":" + str(port))
             version = server.status().version.protocol if version == -1 else version
 
-            connection = mcstatus.protocol.connection.TCPSocketConnection(
-                (ip, port))
+            connection = mcstatus.protocol.connection.TCPSocketConnection((ip, port))
 
             # Send handshake packet: ID, protocol version, server address, server port, intention to login
             # This does not change between versions

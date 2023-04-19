@@ -120,6 +120,29 @@ class Text:
 
         return text
 
+    def colorMine(self, color: str) -> str:
+        # given a color like 'yellow' return the color code like '§e'
+        color = color.lower()
+
+        if color == "gray":
+            return "§7"
+        elif color == "red":
+            return "§c"
+        elif color == "green":
+            return "§a"
+        elif color == "yellow":
+            return "§e"
+        elif color == "blue":
+            return "§9"
+        elif color == "pink":
+            return "§d"
+        elif color == "cyan":
+            return "§b"
+        elif color == "white":
+            return "§f"
+        else:
+            return ""
+
     def resolveHost(self, ip: str) -> str:
         """Resolves a hostname into a hostname
 
