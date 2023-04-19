@@ -69,7 +69,7 @@ def check(scannedHost):
     # example host: "127.0.0.1": [{"status": "open", "port": 25565, "proto": "tcp"}]
 
     try:
-        if scannedHost.replace(".").isdigit():
+        if scannedHost.replace(".", "").isdigit():
             ip = scannedHost
         else:
             ip = list(scannedHost.keys())[0]
