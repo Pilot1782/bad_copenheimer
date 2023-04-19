@@ -1,14 +1,17 @@
-import pymongo
-import masscan as msCan
-import traceback
-import time
-import threading
-import random
+import asyncio
+import json
 import multiprocessing
 import multiprocessing.pool
-import asyncio
-import funcs
+import random
 import sys
+import threading
+import time
+import traceback
+
+import masscan as msCan
+import pymongo
+
+import utils
 
 useWebHook, pingsPerSec, maxActive = False, 4800, 10
 masscan_search_path = (
@@ -18,6 +21,7 @@ masscan_search_path = (
     "/sw/bin/masscan",
     "/opt/local/bin/masscan",
 )
+DISCORD_WEBHOOK = "discord.api.com/..."
 try:
     from privVars import *
 except ImportError:
@@ -29,7 +33,7 @@ if MONGO_URL == "mongodb+srv://...":
     print("Please add your mongo url to privVars.py")
     input()
     sys.exit()
-if useWebHook and DSICORD_WEBHOOK == "discord.api.com/...":
+if useWebHook and DISCORD_WEBHOOK == "discord.api.com/...":
     print("Please add your discord webhook to privVars.py")
     input()
     sys.exit()
@@ -43,24 +47,56 @@ time_start = time.time()
 threads = []
 pool = multiprocessing.pool.ThreadPool(maxActive)
 
-client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi("1"))  # type: ignore
+client = pymongo.MongoClient(
+    MONGO_URL, server_api=pymongo.server_api.ServerApi("1")
+)  # type: ignore
 db = client["mc"]
 col = db["servers"]
-fncs = funcs.funcs(collection=col)
+
+utils = utils.utils(col, debug=DEBUG)
+logger = utils.logger
+finder = utils.finder
 
 # Funcs
 # ---------------------------------------------
 
 
 def print(*args, **kwargs):
-    fncs.print(" ".join(map(str, args)), **kwargs)
+    logger.print(*args, **kwargs)
 
 
-def check(host):
-    if useWebHook:
-        return fncs.check(host, webhook=DSICORD_WEBHOOK)
+def check(scannedHost):
+    # example host: "127.0.0.1": [{"status": "open", "port": 25565, "proto": "tcp"}]
+
+    try:
+        if scannedHost.replace(".", "").isdigit():
+            ip = scannedHost
+        else:
+            ip = list(scannedHost.keys())[0]
+    except Exception:
+        logger.print("Error parsing host: " + str(scannedHost))
+        logger.error(traceback.format_exc())
+        return
+
+    portsJson = (
+        scannedHost[ip]
+        if not isinstance(scannedHost, str)
+        else [{"status": "open", "port": 25565, "proto": "tcp"}]
+    )
+    for portJson in portsJson:
+        if portJson["status"] == "open":
+            if useWebHook:
+                return finder.check(
+                    host=str(ip) + ":" + str(portJson["port"]),
+                    webhook=DISCORD_WEBHOOK,
+                    full=False,
+                )
+            else:
+                return finder.check(
+                    host=str(ip) + ":" + str(portJson["port"]), full=False
+                )
     else:
-        return fncs.check(host)
+        return
 
 
 def scan(ip_list):
@@ -75,29 +111,18 @@ def scan(ip_list):
 
         scanner.scan(
             ip_list,
-            ports="25565",
+            ports="25565-25577",
             arguments="--max-rate {}".format(pingsPerSec / maxActive),
             sudo=True,
         )
-        result = json.loads(scanner.scan_result)  # type: ignore
+        result = json.loads(scanner.scan_result)
 
-        return list(result["scan"].keys())
+        return list(result["scan"])
     except OSError:
         sys.exit(0)
     except Exception:
-        Eprint(traceback.format_exc())
+        logger.error(traceback.format_exc())
         return []
-
-
-def Eprint(text):
-    """Error printer
-
-    Args:
-        text (String): Error text
-    """
-    text = str(text)
-    (disLog("Error: " + "".join(str(i) for i in text))) if useWebHook else None
-    fncs.dprint("\n" + "".join(str(i) for i in text) + "\n")
 
 
 def disLog(text, end="\r"):
@@ -109,7 +134,7 @@ def disLog(text, end="\r"):
             data = {"content": text + end}
             requests.post(url, data=data)
         except Exception:
-            Eprint(text + "\n" + traceback.format_exc())
+            logger.error(text + "\n" + traceback.format_exc())
 
 
 async def threader(ip_range):
@@ -122,7 +147,7 @@ async def threader(ip_range):
     except OSError:
         sys.exit(0)
     except Exception:
-        Eprint(traceback.format_exc())
+        logger.error(traceback.format_exc())
 
 
 def crank(ip_range):
@@ -152,15 +177,13 @@ async def makeThreads():
         # check to make sure that more than 2*maxActive threads haven't been created in the last 1 second
         if len(threads) >= maxActive * 2 and time.time() - tStart <= 1:
             await asyncio.sleep(0.5)
-            Eprint(
+            logger.error(
                 "Too many threads spawned to quickly, exiting\nPlease check the console and logs for more details"
             )
             sys.exit()
 
         t = threading.Thread(
-            target=crank,
-            args=(ip_list,),
-            name=f"Scan func thread: {ip_list}"
+            target=crank, args=(ip_list,), name=f"Scan func thread: {ip_list}"
         )
 
         threads.append(t)
