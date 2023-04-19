@@ -78,7 +78,11 @@ def check(scannedHost):
         logger.error(traceback.format_exc())
         return
 
-    portsJson = scannedHost[ip] if not isinstance(scannedHost, str) else [{"status": "open", "port": 25565, "proto": "tcp"}]
+    portsJson = (
+        scannedHost[ip]
+        if not isinstance(scannedHost, str)
+        else [{"status": "open", "port": 25565, "proto": "tcp"}]
+    )
     for portJson in portsJson:
         if portJson["status"] == "open":
             if useWebHook:
