@@ -449,10 +449,18 @@ class Finder:
         online = False
         motd = info["lastOnlineDescription"]
         try:
-            server = mcstatus.JavaServer.lookup(info["host"])
-            online = True
-            status = server.status()
-            online = True
+            status = None
+            for i in range(5):
+                try:
+                    mcstatus.JavaServer.lookup(info["host"])
+                    online = True
+                    status = mcstatus.JavaServer(info["host"]).status()
+                    break
+                except:
+                    time.sleep(0.5)
+
+            if status is None:
+                raise Exception("Server offline")
 
             # update the online player count
             info["lastOnlinePlayers"] = status.players.online
