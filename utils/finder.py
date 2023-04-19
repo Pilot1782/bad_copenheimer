@@ -86,7 +86,7 @@ class Finder:
             self.logger.debug("Collection is None")
             return None
 
-        self.logger.debug("Checking " + str(host))
+        self.logger.debug("Checking " + str(host)) if full else None
 
         # check for embeded port
         if ":" in host:
@@ -101,7 +101,7 @@ class Finder:
         try:
             mcstatus.JavaServer.lookup(host + ":" + str(port)).status()
         except Exception:
-            self.logger.debug("Server is offline")
+            self.logger.debug("Server is offline") if full else None
             return None
 
         # check the ip and hostname to make sure they arr vaild as a mc server

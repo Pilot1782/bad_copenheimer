@@ -87,10 +87,10 @@ def check(scannedHost):
         if portJson["status"] == "open":
             if useWebHook:
                 return finder.check(
-                    host=str(ip) + ":" + str(portJson["port"]), webhook=DISCORD_WEBHOOK
+                    host=str(ip) + ":" + str(portJson["port"]), webhook=DISCORD_WEBHOOK, full=False
                 )
             else:
-                return finder.check(host=str(ip) + ":" + str(portJson["port"]))
+                return finder.check(host=str(ip) + ":" + str(portJson["port"]), full=False)
     else:
         return
 
