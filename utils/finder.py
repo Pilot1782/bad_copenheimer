@@ -469,7 +469,10 @@ class Finder:
             if "text" in rawMotd and "extra" in rawMotd:
                 motd = rawMotd["text"]
                 for i in rawMotd["extra"]:
-                    motd += self.Text.colorMine(i["color"]) + i["text"]
+                    if "color" in i:
+                        motd += self.Text.colorMine(i["color"]) + i["text"]
+                    else:
+                        motd += i["text"]
             elif "text" in rawMotd:
                 motd = rawMotd["text"]
             else:
