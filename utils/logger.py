@@ -115,7 +115,7 @@ class Logger:
                 )
                 text2 = text2.replace("\n\n", "\n")
         except:
-            self.write("out.log does not exist")
+            self.error("out.log does not exist")
 
         return text1 + "\n" + text2
 
