@@ -36,6 +36,19 @@ class StreamToLogger(object):
         return text1 + "\n" + text2
 
 
+class emailFileHandler(logging.FileHandler):
+    def emit(self, record):
+        if (
+            "To sign in, use a web browser to open the page" in record.getMessage()
+            or "email_modal" in record.getMessage()
+            or "heartbeat" in record.getMessage().lower()
+            or "Added " in record.getMessage()
+            or "Sending data to websocket: {" in record.getMessage()
+        ):
+            return
+        super().emit(record)
+
+
 class Logger:
     def __init__(self, DEBUG=False, level: int = logging.INFO, allowJoin=False):
         """Initializes the logger class
@@ -49,27 +62,16 @@ class Logger:
         logging.basicConfig(
             level=level,
             format="%(asctime)s:%(levelname)s:%(name)s:%(message)s",
-            filename="log.log",
-            filemode="a",
+            datefmt="%d-%b %H:%M:%S",
+            handlers=[
+                emailFileHandler("log.log", mode="a", encoding="utf-8", delay=False),
+            ],
         )
 
         self.log = logging.getLogger("STDOUT")
         self.out = StreamToLogger(self.log, level)
         sys.stdout = self.out
-
-        # if allowJoin:
-        #     # output js console to log.log
-        #     from javascript import On, require, console
-        #     log4js = require("log4js")
-        #     log4js.configure({
-        #         "appenders": {
-        #             "out": {"type": "stdout"},
-        #             "app": {"type": "file", "filename": "out.log"}
-        #         },
-        #         "categories": {
-        #             "default": {"appenders": ["out", "app"], "level": "debug"}
-        #         }
-        #     })
+        sys.stderr = self.out
 
     def info(self, message):
         self.logger.info(message)

@@ -8,11 +8,7 @@ This is a discord bot that will scan ip adresses to see if they are minecraft se
 
 ----
 
-## Beta Release
-
-The new bot is now public, you can check it out in the [dev-builds](https://github.com/Pilot1782/bad_copenheimer/tree/dev-builds) branch and by following the README.
-
-## Installation
+## [Installation](https://github.com/Pilot1782/bad_copenheimer/wiki/Installation-(New-Bot))
 
 [Installation Page](https://github.com/Pilot1782/bad_copenheimer/wiki/Installation-(New-Bot))
 
@@ -22,23 +18,20 @@ The new bot is now public, you can check it out in the [dev-builds](https://gith
 
 ----
 
-## Usage
-
-### Experimental
-
-**The New Bot is Done!**
-
-You can now use the new bot, it is still in beta, but it is much more stable and has more features. You can find it [here](https://github.com/Pilot1782/bad_copenheimer/blob/dev-builds/mongoBot.pyw).
-
 ### Requirements
 
-* Python 3.6 or higher
-* Linux/Docker (for the scanner, the discord bot will run on windows)
+* Python 3.10 or higher
+* Linux/Docker/WSL2 (for the scanner, the discord bot will run on windows)
 * Masscan (for the scanner)
-* requirements.txt (needs to be run with pip3)
+* requirements.txt
 * node.js 16 or higher
 
-### Normal
+### Usage
+
+`/stats`
+This will show you the stats of the databse.
+
+![showcase](https://raw.githubusercontent.com/Pilot1782/bad_copenheimer/doc-resources/Screenshot_20221220_124016.png)
 
 `/help`
 This shows all of the commands you can use and their usage. Then to create your server list, run:
@@ -51,11 +44,6 @@ This will look through your database to find servers that match the provided par
 If the server has a whitelist the dot will be orange if it is online.
 
 ![showcase](https://raw.githubusercontent.com/Pilot1782/bad_copenheimer/doc-resources/Screenshot_20230222_034715.png)
-
-`/stats`
-This will show you the stats of the databse.
-
-![showcase](https://raw.githubusercontent.com/Pilot1782/bad_copenheimer/doc-resources/Screenshot_20221220_124016.png)
 
 #### Important
 

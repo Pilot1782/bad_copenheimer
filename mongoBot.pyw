@@ -9,20 +9,18 @@ import random
 import sys
 import time
 import traceback
+import logging
 
 import interactions
+from interactions.models.discord import message
 import pymongo
 import requests
 from bson.errors import InvalidId
 from bson.objectid import ObjectId
-from interactions.ext.files import (
-    command_edit,
-    command_send,
-    component_edit,
-    component_send,
-)
+from interactions import slash_command
 
 import utils
+from utils import text
 
 autoRestart = False
 allowJoin = False
@@ -45,10 +43,6 @@ if TOKEN == "...":
 # Setup
 # ---------------------------------------------
 
-bot = interactions.Client(
-    token=TOKEN, intents=interactions.Intents.GUILD_MESSAGE_CONTENT
-)
-
 client = pymongo.MongoClient(MONGO_URL, server_api=pymongo.server_api.ServerApi("1"))  # type: ignore
 db = client["mc"]
 col = db["servers"]
@@ -59,6 +53,18 @@ databaseLib = utils.database
 finderLib = utils.finder
 playerLib = utils.players
 serverLib = utils.server
+
+bot = interactions.Client(
+    token=TOKEN,
+    intents=interactions.Intents.GUILD_MESSAGES
+    | interactions.Intents.GUILDS
+    | interactions.Intents.GUILD_INTEGRATIONS,
+    status=interactions.Status.ONLINE,
+    activity=interactions.Activity(
+        type=interactions.ActivityType.WATCHING, name="for servers"
+    ),
+    logger=logger,
+)
 
 
 def print(*args, **kwargs):
@@ -78,72 +84,69 @@ def timeNow():
 # ---------------------------------------------
 
 
-@bot.command(
+@slash_command(
     name="find",
     description="Find a server",
     options=[
-        interactions.Option(
+        interactions.SlashCommandOption(
             name="_id",
             type=interactions.OptionType.STRING,
             description="The ID of the server",
             required=False,
         ),
-        interactions.Option(
+        interactions.SlashCommandOption(
             name="host",
             description="The host of the server",
             type=interactions.OptionType.STRING,
             required=False,
         ),
-        interactions.Option(
+        interactions.SlashCommandOption(
             name="port",
             description="The port of the server",
             type=interactions.OptionType.INTEGER,
             required=False,
-            value=25565,
         ),
-        interactions.Option(
+        interactions.SlashCommandOption(
             name="player",
             description="The player to search for (uuid or player name) **WIP**",
             type=interactions.OptionType.STRING,
             required=False,
         ),
-        interactions.Option(
+        interactions.SlashCommandOption(
             name="version",
             description="The version of the server",
             type=interactions.OptionType.STRING,
             required=False,
         ),
-        interactions.Option(
+        interactions.SlashCommandOption(
             name="motd",
             description="The motd of the server",
             type=interactions.OptionType.STRING,
             required=False,
         ),
-        interactions.Option(
+        interactions.SlashCommandOption(
             name="maxplayers",
             description="The max players of the server",
             type=interactions.OptionType.INTEGER,
             required=False,
             min_value=0,
         ),
-        interactions.Option(
+        interactions.SlashCommandOption(
             name="cracked",
             description="If the server blocks the EULA",
             type=interactions.OptionType.BOOLEAN,
             required=False,
-            value=False,
         ),
-        interactions.Option(
+        interactions.SlashCommandOption(
             name="hasfavicon",
             description="If the server has a favicon",
             type=interactions.OptionType.BOOLEAN,
             required=False,
-            value=False,
         ),
     ],
 )
 async def find(
-    ctx: interactions.CommandContext,
+    ctx: interactions.InteractionContext,
     _id: str = "",
     host: str = "",
     port: int = 25565,
@@ -193,6 +196,14 @@ async def find(
     info = {}
     flag = False
     numServers = 0
+    msg = await ctx.send(
+        embed=interactions.Embed(
+            title="Searching...",
+            description="Please wait while we search for servers",
+            color=finderLib.BLUE,
+        ),
+        components=finderLib.disButtons(),
+    )
     # if parameters are given, add them to the search
 
     # special matching
@@ -241,17 +252,16 @@ async def find(
         # check that _id is vaild
         if len(_id) != 12 and len(_id) != 24:
             logger.print("Invalid ID: " + str(len(_id)))
-            await command_send(
-                ctx,
+            await msg.edit(
                 embeds=[
                     interactions.Embed(
                         title="Error",
-                        description="Invalid ID Length",
+                        description="Invalid ID",
                         timestamp=timeNow(),
                         color=finderLib.RED,
                     )
                 ],
-                ephemeral=True,
+                components=finderLib.disButtons(),
             )
             return
         else:
@@ -261,8 +271,7 @@ async def find(
             res = col.find({"_id": ObjectId(_id)})
         except InvalidId:
             logger.print("Invalid ID for ObjectID: " + _id)
-            await command_send(
-                ctx,
+            await msg.edit(
                 embeds=[
                     interactions.Embed(
                         title="Error",
@@ -271,7 +280,7 @@ async def find(
                         color=finderLib.RED,
                     )
                 ],
-                ephemeral=True,
+                components=finderLib.disButtons(),
             )
             return
         logger.print(res)
@@ -279,8 +288,7 @@ async def find(
 
         if res is None:
             logger.print("Server not found")
-            await command_send(
-                ctx,
+            await msg.edit(
                 embeds=[
                     interactions.Embed(
                         title="Error",
@@ -289,7 +297,7 @@ async def find(
                         color=finderLib.RED,
                     )
                 ],
-                ephemeral=True,
+                components=finderLib.disButtons(),
             )
             return
         else:
@@ -315,8 +323,7 @@ async def find(
 
         if "error" in resp.text or resp.text == "":  # if the player is not found
             logger.print("Player not found in minecraft api")
-            await command_send(
-                ctx,
+            await msg.edit(
                 embeds=[
                     interactions.Embed(
                         title="Error",
@@ -325,7 +332,7 @@ async def find(
                         color=finderLib.RED,
                     )
                 ],
-                ephemeral=True,
+                components=finderLib.disButtons(),
             )
             return
         else:
@@ -356,7 +363,11 @@ async def find(
             ]
             embeds[0].set_thumbnail(url="attachment://playerhead.png")
 
-            await command_send(ctx, embeds=embeds, files=[face], ephemeral=True)
+            await msg.edit(
+                embeds=embeds,
+                components=finderLib.disButtons(),
+                files=[face],
+            )
             return
 
         embed = interactions.Embed(
@@ -367,7 +378,11 @@ async def find(
         )
         embed.set_thumbnail(url="attachment://playerhead.png")
 
-        await command_send(ctx, embeds=[embed], files=[face])
+        await msg.edit(
+            embeds=[embed],
+            components=finderLib.disButtons(),
+            files=[face],
+        )
 
     if version:
         pipeline[0]["$match"]["$and"].append(
@@ -407,8 +422,7 @@ async def find(
         ]
         and not flag
     ):
-        await command_send(
-            ctx,
+        await msg.edit(
             embeds=[
                 interactions.Embed(
                     title="Error",
@@ -417,7 +431,7 @@ async def find(
                     timestamp=timeNow(),
                 )
             ],
-            ephemeral=True,
+            components=finderLib.disButtons(),
         )
     else:
         try:
@@ -449,8 +463,7 @@ async def find(
             logger.print(f"Servers:{numServers}|Search:{pipeline}|Flag:{flag}")
             if numServers == 0:
                 logger.print("No servers found in database")
-                await command_send(
-                    ctx,
+                await ctx.send(
                     embeds=[
                         interactions.Embed(
                             title="Error",
@@ -463,8 +476,7 @@ async def find(
                 )
                 return
 
-            await command_send(
-                ctx,
+            await msg.edit(
                 embeds=[
                     interactions.Embed(
                         title="Searching...",
@@ -475,6 +487,7 @@ async def find(
                         color=finderLib.BLUE,
                     )
                 ],
+                components=finderLib.disButtons(),
             )
 
             # setup the embed
@@ -489,13 +502,12 @@ async def find(
 
             # send the embed sometimes with the favicon
             if _file:
-                await command_edit(ctx, embeds=[embed], files=[_file], components=comps)
+                await msg.edit(embed=embed, file=_file, components=comps)
             else:
-                await command_edit(ctx, embeds=[embed], components=comps)
+                await msg.edit(embed=embed, components=comps)
         except Exception:
             logger.print(traceback.format_exc())
-            await command_send(
-                ctx,
+            await msg.edit(
                 embeds=[
                     interactions.Embed(
                         title="Error",
@@ -504,14 +516,14 @@ async def find(
                         timestamp=timeNow(),
                     )
                 ],
-                ephemeral=True,
+                components=finderLib.disButtons(),
             )
             print(
                 f"----\n{traceback.format_exc()}\n====\n{type(info)}\n====\n{info}\n----"
             )
 
 
-@bot.component("show_players")
+@interactions.component_callback("show_players")
 async def show_players(ctx: interactions.ComponentContext):
     try:
         msg = ctx.message
@@ -548,11 +560,10 @@ async def show_players(ctx: interactions.ComponentContext):
 
         logger.print(embed, "\n---\n", players)
 
-        await component_send(ctx, embeds=[embed], ephemeral=True)
+        await ctx.send(embeds=[embed], ephemeral=True)
     except Exception:
         print(traceback.format_exc(), ctx.message)
-        await component_send(
-            ctx,
+        await ctx.send(
             embeds=[
                 interactions.Embed(
                     title="Error",
@@ -565,45 +576,19 @@ async def show_players(ctx: interactions.ComponentContext):
         )
 
 
-@bot.component("rand_select")
+@interactions.component_callback("rand_select")
 async def rand_select(ctx: interactions.ComponentContext):
     try:
         logger.print("Fetching message")
-        msg = ctx.message.embeds[0]
-        logger.print(str(msg))
+        oldMsg = ctx.message.embeds[0]
+        logger.print(str(oldMsg.title))
 
-        if "---n/a---" in msg.footer.text:
+        if "---n/a---" in oldMsg.footer.text:
             return
 
         await ctx.defer(edit_origin=True)
 
-        buttons = [
-            interactions.Button(
-                label="Show Players",
-                custom_id="show_players",
-                style=interactions.ButtonStyle.PRIMARY,
-                disabled=True,
-            ),
-            interactions.Button(
-                label="Next Server",
-                custom_id="rand_select",
-                style=interactions.ButtonStyle.PRIMARY,
-                disabled=True,
-            ),
-            interactions.Button(
-                label="Join",
-                custom_id="join",
-                style=interactions.ButtonStyle.PRIMARY,
-                disabled=True,
-            ),
-        ]
-
-        row = interactions.ActionRow(
-            components=buttons  # pyright: ignore [reportGeneralTypeIssues]
-        )
-
-        await component_edit(
-            ctx,
+        msg = await ctx.edit_origin(
             embeds=[
                 interactions.Embed(
                     title="Loading...",
@@ -615,10 +600,10 @@ async def rand_select(ctx: interactions.ComponentContext):
                     ),  # key and index
                 )
             ],
-            components=[row],
+            components=finderLib.disButtons(),
         )
 
-        text = msg.footer.text
+        text = oldMsg.footer.text
         text = text.split("\n")[2]
         text = text.split("Key:")[1]
         text = text.split("/|\\")
@@ -648,8 +633,7 @@ async def rand_select(ctx: interactions.ComponentContext):
             )
             return
 
-        await component_edit(
-            ctx,
+        msg = await msg.edit(
             embeds=[
                 interactions.Embed(
                     title="Loading...",
@@ -661,7 +645,7 @@ async def rand_select(ctx: interactions.ComponentContext):
                     ),
                 ),
             ],
-            components=[row],
+            components=finderLib.disButtons(),
         )
 
         embed = finderLib.genEmbed(
@@ -674,12 +658,12 @@ async def rand_select(ctx: interactions.ComponentContext):
         logger.print("Embed generated", embed, button, _file)
 
         if _file:
-            await component_edit(ctx, embeds=[embed], files=[_file], components=button)
+            msg = await msg.edit(embeds=[embed], files=[_file], components=button)
         else:
-            await component_edit(ctx, embeds=[embed], components=button)
+            msg = await msg.edit(embeds=[embed], components=button)
     except Exception:
-        await component_send(
-            ctx,
+        logger.error(traceback.format_exc())
+        await ctx.send(
             embeds=[
                 interactions.Embed(
                     title="Error",
@@ -688,30 +672,37 @@ async def rand_select(ctx: interactions.ComponentContext):
                     timestamp=timeNow(),
                 )
             ],
-            ephemeral=True,
+            components=finderLib.disButtons(),
         )
 
 
-async def emailModal(ctx: interactions.Modal, host: str):
-    textInp = interactions.TextInput(
+async def emailModal(ctx: interactions.ComponentContext, host: str):
+    textInp = interactions.ShortText(
         label="Email",
         custom_id="email",
         placeholder="pilot1782@verygooddomain.com",
         min_length=1,
         max_length=100,
-        style=interactions.TextStyleType.SHORT,
     )
     modal = interactions.Modal(
+        textInp,
         title="Email for " + host,
         custom_id="email_modal",
-        description="Please enter the email you want to join with.",
-        components=[textInp],
     )
 
-    await ctx.popup(modal)
+    await ctx.send_modal(modal)
+
+    try:
+        modal_ctx = await ctx.bot.wait_for_modal(modal, timeout=60)
+
+        email = modal_ctx.responses["email"]
+
+        await emailModalResponse(modal_ctx, email)
+    except asyncio.TimeoutError:
+        pass
 
 
-@bot.component("join")
+@interactions.component_callback("join")
 async def joinServer(ctx: interactions.ComponentContext):
     """Join a servver"""
     # get the original message
@@ -725,10 +716,7 @@ async def joinServer(ctx: interactions.ComponentContext):
     await emailModal(ctx, host)
 
 
-@bot.modal("email_modal")
-async def emailModalResponse(
-    ctx: interactions.CommandContext, email: interactions.TextInput
-):
+async def emailModalResponse(ctx: interactions.ModalContext, email: str):
     modal = ctx.message.embeds[0].title
     host = modal[2:]
 
@@ -747,11 +735,10 @@ async def emailModalResponse(
         code = serverLib.getState().split("AUTHENTICATING:")[1]
         logger.print("Code: " + code)
 
-        await command_send(
-            ctx,
+        await ctx.send(
             embeds=[
                 interactions.Embed(
-                    label="Authentication required",
+                    title="Authentication required",
                     description="Please enter the code `{}` at https://www.microsoft.com/link in order to authenticate.\nYou will have three minutes before the code expires.".format(
                         code
                     ),
@@ -766,11 +753,10 @@ async def emailModalResponse(
             await asyncio.sleep(1)
 
         if "AUTHENTICATING:" in serverLib.getState():
-            await command_send(
-                ctx,
+            await ctx.send(
                 embeds=[
                     interactions.Embed(
-                        label="Authentication required",
+                        title="Authentication required",
                         description="The code has expired. Please try again.",
                         color=finderLib.RED,
                     )
@@ -779,11 +765,10 @@ async def emailModalResponse(
             )
             return
         else:
-            await command_send(
-                ctx,
+            await ctx.send(
                 embeds=[
                     interactions.Embed(
-                        label="Join server",
+                        title="Join server",
                         description="Connecting to {}...".format(host),
                         color=finderLib.ORANGE,
                     )
@@ -802,6 +787,7 @@ async def emailModalResponse(
         players = serverInfo["names"]
         position = serverInfo["position"]
         heldItem = serverInfo["heldItem"]
+        inv = serverInfo["inventory"]
 
         # update player list
         dbVal = col.find_one({"host": host})
@@ -856,7 +842,16 @@ async def emailModalResponse(
                 inline=True,
             )
 
-        await command_send(ctx, embeds=[embed], ephemeral=True)
+        logger.print("Inventory: " + str(inv))
+        items = str(i.display_name for i in inv)
+
+        embed.add_field(
+            name="Inventory",
+            value=items,
+            inline=False,
+        )
+
+        await ctx.send(embeds=[embed], ephemeral=True)
         serverLib.clearNMPCache()
         return
 
@@ -870,8 +865,7 @@ async def emailModalResponse(
                 upsert=True,
             )
 
-            await command_send(
-                ctx,
+            await ctx.send(
                 embeds=[
                     interactions.Embed(
                         title="Join Server",
@@ -888,8 +882,7 @@ async def emailModalResponse(
         serverLib.clearNMPCache()
         return
 
-    await command_send(  # failed to join
-        ctx,
+    await ctx.send(  # failed to join
         embeds=[
             interactions.Embed(
                 title="Join Server",
@@ -903,16 +896,16 @@ async def emailModalResponse(
     serverLib.clearNMPCache()
 
 
-@bot.command(
+@slash_command(
     name="stats",
     description="Get stats about the database",
 )
-async def stats(ctx: interactions.CommandContext):
+async def stats(ctx: interactions.SlashContext):
     await ctx.defer()
     try:
         """Get stats about the database"""
 
-        await ctx.send(
+        msg = await ctx.send(
             embeds=[
                 interactions.Embed(
                     title="Stats",
@@ -929,7 +922,8 @@ async def stats(ctx: interactions.CommandContext):
         # add commas to server count
         serverCount = "{:,}".format(serverCount)
         text = f"Total servers: `{serverCount}`\nPlayer Count: `...`\nPlayers logged: `...`\nMost common version:\n`...`"
-        await ctx.edit(
+        msg = await ctx.edit(
+            message=msg,
             embeds=[
                 interactions.Embed(
                     title="Stats",
@@ -937,7 +931,7 @@ async def stats(ctx: interactions.CommandContext):
                     timestamp=timeNow(),
                     color=finderLib.BLUE,
                 )
-            ]
+            ],
         )
 
         logger.print("Getting versions...")
@@ -947,7 +941,8 @@ async def stats(ctx: interactions.CommandContext):
         text = "Total servers: `{}`\nRough Player Count: `...`\nMost common version:```css\n{}\n```".format(
             serverCount, ("\n".join(topTen[:5]))
         )
-        await ctx.edit(
+        msg = await ctx.edit(
+            message=msg,
             embeds=[
                 interactions.Embed(
                     title="Stats",
@@ -955,7 +950,7 @@ async def stats(ctx: interactions.CommandContext):
                     timestamp=timeNow(),
                     color=finderLib.BLUE,
                 )
-            ]
+            ],
         )
 
         logger.print("Getting player count...")
@@ -974,7 +969,8 @@ async def stats(ctx: interactions.CommandContext):
             f"Total servers: {serverCount}\nRough Player Count: {pLogged}/{players}\nMost common versions: {topTen}"
         )
 
-        await ctx.edit(
+        msg = await ctx.edit(
+            message=msg,
             embeds=[
                 interactions.Embed(
                     title="Stats",
@@ -982,7 +978,7 @@ async def stats(ctx: interactions.CommandContext):
                     timestamp=timeNow(),
                     color=finderLib.BLUE,
                 )
-            ]
+            ],
         )
     except Exception:
         print(f"====\nError: {traceback.format_exc()}\n====")
@@ -1000,8 +996,11 @@ async def stats(ctx: interactions.CommandContext):
         )
 
 
-@bot.command(name="help")
-async def help(ctx: interactions.CommandContext):
+@slash_command(
+    name="help",
+    description="Get help",
+)
+async def help(ctx: interactions.InteractionContext):
     """Get help"""
     await ctx.send(
         embeds=[
@@ -1050,9 +1049,9 @@ A list of servers that match the search
 
 
 # on ready
-@bot.event
+@interactions.listen()
 async def on_ready():
-    user = await bot.get_self_user()
+    user = await bot.fetch_user(bot.user.id)
     logger.print("Bot is signed in as {}".format(user.username))
 
 

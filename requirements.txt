@@ -1,5 +1,5 @@
 mcstatus
-discord-py-interactions
+discord-py-interactions>=5
 pymongo
 requests
 python-masscan

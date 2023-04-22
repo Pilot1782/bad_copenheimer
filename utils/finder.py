@@ -123,10 +123,8 @@ class Finder:
             server = mcstatus.JavaServer.lookup(host + ":" + str(port))
             status = server.status()
 
-            cpLST = self.Player.crackedPlayerList(
-                host, str(port)) if full else None
-            cracked = bool(
-                (cpLST is not None and type(cpLST) is not bool) or cracked)
+            cpLST = self.Player.crackedPlayerList(host, str(port)) if full else None
+            cracked = bool((cpLST is not None and type(cpLST) is not bool) or cracked)
 
             self.logger.debug("Getting players")
             players = []
@@ -181,8 +179,7 @@ class Finder:
                                 }
                             )
                 elif cracked:
-                    self.logger.debug(
-                        "Getting players from cracked player list")
+                    self.logger.debug("Getting players from cracked player list")
                     playerlst = cpLST if cpLST is not None else []
 
                     for player in playerlst:
@@ -199,13 +196,11 @@ class Finder:
                             }
                         )
             except Exception:
-                self.logger.print("Error getting player list",
-                                  traceback.format_exc())
+                self.logger.print("Error getting player list", traceback.format_exc())
                 self.logger.error(traceback.format_exc())
 
             # remove duplicates from player list
-            players = [i for n, i in enumerate(
-                players) if i not in players[n + 1:]]
+            players = [i for n, i in enumerate(players) if i not in players[n + 1 :]]
 
             cracked = bool(joinability == "CRACKED")
 
@@ -342,8 +337,7 @@ class Finder:
                 return None
         except:
             self.logger.error(traceback.format_exc())
-            self.logger.error(
-                "Error getting document at index: {}".format(pipeline))
+            self.logger.error("Error getting document at index: {}".format(pipeline))
             return None
 
     def genEmbed(
@@ -380,33 +374,10 @@ class Finder:
             embed = interactions.Embed(
                 title="No servers found",
                 description="No servers found",
-                color=self.BLUE,
-                timestamp=self.Text.timeNow(),
+                color=self.RED,
             )
-            buttons = [
-                interactions.Button(
-                    label="Show Players",
-                    custom_id="show_players",
-                    style=interactions.ButtonStyle.PRIMARY,
-                    disabled=True,
-                ),
-                interactions.Button(
-                    label="Next Server",
-                    custom_id="rand_select",
-                    style=interactions.ButtonStyle.PRIMARY,
-                    disabled=True,
-                ),
-                interactions.Button(
-                    label="Join",
-                    custom_id="join",
-                    style=interactions.ButtonStyle.PRIMARY,
-                    disabled=True,
-                ),
-            ]
 
-            row = interactions.ActionRow(components=buttons)
-
-            return [embed, None, row]
+            return [embed, None, self.disButtons()]
 
         info = self.get_doc_at_index(self.col, search, index)
 
@@ -418,33 +389,10 @@ class Finder:
                 embed = interactions.Embed(
                     title="No servers found",
                     description="No servers found",
-                    color=self.BLUE,
-                    timestamp=self.Text.timeNow(),
+                    color=self.RED,
                 )
-                buttons = [
-                    interactions.Button(
-                        label="Show Players",
-                        custom_id="show_players",
-                        style=interactions.ButtonStyle.PRIMARY,
-                        disabled=True,
-                    ),
-                    interactions.Button(
-                        label="Next Server",
-                        custom_id="rand_select",
-                        style=interactions.ButtonStyle.PRIMARY,
-                        disabled=True,
-                    ),
-                    interactions.Button(
-                        label="Join",
-                        custom_id="join",
-                        style=interactions.ButtonStyle.PRIMARY,
-                        disabled=True,
-                    ),
-                ]
-
-                row = interactions.ActionRow(components=buttons)
-
-                return [embed, None, row]
+                
+                return [embed, None, self.disButtons()]
 
         online = False
         motd = info["lastOnlineDescription"]
@@ -522,8 +470,7 @@ class Finder:
                     name="Last Online",
                     value=(
                         time.strftime(
-                            "%Y/%m/%d %H:%M:%S", time.localtime(
-                                info["lastOnline"])
+                            "%Y/%m/%d %H:%M:%S", time.localtime(info["lastOnline"])
                         )
                         if not online
                         else time.strftime(  # give the last online time if the server is offline
@@ -579,7 +526,10 @@ class Finder:
 
                     with open("server-icon.png", "wb") as f:
                         f.write(base64.b64decode(bits))
-                    _file = interactions.File(filename="server-icon.png")
+                    _file = interactions.File(
+                        file_name="server-icon.png",
+                        file="server-icon.png",
+                    )
                     embed.set_thumbnail(url="attachment://server-icon.png")
 
                     self.logger.print("Favicon added")
@@ -597,7 +547,7 @@ class Finder:
         else:
             players = []
 
-        buttons = [
+        row = interactions.ActionRow(
             interactions.Button(
                 label="Show Players",
                 custom_id="show_players",
@@ -616,10 +566,6 @@ class Finder:
                 style=interactions.ButtonStyle.PRIMARY,
                 disabled=not online or not allowJoin,
             ),
-        ]
-
-        row = interactions.ActionRow(
-            components=buttons  # pyright: ignore [reportGeneralTypeIssues]
         )
 
         self.update(info)
@@ -633,8 +579,7 @@ class Finder:
             server = mcstatus.JavaServer.lookup(ip + ":" + str(port))
             version = server.status().version.protocol if version == -1 else version
 
-            connection = mcstatus.protocol.connection.TCPSocketConnection(
-                (ip, port))
+            connection = mcstatus.protocol.connection.TCPSocketConnection((ip, port))
 
             # Send handshake packet: ID, protocol version, server address, server port, intention to login
             # This does not change between versions
@@ -706,3 +651,30 @@ class Finder:
                 False,
             ),
         ).start()
+
+    def disButtons(self) -> interactions.ActionRow:
+        """Returns a disabled action row
+
+        Returns:
+            interactions.ActionRow: The disabled action row
+        """
+        return interactions.ActionRow(
+            interactions.Button(
+                label="Show Players",
+                custom_id="show_players",
+                style=interactions.ButtonStyle.PRIMARY,
+                disabled=True,
+            ),
+            interactions.Button(
+                label="Next Server",
+                custom_id="rand_select",
+                style=interactions.ButtonStyle.PRIMARY,
+                disabled=True,
+            ),
+            interactions.Button(
+                label="Join",
+                custom_id="join",
+                style=interactions.ButtonStyle.PRIMARY,
+                disabled=True,
+            ),
+        )

@@ -81,11 +81,12 @@ class Server:
                 round(self.bot.entity.position.x, 2),
                 round(self.bot.entity.position.y, 2),
                 round(self.bot.entity.position.z, 2),
+                self.bot.dimension,
             )
 
             self.inventory = []
             for item in self.bot.inventory.items():
-                self.inventory.append(item)
+                self.inventory.append(item) if item is not None else None
 
             self.clearNMPCache()
 
@@ -124,6 +125,7 @@ class Server:
             "names": self.names,
             "position": self.position,
             "heldItem": self.heldItem,
+            "inventory": self.inventory,
             "state": self.STATE,
         }
 

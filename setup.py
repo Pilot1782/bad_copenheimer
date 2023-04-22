@@ -1,4 +1,4 @@
-import logging
+import sys
 import os
 
 from utils import logger
@@ -17,7 +17,7 @@ def instPyPackage():
         logger.error("requirements.txt not found in current directory.")
         print("requirements.txt not found in current directory.")
     else:
-        os.system("pip install -r requirements.txt")
+        os.system("pip install -Ur requirements.txt")
 
 
 def checkMasscan():
@@ -62,6 +62,12 @@ def privVariables():
 
 
 def main():
+    if sys.version[0] != 3:
+        logger.error("Python 3 is required to run this program.")
+        exit(1)
+    if sys.version[1] < 10:
+        logger.warning("Python 3.10 or higher is needed for interactions.py to work.")
+
     instPyPackage()
     checkMasscan()
     privVariables()
