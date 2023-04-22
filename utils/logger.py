@@ -64,7 +64,8 @@ class Logger:
             format="%(asctime)s:%(levelname)s:%(name)s:%(message)s",
             datefmt="%d-%b %H:%M:%S",
             handlers=[
-                emailFileHandler("log.log", mode="a", encoding="utf-8", delay=False),
+                emailFileHandler("log.log", mode="a",
+                                 encoding="utf-8", delay=False),
             ],
         )
 

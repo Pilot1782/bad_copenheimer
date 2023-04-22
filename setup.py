@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 
 from utils import logger
 
@@ -66,7 +66,8 @@ def main():
         logger.error("Python 3 is required to run this program.")
         exit(1)
     if sys.version[1] < 10:
-        logger.warning("Python 3.10 or higher is needed for interactions.py to work.")
+        logger.warning(
+            "Python 3.10 or higher is needed for interactions.py to work.")
 
     instPyPackage()
     checkMasscan()
