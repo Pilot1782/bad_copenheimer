@@ -107,7 +107,10 @@ class Players:
         with open("playerhead.png", "wb") as f:
             f.write(r.content)
         self.logger.debug("Player head downloaded")
-        return interactions.File(filename="playerhead.png")
+        return interactions.File(
+            file_name="playerhead.png",
+            file=open("playerhead.png", "rb"),
+        )
 
     def playerList(self, host: str, port: int = 25565, usrname: str = "") -> List[Dict]:
         """Return a list of players on a Minecraft server
