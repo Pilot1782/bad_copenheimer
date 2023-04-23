@@ -147,15 +147,15 @@ def timeNow():
 )
 async def find(
     ctx: interactions.InteractionContext,
-    _id: str = "",
-    host: str = "",
-    port: int = 25565,
-    player: str = "",
-    version: str = "",
-    motd: str = "",
-    maxplayers: int = -1,
-    cracked: bool = False,
-    hasfavicon: bool = False,
+    _id: str = None,
+    host: str = None,
+    port: int = None,
+    player: str = None,
+    version: str = None,
+    motd: str = None,
+    maxplayers: int = None,
+    cracked: bool = None,
+    hasfavicon: bool = None,
 ):
     """Find a server
 
@@ -173,12 +173,12 @@ async def find(
 
     print(
         "find",
-        "id:" + _id,
-        "host:" + host,
+        "id:" + str(_id),
+        "host:" + str(host),
         "port:" + str(port),
-        'player:"' + player + '"',
-        'version:"' + version + '"',
-        'motd:"' + motd + '"',
+        'player:"' + str(player) + '"',
+        'version:"' + str(version) + '"',
+        'motd:"' + str(motd) + '"',
         "maxplayers:" + str(maxplayers),
         "cracked:" + str(cracked),
         "hasfavicon:" + str(hasfavicon),
@@ -207,7 +207,7 @@ async def find(
     # if parameters are given, add them to the search
 
     # special matching
-    if host:
+    if host is not None:
         validServ = True
         # check if the given host is a valid server
         serverList = [None]
@@ -248,7 +248,7 @@ async def find(
                     ]
                 }
             )
-    if _id:
+    if _id is not None:
         # check that _id is vaild
         if len(_id) != 12 and len(_id) != 24:
             logger.print("Invalid ID: " + str(len(_id)))
@@ -304,7 +304,7 @@ async def find(
             logger.print("Server found")
             serverList = res
             numServers = 1
-    if player:
+    if player is not None:
         flag = True
         name = ""
         uuid = ""
@@ -384,29 +384,41 @@ async def find(
             files=[face],
         )
 
-    if version:
+    if version is not None:
         pipeline[0]["$match"]["$and"].append(
             {"lastOnlineVersion": {"$regex": ".*" + version + ".*", "$options": "i"}}
         )
-    if motd:
+    if motd is not None:
         pipeline[0]["$match"]["$and"].append(
             {"lastOnlineDescription": {"$regex": ".*" + motd + ".*", "$options": "i"}}
         )
-    if maxplayers > 0:
+    if maxplayers is not None:
         pipeline[0]["$match"]["$and"].append({"lastOnlinePlayersMax": maxplayers})
-    if cracked:
+    if cracked is not None:
         pipeline[0]["$match"]["$and"].append({"cracked": cracked})
-    if hasfavicon:
-        pipeline[0]["$match"]["$and"].append(
-            {
-                "$expr": {
-                    "$and": [
-                        {"$ne": ["$favicon", None]},
-                        {"$gt": [{"$strLenCP": "$favicon"}, 10]},
-                    ]
+    if hasfavicon is not None:
+        if hasfavicon:
+            pipeline[0]["$match"]["$and"].append(
+                {
+                    "$expr": {
+                        "$and": [
+                            {"$ne": ["$favicon", None]},
+                            {"$gt": [{"$strLenCP": "$favicon"}, 10]},
+                        ]
+                    }
                 }
-            }
-        )
+            )
+        else:
+            pipeline[0]["$match"]["$and"].append(
+                {
+                    "$expr": {
+                        "$or": [
+                            {"$eq": ["$favicon", None]},
+                            {"$lte": [{"$strLenCP": "$favicon"}, 10]},
+                        ]
+                    }
+                }
+            )
 
     if (
         pipeline
