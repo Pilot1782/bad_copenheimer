@@ -463,7 +463,7 @@ async def find(
             logger.print(f"Servers:{numServers}|Search:{pipeline}|Flag:{flag}")
             if numServers == 0:
                 logger.print("No servers found in database")
-                await ctx.send(
+                await msg.edit(
                     embeds=[
                         interactions.Embed(
                             title="Error",
@@ -472,7 +472,6 @@ async def find(
                             timestamp=timeNow(),
                         )
                     ],
-                    ephemeral=True,
                 )
                 return
 
