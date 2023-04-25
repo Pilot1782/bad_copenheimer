@@ -147,7 +147,7 @@ class Text:
         """Resolves a hostname into a hostname
 
         Args:
-            host (str): hostname
+            ip (str): IP address
 
         Returns:
             str: IP address
@@ -197,7 +197,7 @@ class Text:
         return datetime.datetime.now(
             datetime.timezone(
                 datetime.timedelta(
-                    hours=0
-                )  # no clue why this is needed but it works now?
+                    hours=-6
+                )  # no clue why this is needed, but it works now?
             )
         ).strftime("%Y-%m-%d %H:%M:%S")
