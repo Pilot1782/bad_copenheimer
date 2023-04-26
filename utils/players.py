@@ -102,15 +102,18 @@ class Players:
         Returns:
             interactions.file | None: file object of the player head
         """
-        url = "https://minotar.net/avatar/" + name
-        r = requests.get(url)
-        with open("playerhead.png", "wb") as f:
-            f.write(r.content)
-        self.logger.debug("Player head downloaded")
-        return interactions.File(
-            file_name="playerhead.png",
-            file=open("playerhead.png", "rb"),
-        )
+        try:
+            url = "https://minotar.net/avatar/" + name
+            r = requests.get(url)
+            with open("playerhead.png", "wb") as f:
+                f.write(r.content)
+            self.logger.debug("Player head downloaded")
+            return interactions.File(
+                file_name="playerhead.png",
+                file=open("playerhead.png", "rb"),
+            )
+        except Exception:
+            return None
 
     def playerList(self, host: str, port: int = 25565, usrname: str = "") -> List[Dict]:
         """Return a list of players on a Minecraft server

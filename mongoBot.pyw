@@ -352,6 +352,19 @@ async def find(
 
         logger.print("Finding player", player)
         face = utils.players.playerHead(name)
+        
+        if face is None:
+            await ctx.send(
+                emebeds=[
+                    interactions.Embed(
+                        title="Error",
+                        description=f"Could not find {name}'s skin",
+                        color=finderLib.RED,
+                        timestamp=timeNow(),
+                    ),
+                ],
+                ephermeral=True,
+            )
 
         if numServers == 0:
             logger.print("Player not found in database")
@@ -363,12 +376,12 @@ async def find(
                     timestamp=timeNow(),
                 )
             ]
-            embeds[0].set_thumbnail(url="attachment://playerhead.png")
+            embeds[0].set_thumbnail(url="attachment://playerhead.png") if face is not None else None
 
             await msg.edit(
                 embeds=embeds,
                 components=finderLib.disButtons(),
-                files=[face],
+                file=face if face is not None else None,
             )
             return
 
@@ -378,12 +391,12 @@ async def find(
             color=finderLib.GREEN,
             timestamp=timeNow(),
         )
-        embed.set_thumbnail(url="attachment://playerhead.png")
+        embed.set_thumbnail(url="attachment://playerhead.png") if face is not None else None
 
         await msg.edit(
             embeds=[embed],
             components=finderLib.disButtons(),
-            files=[face],
+            file=face if face is not None else None,
         )
 
     if version is not None:
