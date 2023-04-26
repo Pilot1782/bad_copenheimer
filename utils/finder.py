@@ -412,7 +412,7 @@ class Finder:
                 try:
                     mcstatus.JavaServer.lookup(info["host"])
                     online = True
-                    status = mcstatus.JavaServer(info["host"]).status()
+                    status = mcstatus.JavaServer(info["host"]).ping()
                     break
                 except socket.timeout:
                     time.sleep(0.5)
