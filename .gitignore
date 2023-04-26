@@ -22,3 +22,5 @@ setup_done.yay
 testing.pyw
 testing2.pyw
 __pycache__
+.idea
+log.log

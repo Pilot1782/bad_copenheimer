@@ -14,7 +14,8 @@ class Text:
         """
         self.logger = logger
 
-    def cFilter(self, text: str, trim: bool = True) -> str:
+    @staticmethod
+    def cFilter(text: str, trim: bool = True) -> str:
         """Removes all color bits from a string
 
         Args:
@@ -70,7 +71,8 @@ class Text:
 
         return text
 
-    def colorAnsi(self, text: str) -> str:
+    @staticmethod
+    def colorAnsi(text: str) -> str:
         """Changes color tags to those that work with ansi code blocks
 
         Args:​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​
@@ -120,7 +122,8 @@ class Text:
 
         return text
 
-    def colorMine(self, color: str) -> str:
+    @staticmethod
+    def colorMine(color: str) -> str:
         # given a color like 'yellow' return the color code like '§e'
         color = color.lower()
 
@@ -192,7 +195,8 @@ class Text:
             self.logger.error(traceback.format_exc())
             return host
 
-    def timeNow(self):
+    @staticmethod
+    def timeNow():
         # return local time
         return datetime.datetime.now(
             datetime.timezone(

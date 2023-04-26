@@ -1,5 +1,6 @@
 import base64
 import re
+import socket
 import threading
 import time
 import traceback
@@ -58,13 +59,16 @@ class Finder:
         full: bool = True,
         *args,
     ) -> Optional[Dict]:
-        """Checks out a host and adds it to the database if it's not there
+        """checks out a host and adds it to the database if it's not there
 
-        Args:
+        args:
             host (String): ip of the server
-            port (String, optional): port of the server. Defaults to "25565".
-            webhook (String, optional): webhook to send the message to. Defaults to "".
-            full (bool, optional): if the full scan should be done. Defaults to True.
+            port (String, optional): port of the server.
+            default to "25565".
+            webhook (String, optional): webhook to send the message to.
+            defaults to "".
+            full (bool, optional): if the full scan should be done.
+            defaults to True.
 
         Returns:
             dict: {
@@ -88,7 +92,7 @@ class Finder:
 
         self.logger.debug("Checking " + str(host)) if full else None
 
-        # check for embeded port
+        # check for embedded port
         if ":" in host:
             host = host.split(":")
             port = host[1]
@@ -104,7 +108,7 @@ class Finder:
             self.logger.debug("Server is offline") if full else None
             return None
 
-        # check the ip and hostname to make sure they arr vaild as a mc server
+        # check the ip and hostname to make sure they arr valid as a mc server
         try:
             server = mcstatus.JavaServer.lookup(ip + ":" + str(port))
             status = server.status()
@@ -116,7 +120,7 @@ class Finder:
         except Exception:
             hostname = host
 
-        joinability = self.join(host, port, "Pilot1782").joinability
+        joinability = self.join(host, int(port), "Pilot1782").joinability
         cracked = bool(joinability == "CRACKED")
 
         try:
@@ -348,7 +352,7 @@ class Finder:
 
     def genEmbed(
         self,
-        search: dict,
+        search: list[dict],
         index: int = 0,
         numServ: int = 0,
         allowJoin: bool = False,
@@ -410,7 +414,7 @@ class Finder:
                     online = True
                     status = mcstatus.JavaServer(info["host"]).status()
                     break
-                except:
+                except socket.timeout:
                     time.sleep(0.5)
 
             if status is None:
@@ -435,21 +439,20 @@ class Finder:
             motd = self.Text.markFilter(motd)
 
             self.logger.debug(f"Raw MOTD: {rawMotd}, MOTD: {motd}")
-        except:
+        except Exception:
             self.logger.debug("Server offline", info["host"])
             self.logger.debug(traceback.format_exc())
 
         hostname = info["hostname"] if "hostname" in info else info["host"]
         whitelisted = info["whitelisted"] if "whitelisted" in info else False
 
-        # setup the embed
+        # set up the embed
         embed = interactions.Embed(
             title=(("🟢 " if not whitelisted else "🟠 ") if online else "🔴 ")
             + info["host"],
             description=f"Host name: `{hostname}`\n{motd}",
             timestamp=self.Text.timeNow(),
             color=(self.GREEN if online else self.PINK),
-            type="rich",
             fields=[
                 interactions.EmbedField(
                     name="Players",
@@ -565,7 +568,13 @@ class Finder:
                 label="Next Server",
                 custom_id="rand_select",
                 style=interactions.ButtonStyle.PRIMARY,
-                disabled=not (numServ > 1),
+                disabled=numServ <= 1,
+            ),
+            interactions.Button(
+                label="Jump",
+                custom_id="jump",
+                style=interactions.ButtonStyle.PRIMARY,
+                disabled=(numServ <= 1),
             ),
             interactions.Button(
                 label="Join",
@@ -660,7 +669,8 @@ class Finder:
             ),
         ).start()
 
-    def disButtons(self) -> interactions.ActionRow:
+    @staticmethod
+    def disButtons() -> interactions.ActionRow:
         """Returns a disabled action row
 
         Returns:
@@ -676,6 +686,12 @@ class Finder:
             interactions.Button(
                 label="Next Server",
                 custom_id="rand_select",
+                style=interactions.ButtonStyle.PRIMARY,
+                disabled=True,
+            ),
+            interactions.Button(
+                label="Jump",
+                custom_id="jump",
                 style=interactions.ButtonStyle.PRIMARY,
                 disabled=True,
             ),

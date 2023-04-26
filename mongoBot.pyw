@@ -3,16 +3,13 @@
 # pyright: basic, reportGeneralTypeIssues=false, reportOptionalSubscript=false, reportOptionalMemberAccess=false
 
 import asyncio
-import datetime
 import json
 import random
 import sys
 import time
 import traceback
-import logging
 
 import interactions
-from interactions.models.discord import message
 import pymongo
 import requests
 from bson.errors import InvalidId
@@ -53,6 +50,7 @@ databaseLib = utils.database
 finderLib = utils.finder
 playerLib = utils.players
 serverLib = utils.server
+text = utils.text
 
 bot = interactions.Client(
     token=TOKEN,
@@ -66,18 +64,24 @@ bot = interactions.Client(
     logger=logger,
 )
 
+default_pipeline = [
+    {
+        "$match": {
+            "$and": [
+                {"lastOnlinePlayersMax": {"$gt": 0}},
+                {"lastOnlinePlayers": {"$gt": 0}},
+            ]
+        }
+    },
+]
+
 
 def print(*args, **kwargs):
     logger.print(" ".join(map(str, args)), **kwargs)
 
 
 def timeNow():
-    # return local time
-    return datetime.datetime.now(
-        datetime.timezone(
-            datetime.timedelta(hours=0)  # no clue why this is needed but it works now?
-        )
-    ).strftime("%Y-%m-%d %H:%M:%S")
+    return text.timeNow()
 
 
 # Commands
@@ -125,7 +129,7 @@ def timeNow():
             required=False,
         ),
         interactions.SlashCommandOption(
-            name="maxplayers",
+            name="max_players",
             description="The max players of the server",
             type=interactions.OptionType.INTEGER,
             required=False,
@@ -138,7 +142,7 @@ def timeNow():
             required=False,
         ),
         interactions.SlashCommandOption(
-            name="hasfavicon",
+            name="has_favicon",
             description="If the server has a favicon",
             type=interactions.OptionType.BOOLEAN,
             required=False,
@@ -153,22 +157,23 @@ async def find(
     player: str = None,
     version: str = None,
     motd: str = None,
-    maxplayers: int = None,
+    max_players: int = None,
     cracked: bool = None,
-    hasfavicon: bool = None,
+    has_favicon: bool = None,
 ):
     """Find a server
 
     Args:
+        ctx (interactions.InteractionContext): The context of the command
         _id (str, optional): The ID of the server. Defaults to None.
         host (str, optional): The host of the server. Defaults to None.
-        Player (str, optional): The player to search for. Defaults to None.
+        player (str, optional): The player to search for. Defaults to None.
         version (str, optional): The version of the server. Defaults to None.
         motd (str, optional): The motd of the server. Defaults to None.
         port (int, optional): The port of the server. Defaults to 25565.
-        maxplayers (int, optional): The max players of the server. Defaults to -1.
+        max_players (int, optional): The max players of the server. Defaults to -1.
         cracked (bool, optional): If the server blocks the EULA. Defaults to False.
-        hasfavicon (bool, optional): If the server has a favicon. Defaults to False.
+        has_favicon (bool, optional): If the server has a favicon. Defaults to False.
     """
 
     print(
@@ -179,16 +184,15 @@ async def find(
         'player:"' + str(player) + '"',
         'version:"' + str(version) + '"',
         'motd:"' + str(motd) + '"',
-        "maxplayers:" + str(maxplayers),
+        "max_players:" + str(max_players),
         "cracked:" + str(cracked),
-        "hasfavicon:" + str(hasfavicon),
+        "has_favicon:" + str(has_favicon),
     )
 
     # send as embed
     await ctx.defer()
 
-    serverList = []
-    # pipline that matches version name case insensitive, motd case insensitive, max players, cracked and has favicon
+    # pipline that matches version name case-insensitive, motd case-insensitive, max players, cracked and has favicon
     pipeline = [{"$match": {"$and": []}}]
 
     pipeline[0]["$match"]["$and"].append({"lastOnlinePlayersMax": {"$gt": 0}})
@@ -210,7 +214,6 @@ async def find(
     if host is not None:
         validServ = True
         # check if the given host is a valid server
-        serverList = [None]
         if host.replace(".", "").isdigit():
             serverList = [col.find_one({"host": host})]
             if serverList[0] is None:
@@ -238,8 +241,8 @@ async def find(
                 {"_id": ObjectId(serverList[0]["_id"])}
             )
         else:
-            # search the database for serbers with similar hostnames
-            # search with regex applyed to 'hostname' and 'host' of .*host.*
+            # search the database for servers with similar hostnames
+            # search with regex applied to 'hostname' and 'host' of .*host.*
             pipeline[0]["$match"]["$and"].append(
                 {
                     "$or": [
@@ -249,7 +252,7 @@ async def find(
                 }
             )
     if _id is not None:
-        # check that _id is vaild
+        # check that _id is valid
         if len(_id) != 12 and len(_id) != 24:
             logger.print("Invalid ID: " + str(len(_id)))
             await msg.edit(
@@ -302,7 +305,6 @@ async def find(
             return
         else:
             logger.print("Server found")
-            serverList = res
             numServers = 1
     if player is not None:
         flag = True
@@ -392,12 +394,12 @@ async def find(
         pipeline[0]["$match"]["$and"].append(
             {"lastOnlineDescription": {"$regex": ".*" + motd + ".*", "$options": "i"}}
         )
-    if maxplayers is not None:
-        pipeline[0]["$match"]["$and"].append({"lastOnlinePlayersMax": maxplayers})
+    if max_players is not None:
+        pipeline[0]["$match"]["$and"].append({"lastOnlinePlayersMax": max_players})
     if cracked is not None:
         pipeline[0]["$match"]["$and"].append({"cracked": cracked})
-    if hasfavicon is not None:
-        if hasfavicon:
+    if has_favicon is not None:
+        if has_favicon:
             pipeline[0]["$match"]["$and"].append(
                 {
                     "$expr": {
@@ -522,7 +524,8 @@ async def find(
                 embeds=[
                     interactions.Embed(
                         title="Error",
-                        description="An error occured while searching. Please try again later and check the logs for more details.",
+                        description="An error occurred while searching. Please try again later and check the logs for "
+                        "more details.",
                         color=finderLib.RED,
                         timestamp=timeNow(),
                     )
@@ -588,7 +591,16 @@ async def show_players(ctx: interactions.ComponentContext):
 
 
 @interactions.component_callback("rand_select")
-async def rand_select(ctx: interactions.ComponentContext):
+async def next(ctx: interactions.ComponentContext):
+    await rand_select(ctx)
+
+
+async def rand_select(
+    ctx: interactions.ComponentContext,
+    _index: int = None,
+    orginal: interactions.Message = None,
+):
+    org = orginal if orginal is not None else ctx.message
     try:
         logger.print("Fetching message")
         oldMsg = ctx.message.embeds[0]
@@ -597,9 +609,9 @@ async def rand_select(ctx: interactions.ComponentContext):
         if "---n/a---" in oldMsg.footer.text:
             return
 
-        await ctx.defer(edit_origin=True)
+        await ctx.defer(edit_origin=True) if orginal is None else None
 
-        msg = await ctx.edit_origin(
+        msg = await org.edit(
             embeds=[
                 interactions.Embed(
                     title="Loading...",
@@ -631,10 +643,10 @@ async def rand_select(ctx: interactions.ComponentContext):
         logger.print("ReGenerating list")
         numServers = col.count_documents(key[0]["$match"])
         logger.print("List generated: " + str(numServers) + " servers")
-        index = (index + 1) if (index + 1 < numServers) else 0
+        index = ((index + 1) if (index + 1 < numServers) else 0) if _index is None else _index
 
         info = finderLib.get_doc_at_index(col, key, index)
-        if info == None:
+        if info is None:
             logger.print(
                 "Error: No server found at index "
                 + str(index)
@@ -678,7 +690,8 @@ async def rand_select(ctx: interactions.ComponentContext):
             embeds=[
                 interactions.Embed(
                     title="Error",
-                    description="An error occured while searching. Please try again later and check the logs for more details.",
+                    description="An error occured while searching. Please try again later and check the logs for more "
+                    "details.",
                     color=finderLib.RED,
                     timestamp=timeNow(),
                 )
@@ -715,7 +728,7 @@ async def emailModal(ctx: interactions.ComponentContext, host: str):
 
 @interactions.component_callback("join")
 async def joinServer(ctx: interactions.ComponentContext):
-    """Join a servver"""
+    """Join a server"""
     # get the original message
     msg = ctx.message.embeds[0]
     host = msg.title[2:]  # exclude the online symbol
@@ -750,7 +763,8 @@ async def emailModalResponse(ctx: interactions.ModalContext, email: str):
             embeds=[
                 interactions.Embed(
                     title="Authentication required",
-                    description="Please enter the code `{}` at https://www.microsoft.com/link in order to authenticate.\nYou will have three minutes before the code expires.".format(
+                    description="Please enter the code `{}` at https://www.microsoft.com/link in order to "
+                    "authenticate.\nYou will have three minutes before the code expires.".format(
                         code
                     ),
                     color=finderLib.BLUE,
@@ -880,7 +894,8 @@ async def emailModalResponse(ctx: interactions.ModalContext, email: str):
                 embeds=[
                     interactions.Embed(
                         title="Join Server",
-                        description="Error: This server is whitelisted or you are banned. Please contact the server owner to be allowed back in.",
+                        description="Error: This server is whitelisted or you are banned. Please contact the server "
+                        "owner to be allowed back in.",
                         color=finderLib.YELLOW,
                         timestamp=timeNow(),
                     )
@@ -905,6 +920,60 @@ async def emailModalResponse(ctx: interactions.ModalContext, email: str):
         ephemeral=True,
     )
     serverLib.clearNMPCache()
+
+
+@interactions.component_callback("jump")
+async def jump(ctx: interactions.ComponentContext):
+    """Jump to a certain index"""
+    org = ctx.message
+
+    total = int(org.embeds[0].footer.text.split("Out of ")[-1].split(" ")[0])
+
+    textInp = interactions.ShortText(
+        label="Jump to index",
+        placeholder="Enter a number between 1 and {}".format(total),
+        min_length=1,
+        max_length=len(str(total)),
+        custom_id="jump",
+    )
+
+    modal = interactions.Modal(
+        textInp,
+        title="Jump to index",
+        custom_id="jump_modal",
+    )
+    await ctx.send_modal(modal)
+
+    try:
+        modal_ctx = await ctx.bot.wait_for_modal(modal=modal, timeout=60)
+
+        index = int(modal_ctx.responses["jump"])
+
+        if index < 1 or index > total:
+            await modal_ctx.send(
+                embeds=[
+                    interactions.Embed(
+                        title="Jump to index",
+                        description="Error: Invalid index",
+                        color=finderLib.RED,
+                    )
+                ],
+                ephemeral=True,
+            )
+            return
+
+        await modal_ctx.send(
+            embed=interactions.Embed(
+                title="Jump to index",
+                description="Jumping to index {}...".format(index - 1),
+                color=finderLib.ORANGE,
+            ),
+            ephemeral=True,
+        )
+
+        await rand_select(ctx, _index=index - 1, orginal=org)
+    except asyncio.TimeoutError:
+        return
 
 
 @slash_command(
@@ -1011,7 +1080,7 @@ async def stats(ctx: interactions.SlashContext):
     name="help",
     description="Get help",
 )
-async def help(ctx: interactions.InteractionContext):
+async def help_list(ctx: interactions.InteractionContext):
     """Get help"""
     await ctx.send(
         embeds=[
