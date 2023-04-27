@@ -1153,17 +1153,11 @@ async def on_ready():
 
 
 if __name__ == "__main__":
-    while True:
-        try:
-            bot.start()
-        except Exception as e:
-            if e == KeyboardInterrupt:
-                break
-            else:
-                logger.error(traceback.format_exc())
-                time.sleep(30)
-                if autoRestart:
-                    logger.print("Restarting...")
-                    continue
-                else:
-                    break
+    try:
+        bot.start()
+    except Exception as e:
+        if e == KeyboardInterrupt:
+            asyncio.run(bot.stop())
+            sys.exit()
+        else:
+            logger.error(traceback.format_exc())
