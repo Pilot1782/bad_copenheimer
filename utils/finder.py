@@ -550,9 +550,11 @@ class Finder:
         except Exception:
             self.logger.error(traceback.format_exc())
             _file = None
-        
+
         if _file is None:
-            embed.set_thumbnail(url="https://media.minecraftforum.net/attachments/300/619/636977108000120237.png")
+            embed.set_thumbnail(
+                url="https://media.minecraftforum.net/attachments/300/619/636977108000120237.png"
+            )
 
         players = info
         if players is not None and "lastOnlinePlayersList" in players:
