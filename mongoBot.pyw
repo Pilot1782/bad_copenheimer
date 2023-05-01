@@ -98,18 +98,18 @@ def timeNow():
             description="The ID of the server",
             required=False,
         ),
-        interactions.SlashCommandOption(
-            name="host",
-            description="The host of the server",
-            type=interactions.OptionType.STRING,
-            required=False,
-        ),
-        interactions.SlashCommandOption(
-            name="port",
-            description="The port of the server",
-            type=interactions.OptionType.INTEGER,
-            required=False,
-        ),
+        # interactions.SlashCommandOption(
+        #     name="host",
+        #     description="The host of the server",
+        #     type=interactions.OptionType.STRING,
+        #     required=False,
+        # ),
+        # interactions.SlashCommandOption(
+        #     name="port",
+        #     description="The port of the server",
+        #     type=interactions.OptionType.INTEGER,
+        #     required=False,
+        # ),
         interactions.SlashCommandOption(
             name="player",
             description="The player to search for (uuid or player name) **WIP**",
