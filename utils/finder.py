@@ -352,7 +352,7 @@ class Finder:
 
     def genEmbed(
         self,
-        search: list[dict],
+        search: list(dict),
         index: int = 0,
         numServ: int = 0,
         allowJoin: bool = False,
