@@ -8,7 +8,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to fill out this bug report!
+        Before filling this out, check the [Installation guide](https://github.com/Pilot1782/bad_copenheimer/wiki/Installation-(New-Bot)) and/or check out the [troubleshooting page](https://github.com/Pilot1782/bad_copenheimer/wiki/Troubleshooting).
   - type: textarea
     id: what-happened
     attributes:
@@ -28,14 +28,16 @@ body:
         - Windows
     validations:
       required: true
-  - type: checkboxes
+  - type: dropdown
     id: Branch
     attributes:
       label: Branch
-      description: Have you tried using dev-builds?
+      description: Which branch are you using?
       options:
-        - label: Tried `dev-builds`
-          required: true
+        - main
+        - dev-builds
+    validations:
+      required: true
   - type: textarea
     id: logs
     attributes:
