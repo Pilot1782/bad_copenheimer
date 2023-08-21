@@ -1,5 +1,7 @@
 # Bad Copenheimer
 
+## [NEW REPO](https://github.com/MCServerScout/Discord-Bot)
+
 A Python impelentation of a discord bot that acts as a server scanner.
 
 This is a discord bot that will scan ip adresses to see if they are minecraft servers and will post the results in your channel.
